@@ -1,0 +1,37 @@
+# OPTIONAL: hands-off deploys — rsync the atlas to your web server on every
+# merge to main, so accepted community PRs go live automatically.
+#
+# To enable:
+#   1. Rename this file to deploy.yml
+#   2. Add repository secrets (Settings → Secrets and variables → Actions):
+#        DEPLOY_SSH_KEY   private key authorized on the server
+#        DEPLOY_HOST      e.g. webserver.example.com
+#        DEPLOY_USER      ssh user
+#        DEPLOY_PATH      e.g. /var/www/the-open-accelerator.com/ecosystem
+#
+# NOTE: this only works if the server accepts SSH from the public internet.
+# If your server is VPN-only (e.g. internal Red Hat infra), skip this and use
+# scripts/sync-to-site.sh as part of your normal local deploy instead.
+
+name: Deploy to TOA site
+
+on:
+  push:
+    branches: [main]
+    paths: ["index.html", "data.js"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+      - name: Rsync atlas
+        run: |
+          rsync -avz -e "ssh -i ~/.ssh/id_deploy" index.html data.js \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"

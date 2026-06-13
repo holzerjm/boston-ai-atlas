@@ -17,3 +17,27 @@ jobs:
           node-version: 20
       - name: Validate data.js
         run: node scripts/validate.js
+
+  badge:
+    # keep the entry-count badge in sync after merges to main
+    if: github.event_name == 'push'
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Regenerate badge.json
+        run: node scripts/badge.js
+      - name: Commit badge if changed
+        run: |
+          if ! git diff --quiet badge.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add badge.json
+            git commit -m "chore: update entry-count badge"
+            git push
+          fi
