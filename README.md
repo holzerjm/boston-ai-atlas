@@ -50,14 +50,20 @@ The atlas is community-maintained:
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the entry schema and review process.
 Every PR touching `data.js` is automatically validated by CI.
 
+**Maintainers** turn accepted issues and PRs into entries — see
+[MAINTAINING.md](MAINTAINING.md) for the step-by-step process.
+
 ## Repo layout
 
 ```
-index.html                      the app (single file, no dependencies beyond Leaflet CDN)
+index.html                      the app (Leaflet, Tailwind & web fonts via CDN; TOA-branded)
 data.js                         the dataset — this is what you edit
 scripts/validate.js             schema validation (runs in CI and locally)
+scripts/sync-to-site.sh         copy index.html + data.js into the TOA site to deploy
 .github/ISSUE_TEMPLATE/         suggest & flag forms
 .github/workflows/validate.yml  CI validation on every data PR
+CONTRIBUTING.md                 entry schema & contributor workflow
+MAINTAINING.md                  maintainer guide — turn issues & PRs into data.js
 ```
 
 ## License & data
