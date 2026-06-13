@@ -1,0 +1,62 @@
+# Boston AI Atlas
+
+The living map of Greater Boston's AI ecosystem — built for founders, presented by
+[The Open Accelerator](https://the-open-accelerator.com) (an initiative between the
+MA AI Hub, Red Hat & IBM).
+
+**Four ways to explore 100+ organizations:**
+
+- 🗺️ **Map** — every VC, lab, accelerator and community pinned across Greater Boston
+- ✨ **Galaxy** — an animated network of how the ecosystem connects (spinouts, funds, hosts)
+- 🧭 **Founder Journey** — resources curated by stage, from first spark to scale
+- 📇 **Directory** — full-text search with category and stage filters
+
+## Run it
+
+It's a static site — no build step.
+
+```bash
+# locally
+python3 -m http.server     # then open http://localhost:8000
+```
+
+Or just open `index.html` in a browser.
+
+## Deploy (GitHub Pages)
+
+1. Push this repo to GitHub
+2. **Settings → Pages → Source: Deploy from a branch → `main` / root**
+3. Done — the atlas is live at `https://<org>.github.io/<repo>/`
+
+**After publishing:** set `GH_REPO` in `index.html` (search for `const GH_REPO`)
+to your `org/repo` so the in-app **Suggest** and **Flag** buttons point at this
+repository's issue forms.
+
+## Contribute
+
+The atlas is community-maintained:
+
+- **➕ Suggest an entry** — [open a suggestion](../../issues/new?template=suggest-entry.yml)
+  or edit [`data.js`](data.js) and send a PR
+- **🚩 Flag an entry** — [report something outdated or miscategorized](../../issues/new?template=flag-entry.yml)
+  (or use the Flag button on any entry inside the atlas)
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the entry schema and review process.
+Every PR touching `data.js` is automatically validated by CI.
+
+## Repo layout
+
+```
+index.html                      the app (single file, no dependencies beyond Leaflet CDN)
+data.js                         the dataset — this is what you edit
+scripts/validate.js             schema validation (runs in CI and locally)
+.github/ISSUE_TEMPLATE/         suggest & flag forms
+.github/workflows/validate.yml  CI validation on every data PR
+```
+
+## License & data
+
+Curated June 2026. Some pin locations are approximate (neighborhood-level) and
+community groups move between venues — check official sites before visiting.
+
+© 2026 The Open Accelerator.

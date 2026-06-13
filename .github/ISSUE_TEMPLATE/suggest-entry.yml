@@ -1,0 +1,94 @@
+name: "➕ Suggest a new entry"
+description: "Propose an organization, program, or event for the Boston AI Atlas"
+title: "[New entry] "
+labels: ["new-entry"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping keep the Boston AI Atlas alive! A maintainer will review your
+        suggestion and add it via pull request. Comfortable with Git? You can also edit
+        `data.js` and open a PR directly — see CONTRIBUTING.md.
+  - type: input
+    id: org-name
+    attributes:
+      label: Organization name
+      placeholder: "e.g. Acme AI Labs"
+    validations:
+      required: true
+  - type: input
+    id: website
+    attributes:
+      label: Official website
+      placeholder: "https://…"
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - AI Companies & Startups
+        - Venture Capital
+        - Angel Groups
+        - Accelerators & Founder Support
+        - University Labs & Centers
+        - Corporate AI Labs
+        - Communities & Meetups
+        - Major Events
+        - Government & Policy
+        - Spaces & Hubs
+        - Student Groups
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Address or neighborhood
+      description: "Street address if it has one; neighborhood (e.g. 'Kendall Sq') if venues vary"
+      placeholder: "e.g. 1 Broadway, Cambridge"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: "1–2 factual sentences. What is it, and what does it do?"
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters for founders
+      description: "One sentence on why an early-stage founder should care"
+    validations:
+      required: true
+  - type: checkboxes
+    id: stages
+    attributes:
+      label: Which founder stages does it serve?
+      options:
+        - label: "💡 Spark — learn & plug in"
+        - label: "🔬 Validate — test the idea"
+        - label: "🔧 Build — team, space & compute"
+        - label: "💸 Fund — raise your first round"
+        - label: "🚀 Scale — grow & lead"
+  - type: input
+    id: tags
+    attributes:
+      label: Tags
+      description: "2–4 short lowercase tags, comma-separated"
+      placeholder: "e.g. robotics, lab space"
+  - type: textarea
+    id: connections
+    attributes:
+      label: Connected entries (optional)
+      description: "Other atlas entries this is related to (spinout of, hosted at, funded by…)"
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: "This information is accurate to the best of my knowledge, and this is a genuine ecosystem resource (not promotional spam)"
+          required: true
+        - label: "I have a direct affiliation with this organization (disclosure — affiliation is fine, just tell us)"

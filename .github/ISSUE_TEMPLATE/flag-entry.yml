@@ -1,0 +1,42 @@
+name: "🚩 Flag an entry"
+description: "Report an entry that is outdated, miscategorized, or no longer active"
+title: "[Flag] "
+labels: ["flag"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks — flags are how the atlas stays trustworthy. A maintainer will verify
+        and update or remove the entry.
+  - type: input
+    id: entry-id
+    attributes:
+      label: Which entry?
+      description: "Pre-filled if you used the Flag button in the atlas"
+      placeholder: "Entry name (id: entry-id)"
+    validations:
+      required: true
+  - type: dropdown
+    id: reason
+    attributes:
+      label: What's wrong?
+      options:
+        - No longer active / shut down
+        - Wrong category
+        - Outdated information (funding, program, dates…)
+        - Wrong location
+        - Duplicate of another entry
+        - Broken or wrong website link
+        - Other (explain below)
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: "What changed? A link to a source helps a lot."
+  - type: input
+    id: source
+    attributes:
+      label: Source link (optional)
+      placeholder: "https://…"
