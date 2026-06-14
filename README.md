@@ -20,7 +20,8 @@ MA AI Hub, Red Hat & IBM).
 ## Run it
 
 It's a static site — no build step.
-Note : Some TOA images will not work if run locally. The core functionality continues to work locally 
+
+**Note :** Some TOA images will not work if run locally. The core functionality continues to work locally 
 
 ```bash
 # locally
