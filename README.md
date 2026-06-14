@@ -23,6 +23,10 @@ It's a static site — no build step.
 
 **Note :** Some TOA images will not work if run locally. The core functionality continues to work locally 
 
+The hosted live page can be accessed at https://the-open-accelerator.com/ecosystem/
+
+
+
 ```bash
 # locally
 python3 -m http.server     # then open http://localhost:8000
