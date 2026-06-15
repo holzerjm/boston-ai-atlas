@@ -667,6 +667,16 @@ const DATA = [
  tags:["festival","May"], stages:[1,4]},
 
 // ---------- GOVERNMENT & POLICY ----------
+{id:"mass-ai-coalition", name:"Massachusetts AI Coalition", cat:"gov", loc:"Boston", approx:true,
+  lat:42.3554, lng:-71.0620, url:"https://massaicoalition.com",
+  desc:"Industry coalition of companies advocating for responsible AI policy in Massachusetts. Hosts events, produces policy recommendations, and connects AI companies with state government.",
+  why:"The bridge between Boston's AI builders and the policymakers shaping the regulatory environment. Member companies host events year-round. Essential for founders navigating AI compliance.",
+  tags:["policy","advocacy","regulation"], links:["aihub"]},
+{id:"masstech", name:"MassTech Collaborative", cat:"gov", loc:"75 North Drive, Westborough, MA",
+  lat:42.2695, lng:-71.6162, url:"https://masstech.org",
+  desc:"Quasi-public state agency driving technology innovation across Massachusetts. Manages the MA AI Hub, broadband programs, MGHPCC, and innovation economy initiatives.",
+  why:"The parent organization of the MA AI Hub. Controls state-level tech funding, manages the Google AI training partnership, and runs programs that directly benefit early-stage AI founders.",
+  tags:["state agency","funding","infrastructure"], links:["aihub","mghpcc"]},
 {id:"aihub", name:"Massachusetts AI Hub", cat:"gov", loc:"MassTech, Boston", approx:true,
  lat:42.3604, lng:-71.0610, url:"https://aihub.masstech.org", badge:"$100M initiative",
  desc:"The state's $100M AI initiative (Mass Leads Act, launched Dec 2024): compute access, the AI Models Innovation Challenge ($3M+), and The Open Accelerator — its startup residency with Red Hat & IBM.",
