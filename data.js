@@ -274,6 +274,16 @@ const DATA = [
  tags:["health","oncology"], stages:[]},
 
 // ---------- VENTURE CAPITAL ----------
+{id:"venx", name:"Ven^X", cat:"vc", loc:"125 High St, Boston",
+ lat:42.3553, lng:-71.0541, url:"https://www.venx.vc",
+ desc:"Boston's first collaborative deep-tech VC hub, where venture investors co-locate downtown to share knowledge, work with portfolio companies, and syndicate deals in deep tech and AI.",
+ why:"For founders in hard deep-tech/AI problem spaces, it concentrates investors who already understand the domain and pool resources to syndicate larger checks.",
+ tags:["deep tech","syndication"], stages:[4], links:[]},
+{id:"epipelagic", name:"Epipelagic Ventures", cat:"vc", loc:"1 Broadway, Cambridge",
+ lat:42.3626, lng:-71.0843, url:"https://www.epipelagic.vc",
+ desc:"A founder-first venture studio in Kendall Square that surrounds early-stage startups with capital, mentorship and hands-on operational support to reach their next milestone.",
+ why:"A hands-on venture-studio model for pre-seed founders — especially edtech, consumer, health and wellness, or moonshot ideas — pairing funding with active build support.",
+ tags:["venture studio","early stage"], stages:[3,4], links:[]},
 {id:"nextview", name:"NextView Ventures", cat:"vc", loc:"Boston, Seaport", approx:true,
   lat:42.3519, lng:-71.0444, url:"https://nextview.vc",
   desc:"Seed-stage fund focused on 'redesigning the everyday economy' — backing founders using software and AI to solve mass-market problems.",
