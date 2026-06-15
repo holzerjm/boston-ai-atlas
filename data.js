@@ -503,6 +503,35 @@ const DATA = [
  desc:"AI-first venture studio at CIC, co-building companies with founders.",
  why:"A venture-studio path: trade some ownership for hands-on company building.",
  tags:["venture studio","AI-first"], stages:[2,3,4], links:["cic"]},
+{id:"founder-institute", name:"Founder Institute Boston", cat:"accel", loc:"Boston", approx:true,
+  lat:42.3554, lng:-71.0620, url:"https://fi.co/s/boston",
+  desc:"Global pre-seed accelerator's Boston chapter. 4-month program for idea-stage to early-traction founders. Low equity model (3.5%).",
+  why:"Lowest barrier to entry of any structured program. Strong alumni network. Good first step for founders who aren't yet ready for Techstars or MassChallenge.",
+  tags:["pre-seed","idea-stage","low equity"], stages:[1,2]},
+
+{id:"learnlaunch", name:"LearnLaunch Accelerator", cat:"accel", loc:"Boston, Back Bay", approx:true,
+  lat:42.3489, lng:-71.0785, url:"https://learnlaunch.com",
+  desc:"EdTech-focused accelerator supporting startups building AI-powered tools for education and workforce development.",
+  why:"The definitive EdTech accelerator in the Northeast. Strong connections to K-12 districts, higher ed institutions, and workforce development organizations.",
+  tags:["edtech","workforce","education"], stages:[3,4]},
+
+{id:"pharmstars", name:"PharmStars", cat:"accel", loc:"Boston", approx:true,
+  lat:42.3554, lng:-71.0530, url:"https://pharmstars.com",
+  desc:"Digital health accelerator creating direct pathways between AI/health startups and pharmaceutical companies.",
+  why:"Unique value prop: accelerates startups by providing warm intros to pharma buyers, not just mentorship. Critical for AI-health founders in the Boston biotech ecosystem.",
+  tags:["digital health","pharma","healthtech"], stages:[3,4]},
+
+{id:"ai-biohub", name:"AI BioHub (C10 Labs)", cat:"accel", loc:"Kendall Square, Cambridge",
+  lat:42.3629, lng:-71.0843, url:"https://c10labs.com",
+  desc:"AI-driven TechBio accelerator in Kendall Square. Partnership between C10 Labs and the biotech industry. Spring 2026 cohort active.",
+  why:"Sits at the intersection of AI and life sciences — exactly where Boston's two strongest ecosystems collide. Kendall Square location provides proximity to pharma HQs.",
+  tags:["biotech","AI","life sciences"], stages:[3,4], links:["c10"]},
+
+{id:"yc-boston", name:"Y Combinator (Boston alumni)", cat:"accel", loc:"Remote / SF (Boston-based founders)", approx:true,
+  lat:42.3601, lng:-71.0589, url:"https://www.ycombinator.com/companies/industry/ai/boston",
+  desc:"16+ YC-funded AI startups are headquartered in Boston. While YC runs from SF, it's a critical pipeline — many founders return post-batch to build in the Boston ecosystem.",
+  why:"YC's Boston alumni network is an invisible but powerful layer of the ecosystem. YC alumni dinners and founder groups are active in Cambridge.",
+  tags:["top-tier","remote","alumni network"], stages:[2,3,4]},
 
 // ---------- SPACES & HUBS ----------
 {id:"cic", name:"CIC Cambridge", cat:"space", loc:"1 Broadway, Kendall Sq",
