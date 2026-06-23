@@ -65,12 +65,24 @@ Every PR touching `data.js` is automatically validated by CI.
 index.html                      the app (Leaflet, Tailwind & web fonts via CDN; TOA-branded)
 data.js                         the dataset — this is what you edit
 scripts/validate.js             schema validation (runs in CI and locally)
+scripts/export-csv.js           export the dataset to a spreadsheet-friendly CSV
 scripts/sync-to-site.sh         copy index.html + data.js into the TOA site to deploy
 .github/ISSUE_TEMPLATE/         suggest & flag forms
 .github/workflows/validate.yml  CI validation on every data PR
 CONTRIBUTING.md                 entry schema & contributor workflow
 MAINTAINING.md                  maintainer guide — turn issues & PRs into data.js
 ```
+
+## Export to a spreadsheet
+
+Turn the dataset into a CSV you can open in Google Sheets or Excel:
+
+```bash
+node scripts/export-csv.js          # writes atlas.csv (one row per organization)
+```
+
+Then import it — Google Sheets: *File → Import → Upload*; Excel: *Data → From Text/CSV*.
+Columns include name, category, location, lat/lng, website, description, tags and stages.
 
 ## License & data
 

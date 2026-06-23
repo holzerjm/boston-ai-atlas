@@ -1,0 +1,5 @@
+# macOS
+.DS_Store
+
+# Generated CSV exports (run: node scripts/export-csv.js)
+*.csv
