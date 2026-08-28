@@ -404,6 +404,16 @@ const DATA = [
  desc:"The Commonwealth's own venture arm — START grants and early capital for MA deep-tech startups.",
  why:"Non-dilutive START grants (up to $500K) for SBIR-funded companies. Free money, seriously.",
  tags:["state fund","grants"], stages:[3,4], links:["aihub"]},
+{id:"foundersedge", name:"FoundersEdge", cat:"vc", loc:"100 Summer St, Boston", approx:true,
+ lat:42.3538, lng:-71.0574, url:"https://www.foundersedge.com",
+ desc:"Pre-seed fund writing $100–$200K first checks into AI-native, software-first B2B startups, run by post-exit operators Greg Raiz (Raizlabs, Techstars Boston) and Jess Lynch (Wishroute).",
+ why:"Operator GPs who lead or co-invest without taking a board seat, plus a CEO peer cohort and open demo nights like Ditch the Deck — first-check money that comes with hands-on company.",
+ tags:["pre-seed","B2B SaaS","AI-native"], stages:[2,4]},
+{id:"milemark", name:"Milemark Capital", cat:"vc", loc:"303 Third St, Cambridge",
+ lat:42.3643, lng:-71.0840, url:"https://www.milemark.capital",
+ desc:"Kendall Square firm founded in 2022 investing pre-seed and seed in startups differentiated by proprietary AI systems, models and data; founding partners include MIT Sloan's Sinan Aral.",
+ why:"Backing diverse founding teams is the explicit thesis, the MIT connection is real, and the portfolio already lists 17+ applied-AI companies — a natural first-round conversation in Kendall's orbit.",
+ tags:["pre-seed","seed","applied AI"], stages:[4]},
 
 // ---------- ANGEL GROUPS ----------
 {id:"bha", name:"Boston Harbor Angels", cat:"angel", loc:"Boston (meets downtown)", approx:true,
