@@ -235,6 +235,11 @@ html:not(.dark) .map-results{background:rgba(255,255,255,.97)}
 .dr-why b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:#9fb4ff;margin-bottom:5px}
 .dr-why div{font-size:13px;line-height:1.55;color:#c4cdf0}
 .dr-sec{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin:18px 0 9px}
+.dr-verified{font-size:12px;color:var(--muted);margin-top:16px}
+.dr-verified.stale{color:#fbbf24}
+.stale-tag{color:#fbbf24;border-color:rgba(251,191,36,.4)}
+/* Light chrome: amber #fbbf24 washes out on white panels — darken it there (icon + text still carry the meaning). */
+html:not(.dark) .dr-verified.stale,html:not(.dark) .stale-tag{color:#b45309;border-color:rgba(180,83,9,.35)}
 .dr-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:6px}
 .btn{appearance:none;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:7px}
 .btn-pri{background:linear-gradient(90deg,#ffd54f,#ffc600);color:#000}
@@ -497,9 +502,22 @@ document.querySelectorAll(".tab[data-view]").forEach(t=>{
     if(currentView==="map" && map) setTimeout(()=>map.invalidateSize(),60);
     if(currentView==="galaxy") { gxResize(); gxKick(); }
     window.scrollTo({top:0});
+    updateURL();
   });
 });
 function switchView(name){ document.querySelector(`.tab[data-view="${name}"]`).click(); }
+
+/* ---------- freshness ---------- */
+const STALE_MONTHS = 12;
+const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const fmtMonth = v => { const [y,m] = v.split("-"); return `${MONTH_NAMES[+m-1]} ${y}`; };
+const fmtVerified = v => `Verified ${fmtMonth(v)}`;
+function isStale(d){
+  if(!d.lastVerified) return false;
+  const [y,m] = d.lastVerified.split("-");
+  const now = new Date();
+  return (now.getFullYear()*12 + now.getMonth()+1) - (+y*12 + +m) > STALE_MONTHS;
+}
 
 /* ---------- detail drawer ---------- */
 function openDrawer(id){
@@ -520,17 +538,23 @@ function openDrawer(id){
   const allRel = [...rel, ...backRel];
   if(allRel.length) html += `<div class="dr-sec">Connected to</div><div class="chips">` +
     allRel.map(x=>{const o=byId[x];return `<span class="chip" onclick="openDrawer('${x}')"><span class="lg-dot" style="color:${cColor(o.cat)};background:${cColor(o.cat)}"></span>${o.name}</span>`}).join("") + `</div>`;
+  if(d.lastVerified) html += isStale(d)
+    ? `<div class="dr-verified stale">⚠️ Last verified ${fmtMonth(d.lastVerified)} — details may have changed. Spot something off? Use 🚩 Flag below.</div>`
+    : `<div class="dr-verified">✓ ${fmtVerified(d.lastVerified)}</div>`;
   html += `<div class="dr-actions">
     <a class="btn btn-pri" href="${d.url}" target="_blank" rel="noopener">Visit website ↗</a>
     <button class="btn btn-sec" onclick="goToMap('${d.id}')">Show on map</button>
+    <button class="btn btn-sec" onclick="copyLink(this)" title="Copy a shareable link to this entry">🔗 Copy link</button>
     <button class="btn btn-sec" onclick="flagEntry('${d.id}')" title="Report this entry as outdated, miscategorized, or no longer active">🚩 Flag</button>
   </div>`;
   $("drBody").innerHTML = html;
   $("drawer").classList.add("open");
   $("overlay").classList.add("on");
+  drawerId = d.id;
+  updateURL();
 }
 window.openDrawer = openDrawer;
-function closeDrawer(){ $("drawer").classList.remove("open"); $("overlay").classList.remove("on"); }
+function closeDrawer(){ $("drawer").classList.remove("open"); $("overlay").classList.remove("on"); drawerId = null; updateURL(); }
 $("drClose").addEventListener("click", closeDrawer);
 $("overlay").addEventListener("click", closeDrawer);
 document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeDrawer(); });
@@ -895,11 +919,36 @@ function renderCards(){
       <h3>${d.name}</h3>
       <div class="c-cat" style="color:${col}">${cLabel(d.cat)} · ${d.loc.split(",")[0]}</div>
       <p>${d.desc.length>150 ? d.desc.slice(0,150)+"…" : d.desc}</p>
-      <div class="c-meta">${d.badge?`<span class="badge">${d.badge}</span>`:""}${(d.tags||[]).slice(0,3).map(t=>`<span class="tag">${t}</span>`).join("")}</div>
+      <div class="c-meta">${isStale(d)?`<span class="tag stale-tag" title="Last verified ${fmtMonth(d.lastVerified)}">⚠ not recently verified</span>`:""}${d.badge?`<span class="badge">${d.badge}</span>`:""}${(d.tags||[]).slice(0,3).map(t=>`<span class="tag">${t}</span>`).join("")}</div>
     </div>`;
   }).join("") || `<div style="color:var(--muted)">No matches — try clearing filters, or <a href="#" onclick="suggestEntry();return false" style="color:#ffc600">suggest a new entry</a>.</div>`;
 }
 renderCards();
+
+/* ---------- deep links (shareable URLs) ---------- */
+let drawerId = null;
+function updateURL(){
+  const url = location.pathname
+    + (drawerId ? `?entry=${drawerId}` : "")
+    + (currentView !== "map" ? `#${currentView}` : "");
+  try{ history.replaceState(null, "", url); }catch(e){}
+}
+function copyLink(btn){
+  if(!navigator.clipboard) return;
+  navigator.clipboard.writeText(location.href).then(()=>{
+    if(!btn.dataset.label) btn.dataset.label = btn.textContent;
+    btn.textContent = "✓ Copied";
+    setTimeout(()=>{ btn.textContent = btn.dataset.label; }, 1500);
+  }).catch(()=>{});
+}
+window.copyLink = copyLink;
+// On load: honor #<view> and ?entry=<id>; unknown values are silently ignored.
+(function(){
+  const h = location.hash.slice(1);
+  if(["map","galaxy","journey","directory"].includes(h) && h !== currentView) switchView(h);
+  const e = new URLSearchParams(location.search).get("entry");
+  if(e && byId[e]) openDrawer(e);
+})();
 </script>
 <script>
   // Mobile menu toggle for the standard TOA site header

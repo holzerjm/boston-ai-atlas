@@ -75,12 +75,15 @@ tips), and `DATA` (the array of entries). One entry:
  lat:42.3629, lng:-71.0838, approx:true, url:"https://acme.ai", badge:"Applications open",
  desc:"1–2 factual sentences, max 400 chars.",
  why:"Why an early-stage founder should care.",
- tags:["robotics","warehouse"], stages:[3,4], links:["csail"]},
+ tags:["robotics","warehouse"], stages:[3,4], links:["csail"], lastVerified:"2026-08"},
 ```
 
 `id` kebab-case & unique · `cat` ∈ CATS keys · lat/lng inside MA bounds · `url` https ·
 `links` must resolve to real ids (they draw Galaxy edges) · `approx: true` when the pin is
-neighbourhood-level. Full reference: `CONTRIBUTING.md`; enforced by `scripts/validate.js`.
+neighbourhood-level · `lastVerified` is the month a maintainer last **actually checked**
+the org (validator warns if missing, errors if malformed; drawer shows "✓ Verified …",
+entries >12 months old get a stale marker). Full reference: `CONTRIBUTING.md`; enforced
+by `scripts/validate.js`.
 
 **Current composition (123 entries):** vc 28 · accel 19 · startup 16 · university 12 ·
 corporate 12 · event 8 · angel 7 · community 7 · student 6 · space 4 · gov 4.
@@ -124,6 +127,7 @@ transparent moderation, contribution history, on-brand for an open-source accele
 |--------|---------|
 | `scripts/validate.js` | Schema + integrity validation. Run before every commit. |
 | `scripts/badge.js` | Regenerates `badge.json`. CI runs it; safe to run locally. |
+| `scripts/stale.js` | Freshness report (`lastVerified` older than N months, default 12). Never fails; CI appends it to the job summary. |
 | `scripts/export-csv.js` | Dataset → `atlas.csv` for Sheets/Excel. Output is gitignored. |
 | `scripts/sync-to-site.sh` | Copies `index.html` + `data.js` into the TOA site tree. |
 
@@ -164,15 +168,13 @@ GitHub Pages copy exists.
 ## 6. Status & known gaps
 
 **Done:** four views · 123 verified entries · TOA branding · GitHub contribution loop ·
-CI validation + auto badge · maintainer docs · CSV export · MIT licence · live at
-`/ecosystem/`.
+CI validation + auto badge · maintainer docs · CSV export · `lastVerified` freshness
+field + stale report · shareable deep links (`?entry=` / `#view`) · MIT licence ·
+live at `/ecosystem/`.
 
 **Open items / ideas, roughly by value:**
 
-1. **`lastVerified` per entry** — the dataset has no freshness signal. Adding a date field
-   (plus a "verified within N months" filter or a staleness report) is the single biggest
-   trust improvement, and was flagged as important early on.
-2. **Basemap migration off CARTO raster** — CARTO's raster basemaps are officially
+1. **Basemap migration off CARTO raster** — CARTO's raster basemaps are officially
    "being retired" (no date); the free `?key=` fix (2026-08-28) is a patch, not a home.
    Recommended destination (researched 2026-08-28): **OpenFreeMap** via the
    `maplibre-gl-leaflet` binding — keyless, unlimited, commercial use permitted, dark +
@@ -180,24 +182,25 @@ CI validation + auto badge · maintainer docs · CSV export · MIT licence · li
    VersaTiles as a one-line fallback style URL. Google Maps rejected (mandatory billing
    account + key + ToS bars its tiles in Leaflet); raw OSM tiles rejected (no dark
    style, no SLA); Stadia viable but $20/mo for for-profit-backed projects.
-3. **Issue → PR automation** — a GitHub Action that parses a `new-entry` issue form and
+2. **Issue → PR automation** — a GitHub Action that parses a `new-entry` issue form and
    opens a draft PR with the entry block pre-built (maintainer still geocodes/reviews).
    Would cut the manual step MAINTAINING.md Part 1 describes.
-4. **Geocoding helper** — `scripts/geocode.js` wrapping Nominatim so maintainers don't
+3. **Geocoding helper** — `scripts/geocode.js` wrapping Nominatim so maintainers don't
    hand-copy coordinates from Google Maps.
-5. **Accessibility pass** — keyboard navigation for the Galaxy canvas, focus states,
+4. **Accessibility pass** — keyboard navigation for the Galaxy canvas, focus states,
    `prefers-reduced-motion` for the animated views, contrast audit.
-6. **Mobile polish** — the Galaxy view is cramped on small screens.
-7. **Deep links** — `?entry=csail` / `#map` so a specific org or view can be shared.
-8. **Self-hosted assets** — vendoring Leaflet/Tailwind/fonts/logo would remove CDN
+5. **Mobile polish** — the Galaxy view is cramped on small screens.
+6. **Self-hosted assets** — vendoring Leaflet/Tailwind/fonts/logo would remove CDN
    dependence and fix the `file://` experience. (Beyond the TOA logo, the favicon and
    `og:image` are also hot-linked — from the-open-accelerator.com and people.redhat.com.)
-9. **Category balance** — `space`, `gov`, `student` are thin (4–6 entries); `vc` is heavy.
-10. **Tailwind Play CDN** prints a console warning about production use; if it ever
-    matters, precompile or drop it (most styling is hand-written CSS anyway).
+7. **Category balance** — `space`, `gov`, `student` are thin (4–6 entries); `vc` is heavy.
+8. **Tailwind Play CDN** prints a console warning about production use; if it ever
+   matters, precompile or drop it (most styling is hand-written CSS anyway).
 
-*(Resolved 2026-08-28: README/CONTRIBUTING described a GitHub Pages deploy path that
-was never how this ships — both now describe the real sync-to-site flow.)*
+*(Resolved 2026-08-28: README/CONTRIBUTING described a GitHub Pages deploy path that was
+never how this ships — both now describe the real sync-to-site flow. `lastVerified`
+freshness field + `scripts/stale.js` report shipped, all 123 entries backfilled from git
+add-dates. Deep links `?entry=<id>` / `#<view>` + a drawer "Copy link" button shipped.)*
 
 **Deliberate non-goals:** no backend/database, no build step, no auto-publishing of
 community submissions, no user accounts.
