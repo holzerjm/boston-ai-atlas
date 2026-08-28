@@ -509,7 +509,7 @@ function switchView(name){ document.querySelector(`.tab[data-view="${name}"]`).c
 
 /* ---------- freshness ---------- */
 const STALE_MONTHS = 12;
-const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const fmtMonth = v => { const [y,m] = v.split("-"); return `${MONTH_NAMES[+m-1]} ${y}`; };
 const fmtVerified = v => `Verified ${fmtMonth(v)}`;
 function isStale(d){
