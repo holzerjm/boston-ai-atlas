@@ -21,28 +21,33 @@ MA AI Hub, Red Hat & IBM).
 
 It's a static site — no build step.
 
-**Note :** Some TOA images will not work if run locally. The core functionality continues to work locally 
-
-The hosted live page can be accessed at https://the-open-accelerator.com/ecosystem/
-
-
+The hosted live page is at https://the-open-accelerator.com/ecosystem/
 
 ```bash
 # locally
 python3 -m http.server     # then open http://localhost:8000
 ```
 
-Or just open `index.html` in a browser.
+Opening `index.html` straight from `file://` mostly works, but a few hot-linked TOA
+images will be broken and it's not how the page ships — prefer the local server above.
 
-## Deploy (GitHub Pages)
+## Deploy
 
-1. Push this repo to GitHub
-2. **Settings → Pages → Source: Deploy from a branch → `main` / root**
-3. Done — the atlas is live at `https://<org>.github.io/<repo>/`
+The atlas is **not** deployed from GitHub Pages — it ships as part of
+[the TOA website](https://the-open-accelerator.com). To publish the current state:
 
-**After publishing:** set `GH_REPO` in `index.html` (search for `const GH_REPO`)
-to your `org/repo` so the in-app **Suggest** and **Flag** buttons point at this
-repository's issue forms.
+```bash
+git pull
+./scripts/sync-to-site.sh /path/to/toa-site/src/ecosystem
+# then deploy the TOA site as usual, e.g. npm run deploy:no-delete
+```
+
+The page must be served at a directory URL (`…/ecosystem/`, trailing slash) so the
+relative `data.js` include resolves.
+
+**If the repo ever moves (or you host your own copy):** set `GH_REPO` in
+`index.html` (search for `const GH_REPO`) to your `org/repo` so the in-app
+**Suggest** and **Flag** buttons point at the right issue forms.
 
 ## Contribute
 
@@ -65,6 +70,7 @@ Every PR touching `data.js` is automatically validated by CI.
 index.html                      the app (Leaflet, Tailwind & web fonts via CDN; TOA-branded)
 data.js                         the dataset — this is what you edit
 scripts/validate.js             schema validation (runs in CI and locally)
+scripts/badge.js                regenerates badge.json (entry count — CI runs it on merge)
 scripts/export-csv.js           export the dataset to a spreadsheet-friendly CSV
 scripts/sync-to-site.sh         copy index.html + data.js into the TOA site to deploy
 .github/ISSUE_TEMPLATE/         suggest & flag forms
@@ -87,7 +93,7 @@ Columns include name, category, location, lat/lng, website, description, tags an
 
 ## License & data
 
-Curated June 2026. Some pin locations are approximate (neighborhood-level) and
+Curated since June 2026. Some pin locations are approximate (neighborhood-level) and
 community groups move between venues — check official sites before visiting.
 
 © 2026 The Open Accelerator.

@@ -4,7 +4,8 @@
 Claude Code (or by any new maintainer) without the original chat history. It captures
 what this project is, how it's built, what's been decided, and what's left.
 
-**Last updated:** after the CSV-export change (`cf3239c`), 121 entries.
+**Last updated:** 2026-08-28, after the docs-sync change; 123 entries
+(FoundersEdge and Milemark Capital added via issues #12/#13).
 Repo: <https://github.com/holzerjm/boston-ai-atlas> · Live: <https://the-open-accelerator.com/ecosystem/>
 
 ---
@@ -74,7 +75,7 @@ tips), and `DATA` (the array of entries). One entry:
 `links` must resolve to real ids (they draw Galaxy edges) · `approx: true` when the pin is
 neighbourhood-level. Full reference: `CONTRIBUTING.md`; enforced by `scripts/validate.js`.
 
-**Current composition (121 entries):** vc 26 · accel 19 · startup 16 · university 12 ·
+**Current composition (123 entries):** vc 28 · accel 19 · startup 16 · university 12 ·
 corporate 12 · event 8 · angel 7 · community 7 · student 6 · space 4 · gov 4.
 
 ### Editorial voice
@@ -97,6 +98,9 @@ transparent moderation, contribution history, on-brand for an open-source accele
   stage checkboxes, spam/affiliation confirmations.
 - `.github/ISSUE_TEMPLATE/flag-entry.yml` — reason dropdown + source link; the entry id is
   prefilled by the app.
+- The forms apply `new-entry` / `flag` labels. ⚠️ Those labels must exist in the repo —
+  GitHub **silently skips** labels that don't (they were missing until 2026-08-28, which
+  is why issues #12/#13 arrived unlabelled). If the repo ever moves, recreate them.
 - **Nothing auto-publishes.** A maintainer converts each issue into a `data.js` edit.
 
 ### CI (`.github/workflows/validate.yml`)
@@ -152,7 +156,7 @@ GitHub Pages copy exists.
 
 ## 6. Status & known gaps
 
-**Done:** four views · 121 verified entries · TOA branding · GitHub contribution loop ·
+**Done:** four views · 123 verified entries · TOA branding · GitHub contribution loop ·
 CI validation + auto badge · maintainer docs · CSV export · MIT licence · live at
 `/ecosystem/`.
 
@@ -166,17 +170,19 @@ CI validation + auto badge · maintainer docs · CSV export · MIT licence · li
    Would cut the manual step MAINTAINING.md Part 1 describes.
 3. **Geocoding helper** — `scripts/geocode.js` wrapping Nominatim so maintainers don't
    hand-copy coordinates from Google Maps.
-4. **README staleness** — the "Deploy (GitHub Pages)" section describes a path that isn't
-   how this actually ships (rsync into the TOA site). Rewrite or delete.
-5. **Accessibility pass** — keyboard navigation for the Galaxy canvas, focus states,
+4. **Accessibility pass** — keyboard navigation for the Galaxy canvas, focus states,
    `prefers-reduced-motion` for the animated views, contrast audit.
-6. **Mobile polish** — the Galaxy view is cramped on small screens.
-7. **Deep links** — `?entry=csail` / `#map` so a specific org or view can be shared.
-8. **Self-hosted assets** — vendoring Leaflet/Tailwind/fonts/logo would remove CDN
-   dependence and fix the `file://` experience.
-9. **Category balance** — `space`, `gov`, `student` are thin (4–6 entries); `vc` is heavy.
-10. **Tailwind Play CDN** prints a console warning about production use; if it ever
-    matters, precompile or drop it (most styling is hand-written CSS anyway).
+5. **Mobile polish** — the Galaxy view is cramped on small screens.
+6. **Deep links** — `?entry=csail` / `#map` so a specific org or view can be shared.
+7. **Self-hosted assets** — vendoring Leaflet/Tailwind/fonts/logo would remove CDN
+   dependence and fix the `file://` experience. (Beyond the TOA logo, the favicon and
+   `og:image` are also hot-linked — from the-open-accelerator.com and people.redhat.com.)
+8. **Category balance** — `space`, `gov`, `student` are thin (4–6 entries); `vc` is heavy.
+9. **Tailwind Play CDN** prints a console warning about production use; if it ever
+   matters, precompile or drop it (most styling is hand-written CSS anyway).
+
+*(Resolved 2026-08-28: README/CONTRIBUTING described a GitHub Pages deploy path that
+was never how this ships — both now describe the real sync-to-site flow.)*
 
 **Deliberate non-goals:** no backend/database, no build step, no auto-publishing of
 community submissions, no user accounts.

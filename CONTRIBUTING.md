@@ -62,7 +62,8 @@ unverifiable. When in doubt we mark things clearly rather than delete silently.
 
 - CI (`scripts/validate.js`) must pass: unique ids, valid category, MA coordinates,
   https links, resolvable connections
-- One maintainer approval merges; data PRs deploy automatically via GitHub Pages
+- One maintainer approval merges; a maintainer then publishes the update to the
+  live site (see [MAINTAINING.md](MAINTAINING.md), Part 3 — merging alone doesn't deploy)
 - Flags with a source link get fast-tracked
 
 ## Maintainers
