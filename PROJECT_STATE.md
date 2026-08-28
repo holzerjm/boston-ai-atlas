@@ -52,6 +52,13 @@ data.js        ~56KB  CATS, STAGES, DATA — the only file most contributors tou
   `/ecosystem`.
 - External runtime deps, all CDN: Leaflet 1.9.4 (map), Tailwind Play CDN, Google Fonts
   (Red Hat Display), plus the TOA logo hot-linked from `the-open-accelerator.com`.
+- **Map tiles:** CARTO raster basemaps (`dark_all`/`light_all`). Since ~2026-08-25 CARTO
+  watermarks keyless requests ("API KEY REQUIRED"), so the tile URLs in `index.html`
+  carry a `?key=` parameter — a free key (no account; commercial use permitted;
+  5M tiles/month) registered for `the-open-accelerator.com` via
+  <https://carto.com/basemaps/apikey>. The key is public by design (referer-scoped).
+  ⚠️ CARTO says the raster basemaps are *being retired* (no date announced) — see the
+  basemap-migration backlog item.
   *Consequence:* opening `index.html` from `file://` shows a broken TOA logo — expected,
   noted in the README.
 - **Brand:** dark theme, Red Hat red (`#EE0000` / `#ff5c45`) for primary actions, Red Hat
@@ -165,21 +172,29 @@ CI validation + auto badge · maintainer docs · CSV export · MIT licence · li
 1. **`lastVerified` per entry** — the dataset has no freshness signal. Adding a date field
    (plus a "verified within N months" filter or a staleness report) is the single biggest
    trust improvement, and was flagged as important early on.
-2. **Issue → PR automation** — a GitHub Action that parses a `new-entry` issue form and
+2. **Basemap migration off CARTO raster** — CARTO's raster basemaps are officially
+   "being retired" (no date); the free `?key=` fix (2026-08-28) is a patch, not a home.
+   Recommended destination (researched 2026-08-28): **OpenFreeMap** via the
+   `maplibre-gl-leaflet` binding — keyless, unlimited, commercial use permitted, dark +
+   light styles, ~15-line buildless change, Leaflet and all marker/popup code untouched;
+   VersaTiles as a one-line fallback style URL. Google Maps rejected (mandatory billing
+   account + key + ToS bars its tiles in Leaflet); raw OSM tiles rejected (no dark
+   style, no SLA); Stadia viable but $20/mo for for-profit-backed projects.
+3. **Issue → PR automation** — a GitHub Action that parses a `new-entry` issue form and
    opens a draft PR with the entry block pre-built (maintainer still geocodes/reviews).
    Would cut the manual step MAINTAINING.md Part 1 describes.
-3. **Geocoding helper** — `scripts/geocode.js` wrapping Nominatim so maintainers don't
+4. **Geocoding helper** — `scripts/geocode.js` wrapping Nominatim so maintainers don't
    hand-copy coordinates from Google Maps.
-4. **Accessibility pass** — keyboard navigation for the Galaxy canvas, focus states,
+5. **Accessibility pass** — keyboard navigation for the Galaxy canvas, focus states,
    `prefers-reduced-motion` for the animated views, contrast audit.
-5. **Mobile polish** — the Galaxy view is cramped on small screens.
-6. **Deep links** — `?entry=csail` / `#map` so a specific org or view can be shared.
-7. **Self-hosted assets** — vendoring Leaflet/Tailwind/fonts/logo would remove CDN
+6. **Mobile polish** — the Galaxy view is cramped on small screens.
+7. **Deep links** — `?entry=csail` / `#map` so a specific org or view can be shared.
+8. **Self-hosted assets** — vendoring Leaflet/Tailwind/fonts/logo would remove CDN
    dependence and fix the `file://` experience. (Beyond the TOA logo, the favicon and
    `og:image` are also hot-linked — from the-open-accelerator.com and people.redhat.com.)
-8. **Category balance** — `space`, `gov`, `student` are thin (4–6 entries); `vc` is heavy.
-9. **Tailwind Play CDN** prints a console warning about production use; if it ever
-   matters, precompile or drop it (most styling is hand-written CSS anyway).
+9. **Category balance** — `space`, `gov`, `student` are thin (4–6 entries); `vc` is heavy.
+10. **Tailwind Play CDN** prints a console warning about production use; if it ever
+    matters, precompile or drop it (most styling is hand-written CSS anyway).
 
 *(Resolved 2026-08-28: README/CONTRIBUTING described a GitHub Pages deploy path that
 was never how this ships — both now describe the real sync-to-site flow.)*

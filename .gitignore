@@ -3,3 +3,6 @@
 
 # Generated CSV exports (run: node scripts/export-csv.js)
 *.csv
+
+# local claude config
+.claude/

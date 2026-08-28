@@ -550,8 +550,8 @@ window.goToMap = goToMap;
 let map, markers = {}, mapTiles;
 const activeCats = new Set(Object.keys(CATS));
 const TILE_URLS = {
-  dark:  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-  light: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+  dark:  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=cb1_2hxx_1_ac6faa2b89817d350e7715f6",
+  light: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_2hxx_1_ac6faa2b89817d350e7715f6"
 };
 const currentTheme = () => document.documentElement.classList.contains('dark') ? 'dark' : 'light';
 function setMapTiles(){ if(mapTiles) mapTiles.setUrl(TILE_URLS[currentTheme()]); }
