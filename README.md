@@ -71,6 +71,7 @@ scripts/sync-to-site.sh         copy index.html + data.js into the TOA site to d
 .github/workflows/validate.yml  CI validation on every data PR
 CONTRIBUTING.md                 entry schema & contributor workflow
 MAINTAINING.md                  maintainer guide — turn issues & PRs into data.js
+PROJECT_STATE.md                architecture, decisions & backlog (start here if new)
 ```
 
 ## Export to a spreadsheet
