@@ -71,7 +71,8 @@ Copy this template and fill it in. Field-by-field help is in
  lat:0, lng:0, url:"https://",
  badge:"", desc:"",
  why:"",
- tags:[], stages:[], links:[]},
+ tags:[], stages:[], links:[],
+ lastVerified:""},
 ```
 
 Three fields need a quick "translation" from the form's words into the code's words —
@@ -86,7 +87,8 @@ the tables in Appendix A do this for you:
   GitHub file view, press **`/`** or `Ctrl/Cmd-F` and search the id).
 
 Leave `badge` empty (or delete the line) if there's nothing special. `links` is
-optional — see Appendix A.
+optional — see Appendix A. For `lastVerified`, put **today's month** as `"YYYY-MM"`
+(e.g. `"2026-08"`) — you just verified the org by building this entry.
 
 ### Step 4 — Add it to `data.js` (right in the browser)
 
@@ -159,6 +161,8 @@ is your judgment, next.
    - [ ] **Right category** and the **pin location looks correct** (paste the lat/lng into
          Google Maps if unsure)
    - [ ] **No duplicate** of an org already in the atlas
+   - [ ] **Carries a current `lastVerified`** (this month, or close to it) — it should
+         reflect when the org was actually checked
    - [ ] If the author is **affiliated** with the org, they disclosed it (that's allowed —
          just expected to be stated)
 
@@ -205,6 +209,25 @@ happens for you on merge; ask a maintainer which setup you're on.)
 
 ---
 
+## The monthly freshness sweep
+
+Every entry carries a `lastVerified` month — the month a maintainer last confirmed the
+org is real, active, and the entry's facts are right. To keep those honest, do a small
+sweep about once a month:
+
+1. Run `node scripts/stale.js` on your computer — it lists the entries that have gone
+   longest without a check. (No terminal? The robot prints the same list in the **job
+   summary** of every CI run.)
+2. For each stale org: open its website, fix anything that changed — or confirm it's
+   all still right.
+3. Bump `lastVerified` to the current month for each one you checked, and put them all
+   in **one PR**.
+
+With ~123 entries on a 12-month cycle, that's roughly **10 re-checks a month — a
+20–30 minute session**.
+
+---
+
 ## Appendix A — Field-by-field cheat sheet
 
 Every entry has these fields. ⭐ = required.
@@ -225,6 +248,7 @@ Every entry has these fields. ⭐ = required.
 | `tags` |  | 2–4 short lowercase tags. | `["robotics", "lab space"]` |
 | `stages` |  | Which founder stages it serves — **numbers**, see table below. | `[1, 3]` |
 | `links` |  | `id`s of related entries (draws lines in the Galaxy view). Optional. | `["csail", "engine"]` |
+| `lastVerified` |  | The month (`"YYYY-MM"`) a maintainer last **confirmed the org is real, active, and the facts are right** — set it when you actually checked the org, not merely when you edited the entry. New entry → today's month. The robot only warns if it's missing, but always set it. | `"2026-08"` |
 
 ### Category (the `cat` field)
 
@@ -282,7 +306,8 @@ You look up `1 Broadway, Cambridge` in Google Maps → `42.3629, -71.0838`, and 
  lat:42.3629, lng:-71.0838, url:"https://acme.ai",
  desc:"Robotics-AI startup building warehouse pick-and-place arms.",
  why:"Hires interns straight out of MIT hackathons.",
- tags:["robotics","warehouse"], stages:[3,4], links:[]},
+ tags:["robotics","warehouse"], stages:[3,4], links:[],
+ lastVerified:"2026-08"},
 ```
 
 …and paste it into the `// ---------- AI COMPANIES & STARTUPS ----------` section of
@@ -306,6 +331,19 @@ category, dead link…). The fix is the same kind of `data.js` edit:
 4. Commit with `Fix <name> per flag (closes #NN)` → open the PR → green check → merge →
    [publish](#part-3--publish-to-the-live-site).
 
+> **Resolving a flag counts as re-verifying.** Whenever you keep the entry — you fixed
+> something, *or* you checked and it was already correct — set its `lastVerified` to the
+> current month (`"YYYY-MM"`). "I looked, and it's fine" is exactly the information the
+> field records.
+
+### When to bump `lastVerified` — and when not to
+
+- **Bump it** whenever you actually looked at the org: building a new entry, resolving a
+  flag, or a fact-check edit where you opened the org's site and confirmed things.
+- **Don't bump it** on mechanical edits — fixing a tag typo, adding a `links` edge,
+  reformatting. Bumping without looking corrupts the signal: the field is only useful if
+  it truly means "a human checked this org then."
+
 ---
 
 ## Appendix D — When the robot complains
@@ -322,6 +360,10 @@ Common ones:
 | `url must start with https://` | Add `https://`, and make sure it isn't `http://`. |
 | `desc too long` | Trim the description to 400 characters or fewer. |
 | `links to unknown entry` | A value in `links` doesn't match any `id`. Fix the spelling or remove it. |
+| `missing lastVerified` (a ⚠ warning, not a failure) | Add the month you last confirmed this entry: `lastVerified:"YYYY-MM"`. |
+| `lastVerified must be a "YYYY-MM" string` | Fix the format: four-digit year, hyphen, two-digit month — e.g. `2026-08`. |
+| `lastVerified … is in the future` | Check the date — it can't be later than the current month. |
+| `looks like a typo (before 2020)` | The year in `lastVerified` is wrong — fix it (e.g. a mistyped `2016` for `2026`). |
 
 You can re-run the check just by editing the file again and committing — every commit
 re-runs the robot automatically.

@@ -15,6 +15,8 @@ const err = (id, msg) => errors.push(`  ✗ [${id}] ${msg}`);
 const ids = new Set();
 const names = new Set();
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+const YYYY_MM = /^\d{4}-(0[1-9]|1[0-2])$/;
+const THIS_MONTH = new Date().toISOString().slice(0, 7);   // current UTC month
 const validStages = new Set(STAGES.map(s => s.n));
 
 for (const d of DATA) {
@@ -44,6 +46,14 @@ for (const d of DATA) {
   if (!Array.isArray(d.tags) || d.tags.length < 1) warn.push(`  ⚠ [${id}] no tags`);
   for (const s of d.stages || [])
     if (!validStages.has(s)) err(id, `invalid stage ${s} (valid: 1-5)`);
+  if (d.lastVerified === undefined)
+    warn.push(`  ⚠ [${id}] missing lastVerified — add the month this entry was last confirmed ("YYYY-MM")`);
+  else if (typeof d.lastVerified !== "string" || !YYYY_MM.test(d.lastVerified))
+    err(id, `lastVerified must be a "YYYY-MM" string (got ${JSON.stringify(d.lastVerified)})`);
+  else if (d.lastVerified > THIS_MONTH)
+    err(id, `lastVerified ${d.lastVerified} is in the future`);
+  else if (d.lastVerified < "2020-01")
+    err(id, `lastVerified ${d.lastVerified} looks like a typo (before 2020)`);
 }
 // resolve links after all ids known
 for (const d of DATA)

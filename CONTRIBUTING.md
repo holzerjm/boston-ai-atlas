@@ -40,7 +40,9 @@ All data lives in [`data.js`](data.js) as one array of plain objects.
   tags: ["robotics", "lab space"],  // 2-4 short lowercase tags
   stages: [1, 3],                   // founder stages served: 1 Spark, 2 Validate,
                                     // 3 Build, 4 Fund, 5 Scale
-  links: ["csail", "engine"]        // ids of related entries (Galaxy view edges)
+  links: ["csail", "engine"],       // ids of related entries (Galaxy view edges)
+  lastVerified: "2026-08"           // month ("YYYY-MM") a maintainer last confirmed the
+                                    // org is real, active, and the facts are right
 }
 ```
 
@@ -64,6 +66,9 @@ unverifiable. When in doubt we mark things clearly rather than delete silently.
   https links, resolvable connections
 - One maintainer approval merges; a maintainer then publishes the update to the
   live site (see [MAINTAINING.md](MAINTAINING.md), Part 3 — merging alone doesn't deploy)
+- Maintainers stamp or refresh `lastVerified` whenever they verify an entry (accepting
+  it, or resolving a flag) — it records when someone actually checked the org, not
+  merely when the entry was last edited
 - Flags with a source link get fast-tracked
 
 ## Maintainers

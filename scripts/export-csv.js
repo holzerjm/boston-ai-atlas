@@ -50,6 +50,7 @@ const COLUMNS = [
   ["tags",           d => (d.tags || []).join("; ")],
   ["stages",         d => stagesToText(d.stages)],    // e.g. "Build; Fund"
   ["linked_ids",     d => (d.links || []).join("; ")],
+  ["last_verified",  d => d.lastVerified || ""],        // "YYYY-MM" month last confirmed
 ];
 
 // --- Build the CSV ---

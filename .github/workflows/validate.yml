@@ -11,12 +11,15 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 20
       - name: Validate data.js
         run: node scripts/validate.js
+      - name: Freshness report (informational, never fails the build)
+        continue-on-error: true
+        run: node scripts/stale.js >> "$GITHUB_STEP_SUMMARY"
 
   badge:
     # keep the entry-count badge in sync after merges to main
@@ -26,8 +29,8 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 20
       - name: Regenerate badge.json
