@@ -4,8 +4,9 @@
 Claude Code (or by any new maintainer) without the original chat history. It captures
 what this project is, how it's built, what's been decided, and what's left.
 
-**Last updated:** 2026-08-28; 133 entries (FoundersEdge and Milemark Capital added via
-issues #12/#13, then 10 verified VCs from a sweep of the MGMT Boston directory).
+**Last updated:** 2026-08-29; 144 entries (FoundersEdge and Milemark Capital added via
+issues #12/#13, then 21 verified VCs across two batches from a sweep of the MGMT
+Boston directory).
 Repo: <https://github.com/holzerjm/boston-ai-atlas> · Live: <https://the-open-accelerator.com/ecosystem/>
 
 ---
@@ -85,7 +86,7 @@ the org (validator warns if missing, errors if malformed; drawer shows "✓ Veri
 entries >12 months old get a stale marker). Full reference: `CONTRIBUTING.md`; enforced
 by `scripts/validate.js`.
 
-**Current composition (133 entries):** vc 38 · accel 19 · startup 16 · university 12 ·
+**Current composition (144 entries):** vc 49 · accel 19 · startup 16 · university 12 ·
 corporate 12 · event 8 · angel 7 · community 7 · student 6 · space 4 · gov 4.
 
 ### Editorial voice
