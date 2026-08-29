@@ -1,0 +1,46 @@
+# Hands-off deploys — rsync the atlas to the web server on every merge to
+# main that touches index.html or data.js, so accepted community PRs go
+# live automatically. Can also be run manually from the Actions tab
+# (workflow_dispatch), e.g. to test the pipeline.
+#
+# Repository secrets (Settings → Secrets and variables → Actions):
+#   DEPLOY_SSH_KEY   dedicated private key authorized on the server
+#                    (never commit it; revoke server-side to disable)
+#   DEPLOY_HOST      the ORIGIN server IP — not the domain: the domain
+#                    resolves to Cloudflare's proxy, which won't pass SSH
+#   DEPLOY_USER      ssh user on the server
+#   DEPLOY_PATH      docroot ecosystem dir (or "/" if the key is
+#                    rrsync-restricted to that dir)
+#
+# data.js is validated before anything is copied, so a broken dataset can
+# never ship even if it somehow reaches main. Manual fallback if this
+# workflow is ever unavailable: scripts/sync-toa.sh from a local checkout.
+
+name: Deploy to TOA site
+
+on:
+  push:
+    branches: [main]
+    paths: ["index.html", "data.js"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - name: Validate data.js before shipping
+        run: node scripts/validate.js
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+      - name: Rsync atlas
+        run: |
+          rsync -avz -e "ssh -i ~/.ssh/id_deploy" index.html data.js \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
