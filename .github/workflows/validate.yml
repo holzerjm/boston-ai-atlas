@@ -42,5 +42,12 @@ jobs:
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add badge.json
             git commit -m "chore: update entry-count badge"
+            # main may have moved while this job ran (another push, or a
+            # human pushing right after a merge) — rebase and retry so the
+            # badge commit isn't rejected as non-fast-forward
+            for i in 1 2 3; do
+              if git push; then exit 0; fi
+              git pull --rebase origin main
+            done
             git push
           fi
