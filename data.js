@@ -684,11 +684,11 @@ const DATA = [
  desc:"City-backed community space for art, tech and education events in East Cambridge.",
  why:"Affordable event space for community-building workshops and demos.",
  tags:["events","community"], stages:[1], lastVerified:"2026-06"},
-{id:"labcentral", name:"LabCentral", cat:"space", loc:"700 Main St North, Cambridge", approx:true,
- lat:0, lng:0, url:"https://www.labcentral.org",
+{id:"labcentral", name:"LabCentral", cat:"space", loc:"700 Main St North, Cambridge",
+ lat:42.3626, lng:-71.0951, url:"https://www.labcentral.org",
  desc:"Shared wet-lab and office facility for early-stage life-science startups in Kendall Square, and the physical home of the AI BioHub accelerator run with C10 Labs.",
  why:"If you're building AI-for-bio, this is where the bench work happens — subsidized lab space in the densest biotech neighborhood on earth.",
- tags:["lab space","biotech","AI bio"], stages:[3], links:["c10"], lastVerified:"2026-08"},
+ tags:["lab space","biotech","AI bio"], stages:[3], links:["c10","ai-biohub"], lastVerified:"2026-08"},
 
 // ---------- COMMUNITIES & MEETUPS ----------
 {id:"tinkerers", name:"AI Tinkerers Boston", cat:"community", loc:"Venues vary (often Kendall Sq)", approx:true,
