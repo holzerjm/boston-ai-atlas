@@ -83,6 +83,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
+    env:
+      # secrets aren't allowed in `if:` expressions — indirect through env
+      HAS_APP: ${{ secrets.ATLAS_APP_ID != '' }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -90,7 +93,7 @@ jobs:
 
       - name: Mint bot token (GitHub App)
         id: app
-        if: ${{ secrets.ATLAS_APP_ID != '' }}
+        if: env.HAS_APP == 'true'
         uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.ATLAS_APP_ID }}
