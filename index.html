@@ -519,6 +519,10 @@ function isStale(d){
   return (now.getFullYear()*12 + now.getMonth()+1) - (+y*12 + +m) > STALE_MONTHS;
 }
 
+/* ---------- html escaping (entry text is data, never markup) ---------- */
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+  .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+
 /* ---------- detail drawer ---------- */
 function openDrawer(id){
   const d = byId[id]; if(!d) return;
@@ -527,22 +531,22 @@ function openDrawer(id){
   $("drCat").style.color = col;
   $("drName").textContent = d.name;
   $("drLoc").textContent = "📍 " + d.loc + (d.approx ? " (approx.)" : "");
-  let html = `<p>${d.desc}</p>`;
-  if(d.why) html += `<div class="dr-why" style="--cc:${col}"><b>Why it matters for founders</b><div>${d.why}</div></div>`;
+  let html = `<p>${esc(d.desc)}</p>`;
+  if(d.why) html += `<div class="dr-why" style="--cc:${col}"><b>Why it matters for founders</b><div>${esc(d.why)}</div></div>`;
   if(d.tags && d.tags.length) html += `<div class="dr-sec">Tags</div><div class="chips">` +
-    d.tags.map(t=>`<span class="tag">${t}</span>`).join(" ") + `</div>`;
+    d.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join(" ") + `</div>`;
   if(d.stages && d.stages.length) html += `<div class="dr-sec">Founder stages</div><div class="chips">` +
     d.stages.map(n=>{const s=STAGES.find(x=>x.n===n);return `<span class="tag">${s.icon} ${s.t}</span>`}).join(" ") + `</div>`;
   const rel = (d.links||[]).filter(x=>byId[x]);
   const backRel = DATA.filter(o=>(o.links||[]).includes(d.id) && !rel.includes(o.id)).map(o=>o.id);
   const allRel = [...rel, ...backRel];
   if(allRel.length) html += `<div class="dr-sec">Connected to</div><div class="chips">` +
-    allRel.map(x=>{const o=byId[x];return `<span class="chip" onclick="openDrawer('${x}')"><span class="lg-dot" style="color:${cColor(o.cat)};background:${cColor(o.cat)}"></span>${o.name}</span>`}).join("") + `</div>`;
+    allRel.map(x=>{const o=byId[x];return `<span class="chip" onclick="openDrawer('${x}')"><span class="lg-dot" style="color:${cColor(o.cat)};background:${cColor(o.cat)}"></span>${esc(o.name)}</span>`}).join("") + `</div>`;
   if(d.lastVerified) html += isStale(d)
     ? `<div class="dr-verified stale">⚠️ Last verified ${fmtMonth(d.lastVerified)} — details may have changed. Spot something off? Use 🚩 Flag below.</div>`
     : `<div class="dr-verified">✓ ${fmtVerified(d.lastVerified)}</div>`;
   html += `<div class="dr-actions">
-    <a class="btn btn-pri" href="${d.url}" target="_blank" rel="noopener">Visit website ↗</a>
+    <a class="btn btn-pri" href="${esc(d.url)}" target="_blank" rel="noopener">Visit website ↗</a>
     <button class="btn btn-sec" onclick="goToMap('${d.id}')">Show on map</button>
     <button class="btn btn-sec" onclick="copyLink(this)" title="Copy a shareable link to this entry">🔗 Copy link</button>
     <button class="btn btn-sec" onclick="flagEntry('${d.id}')" title="Report this entry as outdated, miscategorized, or no longer active">🚩 Flag</button>
@@ -593,9 +597,9 @@ function setMapTiles(){ if(mapTiles) mapTiles.setUrl(TILE_URLS[currentTheme()]);
       iconSize:[13,13], iconAnchor:[7,7]});
     const m = L.marker([d.lat,d.lng], {icon, title:d.name});
     m.bindPopup(
-      `<div class="pop-name">${d.name}</div>`+
+      `<div class="pop-name">${esc(d.name)}</div>`+
       `<div class="pop-cat" style="color:${col}">${cLabel(d.cat)}</div>`+
-      `<div class="pop-desc">${d.desc.length>140 ? d.desc.slice(0,140)+"…" : d.desc}</div>`+
+      `<div class="pop-desc">${esc(d.desc.length>140 ? d.desc.slice(0,140)+"…" : d.desc)}</div>`+
       `<span class="pop-btn" onclick="openDrawer('${d.id}')">Full details →</span>`,
       {maxWidth:260});
     m.addTo(map);
@@ -631,7 +635,7 @@ function setMapTiles(){ if(mapTiles) mapTiles.setUrl(TILE_URLS[currentTheme()]);
       cLabel(d.cat).toLowerCase().includes(q)
     ).slice(0,8);
     res.innerHTML = hits.map(d=>
-      `<div data-id="${d.id}"><span class="lg-dot" style="color:${cColor(d.cat)};background:${cColor(d.cat)}"></span>${d.name}</div>`).join("")
+      `<div data-id="${d.id}"><span class="lg-dot" style="color:${cColor(d.cat)};background:${cColor(d.cat)}"></span>${esc(d.name)}</div>`).join("")
       || `<div style="color:var(--muted)">No matches</div>`;
     res.classList.add("open");
     res.querySelectorAll("div[data-id]").forEach(el=>{
@@ -798,7 +802,7 @@ gxCanvas.addEventListener("mousemove", e=>{
   if(gxHover){
     gxTip.style.display="block";
     gxTip.style.left=(px+16)+"px"; gxTip.style.top=(py+10)+"px";
-    gxTip.innerHTML = `<b>${gxHover.name}</b><span style="color:${cColor(gxHover.cat)}">${cLabel(gxHover.cat)}</span>`;
+    gxTip.innerHTML = `<b>${esc(gxHover.name)}</b><span style="color:${cColor(gxHover.cat)}">${cLabel(gxHover.cat)}</span>`;
   } else gxTip.style.display="none";
 });
 gxCanvas.addEventListener("mousedown", e=>{
@@ -864,7 +868,7 @@ function renderJourney(){
   order.filter(c=>groups[c]).forEach(c=>{
     html += `<div class="jr-group"><h4 style="color:${cColor(c)}">${cLabel(c)}</h4><div class="chips">` +
       groups[c].sort((a,b)=>a.name.localeCompare(b.name)).map(d=>
-        `<span class="chip" onclick="openDrawer('${d.id}')"><span class="lg-dot" style="color:${cColor(c)};background:${cColor(c)}"></span>${d.name}</span>`).join("") +
+        `<span class="chip" onclick="openDrawer('${d.id}')"><span class="lg-dot" style="color:${cColor(c)};background:${cColor(c)}"></span>${esc(d.name)}</span>`).join("") +
       `</div></div>`;
   });
   $("jrPanel").innerHTML = html;
@@ -916,10 +920,10 @@ function renderCards(){
   $("cards").innerHTML = list.map(d=>{
     const col=cColor(d.cat);
     return `<div class="card" style="--cc:${col}" onclick="openDrawer('${d.id}')">
-      <h3>${d.name}</h3>
-      <div class="c-cat" style="color:${col}">${cLabel(d.cat)} · ${d.loc.split(",")[0]}</div>
-      <p>${d.desc.length>150 ? d.desc.slice(0,150)+"…" : d.desc}</p>
-      <div class="c-meta">${isStale(d)?`<span class="tag stale-tag" title="Last verified ${fmtMonth(d.lastVerified)}">⚠ not recently verified</span>`:""}${d.badge?`<span class="badge">${d.badge}</span>`:""}${(d.tags||[]).slice(0,3).map(t=>`<span class="tag">${t}</span>`).join("")}</div>
+      <h3>${esc(d.name)}</h3>
+      <div class="c-cat" style="color:${col}">${cLabel(d.cat)} · ${esc(d.loc.split(",")[0])}</div>
+      <p>${esc(d.desc.length>150 ? d.desc.slice(0,150)+"…" : d.desc)}</p>
+      <div class="c-meta">${isStale(d)?`<span class="tag stale-tag" title="Last verified ${fmtMonth(d.lastVerified)}">⚠ not recently verified</span>`:""}${d.badge?`<span class="badge">${esc(d.badge)}</span>`:""}${(d.tags||[]).slice(0,3).map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
     </div>`;
   }).join("") || `<div style="color:var(--muted)">No matches — try clearing filters, or <a href="#" onclick="suggestEntry();return false" style="color:#ffc600">suggest a new entry</a>.</div>`;
 }

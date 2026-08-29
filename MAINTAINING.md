@@ -40,6 +40,16 @@ There are two ways new information arrives:
 
 Use this when someone used the **"➕ Suggest an entry"** form.
 
+> **Shortcut — let the bot draft it for you.** After you've eyeballed a
+> suggestion issue and it looks real (not spam), add the **`bot:draft`** label.
+> A bot reads the form, geocodes the address, builds the entry, and opens a
+> **draft pull request** with a review checklist — turning the rest of this
+> Part into "check the draft and merge." The bot never publishes anything; you
+> still verify the org and merge (which is what puts it live). If the bot can't
+> parse the form it comments on the issue and you do it by hand as below. Re-run
+> after the submitter edits: remove and re-add `bot:draft`. (Requires the bot's
+> token secret to be configured — see PROJECT_STATE.md §3.)
+
 ### Step 1 — Open the issue
 
 1. Go to the repository on github.com → click the **Issues** tab.

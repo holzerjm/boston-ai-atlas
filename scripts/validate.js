@@ -39,9 +39,18 @@ for (const d of DATA) {
   else if (d.lat < 41.5 || d.lat > 43 || d.lng < -73.5 || d.lng > -70.5)
     err(id, `coordinates (${d.lat}, ${d.lng}) outside Greater Boston / Massachusetts bounds`);
   if (!d.url || !/^https:\/\//.test(d.url)) err(id, "url must start with https://");
+  else if (/[\s"'<>\\]/.test(d.url)) err(id, "url contains characters unsafe in a link");
   if (!d.loc) err(id, "missing loc (address or neighborhood)");
   if (!d.desc) err(id, "missing desc");
   else if (d.desc.length > 400) err(id, `desc too long (${d.desc.length} chars, max 400)`);
+  // text fields are prose — HTML has no legitimate use here and is an XSS vector
+  for (const [f, v] of [["name", d.name], ["loc", d.loc], ["desc", d.desc],
+                        ["why", d.why], ["badge", d.badge]])
+    if (typeof v === "string" && /[<>]/.test(v))
+      err(id, `${f} must not contain < or > (HTML is not allowed in entry text)`);
+  for (const t of d.tags || [])
+    if (typeof t === "string" && /[<>]/.test(t))
+      err(id, `tag ${JSON.stringify(t)} must not contain < or > (HTML is not allowed)`);
   if (!d.why) warn.push(`  ⚠ [${id}] missing "why it matters" — strongly encouraged`);
   if (!Array.isArray(d.tags) || d.tags.length < 1) warn.push(`  ⚠ [${id}] no tags`);
   for (const s of d.stages || [])

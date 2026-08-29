@@ -1,0 +1,135 @@
+# Suggestion bot — turns a "Suggest a new entry" issue into a DRAFT PR.
+#
+# TRIGGER IS MAINTAINER-GATED. The issue form auto-applies `new-entry`, which
+# does NOT run this workflow. A maintainer triages the issue and adds the
+# `bot:draft` label to invoke the bot — so untrusted internet input is never
+# processed, geocoded, or given a token without a human first asking for it.
+# (Re-run after the submitter edits: remove and re-add `bot:draft`.)
+#
+# TWO JOBS, split on trust:
+#   draft   — no bot secret, minimal permissions. Parses the untrusted issue
+#             body (scripts/issue-to-entry.js), builds the entry, validates,
+#             and uploads the result as an artifact. If it can't, it comments
+#             on the issue and stops. Never holds the deploy-capable token.
+#   publish — holds the bot token. Downloads the artifact and opens the PR
+#             WITHOUT running any issue-derived code. This keeps one parser bug
+#             from ever reaching a token that can push to auto-deploying main.
+#
+# Token (one of): a GitHub App (ATLAS_APP_ID + ATLAS_APP_PRIVATE_KEY, Contents
+# RW + Pull requests RW) — preferred — or a repo-scoped fine-grained PAT
+# (ATLAS_BOT_PAT). The bot token (not GITHUB_TOKEN) opens the PR so validate.yml
+# actually runs on it: PRs opened with GITHUB_TOKEN don't trigger workflows, and
+# an unchecked PR must never be mergeable into a branch that auto-deploys.
+#
+# SECURITY: the issue body is untrusted. It is parsed from the event file in
+# scripts/issue-to-entry.js (never interpolated via ${{ }} into run:) and every
+# value reaches data.js JSON.stringify-serialized. PR text passes as files.
+
+name: Suggestion bot
+
+on:
+  issues:
+    types: [labeled]
+
+concurrency:
+  group: suggestion-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  draft:
+    if: github.event.label.name == 'bot:draft'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    outputs:
+      status: ${{ steps.build.outputs.status }}
+      branch: ${{ steps.build.outputs.branch }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Parse issue and build entry
+        id: build
+        run: node scripts/issue-to-entry.js
+
+      - name: Stage artifact
+        if: steps.build.outputs.status == 'ok'
+        run: |
+          mkdir -p bot-artifact
+          cp data.js bot-artifact/data.js
+          cp "$RUNNER_TEMP/pr-title.txt" "$RUNNER_TEMP/pr-body.md" bot-artifact/
+
+      - name: Upload artifact
+        if: steps.build.outputs.status == 'ok'
+        uses: actions/upload-artifact@v4
+        with:
+          name: draft-${{ github.event.issue.number }}
+          path: bot-artifact/
+          retention-days: 1
+
+      - name: Comment (couldn't draft this one)
+        if: steps.build.outputs.status != 'ok'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: gh issue comment "$ISSUE" --repo "${{ github.repository }}" --body-file "$RUNNER_TEMP/issue-comment.md"
+
+  publish:
+    needs: draft
+    if: needs.draft.outputs.status == 'ok'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false   # we push with the bot token, not GITHUB_TOKEN
+
+      - name: Mint bot token (GitHub App)
+        id: app
+        if: ${{ secrets.ATLAS_APP_ID != '' }}
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.ATLAS_APP_ID }}
+          private-key: ${{ secrets.ATLAS_APP_PRIVATE_KEY }}
+
+      - name: Download draft artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: draft-${{ github.event.issue.number }}
+          path: bot-artifact
+
+      - name: Open draft PR
+        env:
+          BOT_TOKEN: ${{ steps.app.outputs.token || secrets.ATLAS_BOT_PAT }}
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ needs.draft.outputs.branch }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          if [ -z "$BOT_TOKEN" ]; then
+            echo "::warning::No bot token configured (ATLAS_APP_ID/ATLAS_APP_PRIVATE_KEY or ATLAS_BOT_PAT) — cannot open the PR."
+            gh issue comment "$ISSUE" --repo "${{ github.repository }}" \
+              --body "I drafted an entry for this suggestion but the bot has no push token configured yet, so a maintainer needs to open the PR by hand (see MAINTAINING.md)."
+            exit 0
+          fi
+          cp bot-artifact/data.js data.js
+          git config user.name "atlas-entry-bot"
+          git config user.email "atlas-entry-bot@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add data.js
+          git commit -m "Draft entry from suggestion #${ISSUE}"
+          # token via auth header, never in the remote URL
+          AUTH=$(printf 'x-access-token:%s' "$BOT_TOKEN" | base64 -w0)
+          git -c http.extraheader="AUTHORIZATION: basic ${AUTH}" \
+            push --force "https://github.com/${{ github.repository }}.git" "HEAD:refs/heads/${BRANCH}"
+          PR_URL=$(GH_TOKEN="$BOT_TOKEN" gh pr list --head "$BRANCH" --json url -q '.[0].url')
+          if [ -z "$PR_URL" ]; then
+            PR_URL=$(GH_TOKEN="$BOT_TOKEN" gh pr create --draft --base main --head "$BRANCH" \
+              --title "$(cat bot-artifact/pr-title.txt)" \
+              --body-file bot-artifact/pr-body.md)
+          fi
+          gh issue comment "$ISSUE" --repo "${{ github.repository }}" \
+            --body "Thanks! I drafted this as a pull request for a maintainer to review — it goes live once a maintainer verifies and merges it: ${PR_URL}"

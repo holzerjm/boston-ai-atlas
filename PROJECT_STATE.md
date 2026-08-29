@@ -111,8 +111,35 @@ transparent moderation, contribution history, on-brand for an open-source accele
   prefilled by the app.
 - The forms apply `new-entry` / `flag` labels. ⚠️ Those labels must exist in the repo —
   GitHub **silently skips** labels that don't (they were missing until 2026-08-28, which
-  is why issues #12/#13 arrived unlabelled). If the repo ever moves, recreate them.
-- **Nothing auto-publishes.** A maintainer converts each issue into a `data.js` edit.
+  is why issues #12/#13 arrived unlabelled). If the repo ever moves, recreate them
+  (and `bot:draft`, below).
+- **Nothing auto-publishes.** A maintainer converts each issue into a `data.js` edit —
+  by hand, or with the suggestion bot.
+
+### Suggestion bot (`.github/workflows/suggest-to-pr.yml` + `scripts/issue-to-entry.js`)
+
+Maintainer adds the **`bot:draft`** label to a suggestion issue → the bot parses the
+form, geocodes the address (Nominatim), builds a JSON-serialized `data.js` entry, and
+opens a **draft PR** with a review checklist. It never publishes (merge does that).
+
+**Trust model — read before editing this workflow:**
+- **Maintainer-gated.** The trigger is `issues: [labeled]` gated on the `bot:draft`
+  label, which the form does *not* auto-apply — so untrusted internet input is never
+  parsed, geocoded, or handed a token until a human asks. Create the label if the repo
+  moves: `gh label create bot:draft`.
+- **Two jobs, split on trust.** `draft` (no bot secret, `contents:read`+`issues:write`)
+  parses the untrusted issue and uploads an artifact; `publish` (holds the bot token)
+  opens the PR from that artifact **without running any issue-derived code**. One parser
+  bug can't reach the deploy-capable token.
+- **Injection-safe.** Issue text is read from the event file (never `${{ }}`-interpolated
+  into `run:`), every value reaches `data.js` via `JSON.stringify`, and `validate.js`
+  rejects `<`/`>` in text fields (defence-in-depth with the app's `esc()` render
+  escaping). The token pushes via an auth header, not a URL.
+- **Token:** a GitHub App (`ATLAS_APP_ID` + `ATLAS_APP_PRIVATE_KEY`, Contents RW + PRs RW)
+  — preferred — or a repo-scoped fine-grained PAT (`ATLAS_BOT_PAT`). Must be the bot token,
+  not `GITHUB_TOKEN`, so `validate.yml` runs on the bot's PR (GitHub's recursion guard).
+- Optional hardening not yet applied: branch protection on `main` requiring review. ⚠️
+  Would also block the `badge` job's direct push — carve out `github-actions[bot]` first.
 
 ### CI (`.github/workflows/validate.yml`)
 
@@ -173,9 +200,10 @@ GitHub Pages copy exists.
 
 ## 6. Status & known gaps
 
-**Done:** four views · 123 verified entries · TOA branding · GitHub contribution loop ·
-CI validation + auto badge · maintainer docs · CSV export · `lastVerified` freshness
-field + stale report · shareable deep links (`?entry=` / `#view`) · MIT licence ·
+**Done:** four views · 144 verified entries · TOA branding · GitHub contribution loop ·
+CI validation + auto badge · auto-deploy on merge + Slack notifications · suggestion bot
+(issue → draft PR) · maintainer docs · CSV export · `lastVerified` freshness field + stale
+report · shareable deep links (`?entry=` / `#view`) · HTML-escaped rendering · MIT licence ·
 live at `/ecosystem/`.
 
 **Open items / ideas, roughly by value:**
@@ -188,12 +216,7 @@ live at `/ecosystem/`.
    VersaTiles as a one-line fallback style URL. Google Maps rejected (mandatory billing
    account + key + ToS bars its tiles in Leaflet); raw OSM tiles rejected (no dark
    style, no SLA); Stadia viable but $20/mo for for-profit-backed projects.
-2. **Issue → PR automation** — a GitHub Action that parses a `new-entry` issue form and
-   opens a draft PR with the entry block pre-built (maintainer still geocodes/reviews).
-   Would cut the manual step MAINTAINING.md Part 1 describes.
-3. **Geocoding helper** — `scripts/geocode.js` wrapping Nominatim so maintainers don't
-   hand-copy coordinates from Google Maps.
-4. **Accessibility pass** — keyboard navigation for the Galaxy canvas, focus states,
+2. **Accessibility pass** — keyboard navigation for the Galaxy canvas, focus states,
    `prefers-reduced-motion` for the animated views, contrast audit.
 5. **Mobile polish** — the Galaxy view is cramped on small screens.
 6. **Self-hosted assets** — vendoring Leaflet/Tailwind/fonts/logo would remove CDN
