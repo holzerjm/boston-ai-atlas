@@ -4,13 +4,15 @@
 # (workflow_dispatch), e.g. to test the pipeline.
 #
 # Repository secrets (Settings → Secrets and variables → Actions):
-#   DEPLOY_SSH_KEY   dedicated private key authorized on the server
-#                    (never commit it; revoke server-side to disable)
-#   DEPLOY_HOST      the ORIGIN server IP — not the domain: the domain
-#                    resolves to Cloudflare's proxy, which won't pass SSH
-#   DEPLOY_USER      ssh user on the server
-#   DEPLOY_PATH      docroot ecosystem dir (or "/" if the key is
-#                    rrsync-restricted to that dir)
+#   DEPLOY_SSH_KEY     dedicated private key authorized on the server
+#                      (never commit it; revoke server-side to disable)
+#   DEPLOY_HOST        the ORIGIN server IP — not the domain: the domain
+#                      resolves to Cloudflare's proxy, which won't pass SSH
+#   DEPLOY_USER        ssh user on the server
+#   DEPLOY_PATH        docroot ecosystem dir — "/" when the key is
+#                      rrsync-restricted to that dir (it is)
+#   SLACK_WEBHOOK_URL  optional — TOA Slack incoming webhook; deploy and
+#                      failure notifications are skipped when unset
 #
 # data.js is validated before anything is copied, so a broken dataset can
 # never ship even if it somehow reaches main. Manual fallback if this
@@ -29,6 +31,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0   # full history so the Slack step can diff the push
       - uses: actions/setup-node@v5
         with:
           node-version: 20
@@ -44,3 +48,80 @@ jobs:
         run: |
           rsync -avz -e "ssh -i ~/.ssh/id_deploy" index.html data.js \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
+
+      - name: Notify Slack (deployed)
+        if: success()
+        continue-on-error: true
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          [ -z "$SLACK_WEBHOOK_URL" ] && { echo "SLACK_WEBHOOK_URL not set — skipping"; exit 0; }
+
+          COUNT=$(node -e 'const s=require("fs").readFileSync("data.js","utf8");console.log(new Function(s+";return DATA;")().length)')
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          COMMIT_URL="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+          SHORT_SHA=$(git rev-parse --short HEAD)
+
+          # What changed: commit subjects for the pushed range, plus the
+          # data.js entry-level delta (new ids vs. touched-but-existing ids).
+          NEW_NAMES=""; UPDATED=0
+          if [ "$EVENT_NAME" = "push" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] \
+             && git rev-parse -q --verify "$BEFORE_SHA^{commit}" >/dev/null; then
+            RANGE="$BEFORE_SHA..HEAD"
+            SUBJECTS=$(git log --pretty='• %s' "$RANGE" | grep -v '^• chore:' | head -5)
+            DIFF=$(git diff "$RANGE" -- data.js || true)
+            PLUS=$(printf '%s\n' "$DIFF" | sed -nE 's/^\+\{id:"([^"]*)".*/\1/p' | sort -u)
+            MINUS=$(printf '%s\n' "$DIFF" | sed -nE 's/^-\{id:"([^"]*)".*/\1/p' | sort -u)
+            NEW_IDS=$(comm -23 <(printf '%s\n' "$PLUS") <(printf '%s\n' "$MINUS") | grep . || true)
+            UPDATED=$(comm -12 <(printf '%s\n' "$PLUS") <(printf '%s\n' "$MINUS") | grep -c . || true)
+            if [ -n "$NEW_IDS" ]; then
+              NEW_NAMES=$(node -e '
+                const fs=require("fs");
+                const DATA=new Function(fs.readFileSync("data.js","utf8")+";return DATA;")();
+                const names=process.argv.slice(1).map(i=>(DATA.find(d=>d.id===i)||{name:i}).name);
+                console.log(names.join(", "));' $NEW_IDS)
+            fi
+          else
+            SUBJECTS="• Manual deploy of the current state"
+          fi
+
+          DELTA=""
+          [ -n "$NEW_NAMES" ] && DELTA="✨ *New:* ${NEW_NAMES}"
+          if [ "$UPDATED" -gt 0 ]; then
+            [ -n "$DELTA" ] && DELTA="$DELTA · "
+            DELTA="${DELTA}✏️ *Updated:* ${UPDATED} entr$( [ "$UPDATED" = 1 ] && echo y || echo ies)"
+          fi
+
+          jq -n --arg count "$COUNT" --arg subjects "$SUBJECTS" --arg delta "$DELTA" \
+                --arg run "$RUN_URL" --arg commit "$COMMIT_URL" --arg sha "$SHORT_SHA" '
+            {text: ("🗺️ Boston AI Atlas updated — " + $count + " organizations live"),
+             blocks: ([
+               {type:"header", text:{type:"plain_text", text:"🗺️ Boston AI Atlas updated", emoji:true}},
+               {type:"section", text:{type:"mrkdwn",
+                 text:("*" + $count + " organizations* live at <https://the-open-accelerator.com/ecosystem/|the-open-accelerator.com/ecosystem>\n" + $subjects)}}
+             ]
+             + (if $delta != "" then [{type:"section", text:{type:"mrkdwn", text:$delta}}] else [] end)
+             + [{type:"context", elements:[{type:"mrkdwn",
+                 text:("<" + $commit + "|`" + $sha + "`> · <" + $run + "|deploy log> · via GitHub Actions")}]}])
+            }' \
+          | curl -sS -X POST -H 'Content-type: application/json' -d @- "$SLACK_WEBHOOK_URL"
+
+      - name: Notify Slack (deploy failed)
+        if: failure()
+        continue-on-error: true
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          [ -z "$SLACK_WEBHOOK_URL" ] && { echo "SLACK_WEBHOOK_URL not set — skipping"; exit 0; }
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          SUBJECT=$(git log -1 --pretty=%s 2>/dev/null || echo "unknown commit")
+          jq -n --arg subject "$SUBJECT" --arg run "$RUN_URL" '
+            {text: "🚨 Boston AI Atlas deploy FAILED",
+             blocks: [
+               {type:"header", text:{type:"plain_text", text:"🚨 Atlas deploy failed", emoji:true}},
+               {type:"section", text:{type:"mrkdwn",
+                 text:("`" + $subject + "`\nThe live site is *unchanged*. <" + $run + "|View the failed run> to see what broke.")}}
+             ]}' \
+          | curl -sS -X POST -H 'Content-type: application/json' -d @- "$SLACK_WEBHOOK_URL"
