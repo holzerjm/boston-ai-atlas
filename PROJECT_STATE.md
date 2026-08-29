@@ -135,17 +135,22 @@ transparent moderation, contribution history, on-brand for an open-source accele
 
 ## 4. Deployment
 
-The atlas is **not** deployed from GitHub Pages. It's copied into the main TOA website
-and shipped with it (the site is deployed via rsync; there's an npm deploy wrapper).
+**Automatic since 2026-08-29** — merging to `main` is publishing.
+`.github/workflows/deploy.yml` fires on pushes touching `index.html`/`data.js`
+(plus manual `workflow_dispatch` runs): it re-validates `data.js`, rsyncs both files
+to the origin server, and posts a summary (new/updated entry names, count, links) to
+the TOA Slack — or a failure alert; a failed deploy leaves the live site unchanged.
 
-```bash
-git pull
-./scripts/sync-to-site.sh /path/to/toa-site/src/ecosystem
-# then deploy the TOA site as usual, e.g. npm run deploy:no-delete
-```
+Plumbing (all in repo secrets, Settings → Secrets → Actions): `DEPLOY_SSH_KEY` is a
+dedicated ed25519 key whose `authorized_keys` line on the server is
+**rrsync-restricted** to writing the ecosystem docroot only; `DEPLOY_HOST` is the
+**origin IP** (the domain resolves to Cloudflare's proxy, which won't pass SSH);
+`DEPLOY_USER`; `DEPLOY_PATH` is `/` (paths are relative to the rrsync root);
+`SLACK_WEBHOOK_URL` is optional — notifications skip silently without it and are
+`continue-on-error`, so Slack can never break a deploy.
 
-`.github/workflows/deploy.yml.example` contains an optional auto-rsync workflow — only
-viable if the web server accepts SSH from the public internet; unused so far.
+Manual fallback: `./scripts/sync-to-site.sh <dest>` from a local checkout with SSH
+access. The atlas is **not** on GitHub Pages.
 
 `index.html` carries `<link rel="canonical">` and `og:url` pointing at
 `https://the-open-accelerator.com/ecosystem/`, so that URL stays canonical even if a

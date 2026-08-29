@@ -186,26 +186,28 @@ contribution).
 
 ## Part 3 — Publish to the live site
 
-Merging updates the **repository**. The public atlas at
-**the-open-accelerator.com/ecosystem** updates when the site is rebuilt and uploaded.
-The atlas is two files — `index.html` (the app) and `data.js` (the data) — copied into
-the main TOA website and deployed with it.
+**Publishing is automatic.** When a change to `index.html` or `data.js` lands on
+`main` (i.e. when you merge a PR, or the robot pushes the badge), a GitHub Action
+re-checks the data and copies both files to the web server. Within about a minute
+the public atlas at **the-open-accelerator.com/ecosystem** shows the change, and a
+summary lands in the TOA Slack channel (what deployed, which entries are new or
+updated — or a 🚨 alert if the deploy failed, in which case the live site is simply
+unchanged).
 
-If you have the TOA website checked out on your computer, there's a helper script:
+So: **merging IS publishing.** There is no step 3 anymore.
+
+If the deploy ever fails (red ✗ on the "Deploy to TOA site" action, or the 🚨 Slack
+message): open the failed run from the Actions tab to see why, and know the live site
+still serves the previous version — nothing half-deploys. A deploy can also be
+triggered by hand from the **Actions tab → Deploy to TOA site → Run workflow**.
+
+Manual fallback (only if GitHub Actions is unavailable), from a computer with the
+repo checked out and SSH access to the server:
 
 ```bash
-# 1. Get the latest merged data onto your computer
 git pull
-
-# 2. Copy index.html + data.js into the website's ecosystem folder
-./scripts/sync-to-site.sh /path/to/toa-site/src/ecosystem
-
-# 3. Deploy the website the usual way (from the TOA site folder), e.g.
-#    npm run deploy:no-delete
+./scripts/sync-to-site.sh <destination>   # copies index.html + data.js
 ```
-
-That's it — the new entry is live. (If your team has turned on automatic deploys, this
-happens for you on merge; ask a maintainer which setup you're on.)
 
 ---
 

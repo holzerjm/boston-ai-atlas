@@ -33,13 +33,15 @@ images will be broken and it's not how the page ships — prefer the local serve
 
 ## Deploy
 
-The atlas is **not** deployed from GitHub Pages — it ships as part of
-[the TOA website](https://the-open-accelerator.com). To publish the current state:
+**Merging is publishing.** A GitHub Action deploys `index.html` + `data.js` to
+[the live site](https://the-open-accelerator.com/ecosystem/) on every merge to `main`
+that touches them — it re-validates the data first, then rsyncs to the server and
+posts a summary to the TOA Slack. (Not GitHub Pages.)
+
+Manual fallback, from a checkout with SSH access to the server:
 
 ```bash
-git pull
-./scripts/sync-to-site.sh /path/to/toa-site/src/ecosystem
-# then deploy the TOA site as usual, e.g. npm run deploy:no-delete
+./scripts/sync-to-site.sh <destination>
 ```
 
 The page must be served at a directory URL (`…/ecosystem/`, trailing slash) so the
