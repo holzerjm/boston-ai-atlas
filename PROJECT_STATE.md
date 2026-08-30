@@ -97,7 +97,7 @@ optional 1-6-row [label, value] "at a glance" table (whitelisted labels). Tags a
 canonical ~45-word vocabulary (list in `validate.js`; unknown tags warn-only). Full
 reference: `CONTRIBUTING.md`; enforced by `scripts/validate.js`.
 
-**Current composition (160 entries):** vc 49 · accel 19 · startup 16 · student 13 ·
+**Current composition (158 entries):** vc 49 · accel 18 · startup 15 · student 13 ·
 university 12 · corporate 12 · gov 9 · space 8 · event 8 · angel 7 · community 7.
 
 ### Editorial voice
