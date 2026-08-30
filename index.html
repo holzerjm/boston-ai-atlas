@@ -36,6 +36,7 @@ tailwind.config = {
 <script>(function(){try{if(localStorage.getItem('toa-atlas-theme')==='light'){document.documentElement.classList.remove('dark');}}catch(e){}})();</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.24.0/maplibre-gl.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css">
 <style>
 :root{
   --bg:#0a0a0f; --bg2:#101018; --panel:#12121a; --panel2:#1e1e2a;
@@ -154,6 +155,11 @@ html:not(.dark) .map-results{background:rgba(255,255,255,.97)}
 .pop-btn{display:inline-block;font-size:12px;font-weight:700;color:#000;background:linear-gradient(90deg,#ffd54f,#ffc600);
   padding:6px 12px;border-radius:8px;cursor:pointer;text-decoration:none}
 .pulse-dot{border-radius:50%;box-shadow:0 0 10px 2px currentColor;border:2px solid rgba(255,255,255,.75)}
+.cluster-chip{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font:700 13px/1 'Red Hat Display',sans-serif;background:rgba(20,23,28,.92);color:#fff;
+  border:2px solid #ff5c45;box-shadow:0 0 12px rgba(255,92,69,.35)}
+html:not(.dark) .cluster-chip{background:rgba(255,255,255,.95);color:#1c1a17;
+  border-color:#ee0000;box-shadow:0 0 10px rgba(238,0,0,.25)}
 
 /* ---------- GALAXY ---------- */
 .galaxy-wrap{position:relative;height:calc(100vh - 64px);min-height:540px;background:radial-gradient(ellipse at 50% 40%,#0d1530 0%,#070b16 70%)}
@@ -237,6 +243,19 @@ html:not(.dark) .map-results{background:rgba(255,255,255,.97)}
 .dr-why div{font-size:13px;line-height:1.55;color:#c4cdf0}
 .dr-sec{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin:18px 0 9px}
 .map-home{font-size:18px;line-height:26px}
+.map-cluster-toggle{font-size:17px;line-height:26px;letter-spacing:-1px}
+.map-cluster-toggle.off{opacity:.45}
+/* guided tour */
+.tour-card{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;z-index:9500;
+  width:min(440px,calc(100vw - 32px));background:#14171c;border:1px solid #2a2f38;
+  border-radius:12px;padding:16px 18px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.tour-card p{margin:8px 0 12px;color:#b7bdc6;font-size:14px;line-height:1.5}
+.tour-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.tour-step{font-size:12px;color:#6b7280;white-space:nowrap}
+.tour-actions{display:flex;gap:10px;justify-content:flex-end}
+html:not(.dark) .tour-card{background:#fff;border-color:#ddd;box-shadow:0 12px 40px rgba(0,0,0,.18)}
+html:not(.dark) .tour-card p{color:#444}
+.tour-spot{outline:3px solid #ffc600;outline-offset:3px;border-radius:10px}
 .dr-verified{font-size:12px;color:var(--muted);margin-top:16px}
 .dr-verified.stale{color:#fbbf24}
 .stale-tag{color:#fbbf24;border-color:rgba(251,191,36,.4)}
@@ -277,6 +296,15 @@ html:not(.dark) .dr-verified.stale,html:not(.dark) .stale-tag{color:#b45309;bord
 <noscript><p style="padding:16px">The interactive atlas needs JavaScript. You can still
 browse the <a href="e/">full organization index</a> or use the open dataset
 (<a href="atlas.json">JSON</a> · <a href="atlas.csv">CSV</a>, CC BY 4.0).</p></noscript>
+
+<div id="tourCard" class="tour-card" style="display:none" role="dialog" aria-label="Quick tour">
+  <div class="tour-head"><b id="tourTitle"></b><span id="tourStep" class="tour-step"></span></div>
+  <p id="tourText"></p>
+  <div class="tour-actions">
+    <button class="btn btn-sec" onclick="endTour(false)">Skip</button>
+    <button class="btn btn-pri" id="tourNext" onclick="nextTourStep()">Next →</button>
+  </div>
+</div>
 
 <!-- ============ STANDARD TOA SITE HEADER ============ -->
 <header id="site-header" class="relative z-50 px-4 py-4 md:px-8 bg-white/90 dark:bg-dark-bg/95 backdrop-blur-md border-b border-gray-200 dark:border-white/10">
@@ -349,7 +377,7 @@ browse the <a href="e/">full organization index</a> or use the open dataset
     <button class="tab" data-view="directory"><span class="ico">📇</span>Directory</button>
     <div class="nav-spacer"></div>
     <button class="tab suggest" id="suggestBtn" title="Propose a new organization for the atlas">➕ Suggest an entry</button>
-    <span class="nav-hint">Click any of the colored icons on the map for details</span>
+    <span class="nav-hint">Click any colored icon for details · <a href="#" onclick="startTour();return false" style="color:#ffc600">Take the quick tour</a></span>
     <a id="ghLink" class="nav-gh" target="_blank" rel="noopener" title="Contribute on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
   </div>
 </nav>
@@ -454,6 +482,7 @@ browse the <a href="e/">full organization index</a> or use the open dataset
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.24.0/maplibre-gl.min.js"></script>
 <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
 <script src="data.js"></script>
 <script>
 /* ============================================================
@@ -576,13 +605,20 @@ function goToMap(id){
   const d = byId[id];
   setTimeout(()=>{
     map.flyTo([d.lat,d.lng], 15, {duration:.9});
-    const m = markers[id]; if(m) setTimeout(()=>m.openPopup(), 950);
+    const m = markers[id];
+    if(m) setTimeout(()=>{
+      // at z15 clustering is disabled, so this resolves immediately; the
+      // helper covers any edge where the marker is still inside a cluster
+      if(clusterGroup && clusterGroup.hasLayer(m)) clusterGroup.zoomToShowLayer(m, ()=>m.openPopup());
+      else m.openPopup();
+    }, 950);
   }, 120);
 }
 window.goToMap = goToMap;
 
 /* ---------- map ---------- */
-let map, markers = {}, mapTiles;
+let map, markers = {}, mapTiles, clusterGroup, flatGroup, clustered = true;
+try{ clustered = localStorage.getItem("toa-atlas-cluster") !== "off"; }catch(e){}
 const activeCats = new Set(Object.keys(CATS));
 // OpenFreeMap vector basemap via maplibre-gl-leaflet — keyless, unlimited,
 // commercial use permitted. Leaflet stays the map engine; only the base layer
@@ -619,6 +655,47 @@ function setMapTiles(){ if(!map) return; if(mapTiles) map.removeLayer(mapTiles);
   };
   homeCtl.addTo(map);
 
+  // cluster stacked pins at city zoom; street zoom (15+) shows every pin.
+  // flatGroup is the unclustered alternative — the ∴ control swaps them.
+  clusterGroup = L.markerClusterGroup({
+    showCoverageOnHover:false, maxClusterRadius:46, disableClusteringAtZoom:15,
+    spiderfyOnMaxZoom:false,
+    iconCreateFunction: c => L.divIcon({className:"",
+      html:`<div class="cluster-chip">${c.getChildCount()}</div>`,
+      iconSize:[34,34], iconAnchor:[17,17]})
+  });
+  flatGroup = L.layerGroup();
+  const pinGroup = () => clustered ? clusterGroup : flatGroup;
+  function setClustered(on){
+    if(on === clustered){ return; }
+    map.removeLayer(pinGroup());
+    clustered = on;
+    const g = pinGroup(); g.clearLayers();
+    DATA.forEach(d=>{ if(activeCats.has(d.cat)) g.addLayer(markers[d.id]); });
+    map.addLayer(g);
+    try{ localStorage.setItem("toa-atlas-cluster", on ? "on" : "off"); }catch(e){}
+    document.querySelectorAll(".map-cluster-toggle").forEach(b=>{
+      b.classList.toggle("off", !on);
+      b.title = on ? "Show every pin (no grouping)" : "Group nearby pins";
+      b.setAttribute("aria-pressed", String(on));
+    });
+  }
+  window.setClustered = setClustered;
+
+  // cluster on/off control, below re-center
+  const clusterCtl = L.control({position:"topleft"});
+  clusterCtl.onAdd = () => {
+    const div = L.DomUtil.create("div","leaflet-bar");
+    const a = L.DomUtil.create("a","map-cluster-toggle" + (clustered ? "" : " off"),div);
+    a.href = "#"; a.title = clustered ? "Show every pin (no grouping)" : "Group nearby pins";
+    a.setAttribute("role","button"); a.setAttribute("aria-pressed", String(clustered));
+    a.setAttribute("aria-label","Toggle grouping of nearby pins");
+    a.innerHTML = "∴";
+    L.DomEvent.on(a,"click",e=>{ L.DomEvent.preventDefault(e); setClustered(!clustered); });
+    return div;
+  };
+  clusterCtl.addTo(map);
+
   DATA.forEach(d=>{
     const col = cColor(d.cat);
     const icon = L.divIcon({className:"", html:
@@ -631,9 +708,10 @@ function setMapTiles(){ if(!map) return; if(mapTiles) map.removeLayer(mapTiles);
       `<div class="pop-desc">${esc(d.desc.length>140 ? d.desc.slice(0,140)+"…" : d.desc)}</div>`+
       `<span class="pop-btn" onclick="openDrawer('${d.id}')">Full details →</span>`,
       {maxWidth:260});
-    m.addTo(map);
+    pinGroup().addLayer(m);
     markers[d.id] = m;
   });
+  map.addLayer(pinGroup());
 
   // legend
   const lg = $("mapLegend");
@@ -646,7 +724,7 @@ function setMapTiles(){ if(!map) return; if(mapTiles) map.removeLayer(mapTiles);
       div.classList.toggle("off", !activeCats.has(k));
       DATA.forEach(d=>{
         if(d.cat!==k) return;
-        if(activeCats.has(k)) markers[d.id].addTo(map); else map.removeLayer(markers[d.id]);
+        if(activeCats.has(k)) pinGroup().addLayer(markers[d.id]); else pinGroup().removeLayer(markers[d.id]);
       });
     });
     lg.appendChild(div);
@@ -979,6 +1057,58 @@ function copyLink(btn){
   }).catch(()=>{});
 }
 window.copyLink = copyLink;
+
+/* ---------- guided tour (first visit, or via the nav link) ---------- */
+const TOUR = [
+  { view:"map", sel:".nav-inner",
+    title:"Welcome to the Boston AI Atlas 👋",
+    text:"160 verified organizations — VCs, labs, accelerators, spaces and communities — in four views: the Map, the Galaxy of connections, a stage-by-stage Founder Journey, and a searchable Directory." },
+  { view:"map", sel:"#mapSearch",
+    title:"The Map",
+    text:"Search anything, toggle categories in the legend, and click any colored pin for details. ⌖ re-centers on downtown Boston; ∴ groups or un-groups nearby pins." },
+  { view:"directory", sel:"#catChips",
+    title:"The Directory",
+    text:"Full-text search plus category and founder-stage filters — the fastest way to answer “who can help me right now?”" },
+  { view:"journey", sel:"#stepper",
+    title:"Founder Journey",
+    text:"Pick your stage — Spark, Validate, Build, Fund or Scale — and see the resources curated for exactly that moment." },
+  { view:"map", sel:"#suggestBtn",
+    title:"Help it stay alive",
+    text:"Every entry shows when we last verified it, and 🔗 copies a shareable link. Know an org we're missing? Suggest it here — a maintainer reviews every submission." },
+];
+let tourStep = -1;
+function startTour(){ tourStep = -1; nextTourStep(); }
+function endTour(){
+  document.querySelectorAll(".tour-spot").forEach(el=>el.classList.remove("tour-spot"));
+  $("tourCard").style.display = "none";
+  const wasRunning = tourStep >= 0;
+  tourStep = -1;
+  try{ localStorage.setItem("toa-atlas-tour","done"); }catch(e){}
+  if(wasRunning) switchView("map");
+}
+function nextTourStep(){
+  tourStep++;
+  if(tourStep >= TOUR.length){ endTour(); return; }
+  const s = TOUR[tourStep];
+  document.querySelectorAll(".tour-spot").forEach(el=>el.classList.remove("tour-spot"));
+  if(s.view && currentView !== s.view) switchView(s.view);
+  setTimeout(()=>{
+    const t = document.querySelector(s.sel);
+    if(t){ t.classList.add("tour-spot"); t.scrollIntoView({block:"center", behavior:"smooth"}); }
+    $("tourTitle").textContent = s.title;
+    $("tourText").textContent = s.text;
+    $("tourStep").textContent = (tourStep+1) + " / " + TOUR.length;
+    $("tourNext").textContent = tourStep === TOUR.length-1 ? "Done" : "Next →";
+    $("tourCard").style.display = "block";
+  }, 180);
+}
+window.startTour = startTour; window.endTour = endTour; window.nextTourStep = nextTourStep;
+document.addEventListener("keydown", e=>{ if(e.key === "Escape" && tourStep >= 0) endTour(); });
+// auto-start for first-time visitors — but never over a shared deep link
+(function(){
+  let seen = null; try{ seen = localStorage.getItem("toa-atlas-tour"); }catch(e){}
+  if(!seen && !location.search.includes("entry=") && !location.hash) setTimeout(startTour, 1400);
+})();
 
 /* ---------- structured data (SEO) ---------- */
 (function jsonLd(){
