@@ -4,10 +4,11 @@
 Claude Code (or by any new maintainer) without the original chat history. It captures
 what this project is, how it's built, what's been decided, and what's left.
 
-**Last updated:** 2026-08-29; 160 entries (FoundersEdge and Milemark Capital via issues
-#12/#13; 21 VCs from the MGMT Boston directory sweep; LabCentral via the suggestion
-bot's first live run, PR #15; then 15 verified gov/space/student orgs from the
-thin-category sourcing pass).
+**Last updated:** 2026-08-30; 158 entries. Recent history: FoundersEdge + Milemark via
+issues #12/#13; 21 VCs from the MGMT Boston sweep; LabCentral via the suggestion bot's
+first run (PR #15); 15 gov/space/student orgs; then the first link-rot sweep fixed 19
+URLs and retired three defunct orgs (BUMIC → replaced by BU AI Society; Cogito acquired
+by Verint; XLR8 defunct).
 Repo: <https://github.com/holzerjm/boston-ai-atlas> · Live: <https://the-open-accelerator.com/ecosystem/>
 
 ---
