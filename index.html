@@ -78,6 +78,7 @@ html:not(.dark) .footer,html:not(.dark) footer.py-16{background:#0a0a0f}
 /* Light map: tiles swap to CARTO light_all (JS), the container backdrop and floating controls follow so the popups/legend/search read as light. */
 html:not(.dark) #map{background:#e8eaed}
 html:not(.dark) .map-legend{background:rgba(255,255,255,.92)}
+html:not(.dark) #gxLegend{background:rgba(10,15,30,.92)} /* the galaxy stays dark in light mode */
 html:not(.dark) .map-search input{background:rgba(255,255,255,.94)}
 html:not(.dark) .map-results{background:rgba(255,255,255,.97)}
 ::-webkit-scrollbar{width:10px;height:10px}
@@ -140,6 +141,9 @@ html:not(.dark) .map-results{background:rgba(255,255,255,.97)}
 .lg-item.off{opacity:.32}
 .lg-dot{width:11px;height:11px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}
 .map-search{position:absolute;z-index:1000;top:14px;left:54px;right:auto;width:300px}
+.gx-search{left:14px}
+html:not(.dark) .gx-search input{background:rgba(10,15,30,.92);color:#e6ecff} /* galaxy stays dark */
+html:not(.dark) .gx-search .map-results{background:rgba(10,15,30,.97);color:#e6ecff}
 .map-search input{width:100%;background:rgba(10,15,30,.92);border:1px solid var(--line);color:var(--text);
   border-radius:12px;padding:11px 14px;font-size:14px;outline:none;backdrop-filter:blur(8px)}
 .map-search input:focus{border-color:var(--gold)}
@@ -412,8 +416,13 @@ browse the <a href="e/">full organization index</a> or use the open dataset
 <section id="view-galaxy" class="view view-full">
   <div class="galaxy-wrap">
     <canvas id="galaxy"></canvas>
-    <div class="gx-hint">Drag to pan · scroll to zoom · click a node for details</div>
+    <div class="map-search gx-search">
+      <input id="gxSearch" type="text" placeholder="Find an organization in the galaxy…" autocomplete="off">
+      <div class="map-results" id="gxResults"></div>
+    </div>
+    <div class="gx-hint">Drag to pan · scroll to zoom · hover to trace connections · click a node for details</div>
     <div class="gx-tip" id="gxTip"></div>
+    <div class="map-legend" id="gxLegend"><h4>Categories · click to toggle</h4></div>
   </div>
 </section>
 
@@ -797,6 +806,7 @@ function setMapTiles(){ if(!map) return; if(mapTiles) map.removeLayer(mapTiles);
 /* ---------- galaxy ---------- */
 const gxCanvas = $("galaxy"), gxCtx = gxCanvas.getContext("2d"), gxTip = $("gxTip");
 let gxNodes = [], gxEdges = [], gxStars = [], gxW=0, gxH=0, gxDPR=1;
+let gxAdj = [], gxCats = new Set(Object.keys(CATS)), gxLocked = null;
 let gxScale=1, gxOX=0, gxOY=0, gxHover=null, gxDrag=null, gxPanning=false, gxLastX=0, gxLastY=0;
 let gxEnergy = 1;
 
@@ -822,6 +832,25 @@ let gxEnergy = 1;
       if(idx[l]!==undefined) gxEdges.push({a:idx[d.id], b:idx[l], k:0.006, len:90, soft:false});
     });
   });
+  // degree + adjacency from real links; connected nodes render larger
+  gxAdj = gxNodes.map(()=>new Set());
+  gxEdges.forEach(e=>{ if(!e.soft){
+    gxAdj[e.a].add(e.b); gxAdj[e.b].add(e.a);
+    gxNodes[e.a].deg=(gxNodes[e.a].deg||0)+1; gxNodes[e.b].deg=(gxNodes[e.b].deg||0)+1;
+  }});
+  gxNodes.forEach(n=>{ if(!n.hub) n.r = 5.5 + Math.min(n.deg||0, 8)*0.8; });
+  // category legend (same behavior as the map legend)
+  const lg = $("gxLegend");
+  Object.entries(CATS).forEach(([k,v])=>{
+    const div = document.createElement("div");
+    div.className = "lg-item"; div.dataset.cat = k;
+    div.innerHTML = `<span class="lg-dot" style="color:${v.color};background:${v.color}"></span>${v.label}`;
+    div.addEventListener("click", ()=>{
+      if(gxCats.has(k)) gxCats.delete(k); else gxCats.add(k);
+      div.classList.toggle("off", !gxCats.has(k));
+    });
+    lg.appendChild(div);
+  });
   // starfield
   for(let i=0;i<160;i++) gxStars.push({x:Math.random(), y:Math.random(), r:Math.random()*1.3+0.3, p:Math.random()*Math.PI*2});
 })();
@@ -846,7 +875,7 @@ function gxStep(){
       let dx=a.x-b.x, dy=a.y-b.y, d2=dx*dx+dy*dy;
       if(d2<1) d2=1;
       if(d2<26000){
-        const f = (a.hub||b.hub ? 420 : 240)/d2;
+        const f = ((a.hub||b.hub ? 420 : 240) * (1+((a.deg||0)+(b.deg||0))*0.04))/d2;
         const d = Math.sqrt(d2);
         dx/=d; dy/=d;
         a.vx+=dx*f; a.vy+=dy*f; b.vx-=dx*f; b.vy-=dy*f;
@@ -884,36 +913,55 @@ function gxDraw(t){
   const cx = gxW/2+gxOX, cy = gxH/2+gxOY;
   ctx.save();
   ctx.translate(cx,cy); ctx.scale(gxScale,gxScale);
+  // hover focus: an entity highlights itself + its linked neighborhood;
+  // a hub highlights its whole category
+  let focus = null;
+  const fNode = gxHover || gxLocked;   // search locks a focus; hover overrides it
+  if(fNode){
+    focus = new Set();
+    const hi = gxNodes.indexOf(fNode);
+    focus.add(hi);
+    if(fNode.hub) gxNodes.forEach((n,i)=>{ if(n.cat===fNode.cat) focus.add(i); });
+    else gxAdj[hi].forEach(i=>focus.add(i));
+  }
   // edges
   gxEdges.forEach(e=>{
     const a=gxNodes[e.a], b=gxNodes[e.b];
-    const hl = gxHover && (gxNodes[e.a]===gxHover || gxNodes[e.b]===gxHover);
-    ctx.strokeStyle = hl ? "rgba(180,200,255,.85)" : (e.soft ? "rgba(120,140,220,.10)" : "rgba(160,180,255,.30)");
-    ctx.lineWidth = (hl?1.6:(e.soft?0.7:1.1))/gxScale;
+    if(!gxCats.has(a.cat) || !gxCats.has(b.cat)) return;
+    const hl = focus && focus.has(e.a) && focus.has(e.b) && !e.soft;
+    ctx.globalAlpha = focus && !hl ? 0.07 : 1;
+    ctx.strokeStyle = hl ? "rgba(180,200,255,.9)" : (e.soft ? "rgba(120,140,220,.10)" : "rgba(160,180,255,.30)");
+    ctx.lineWidth = (hl?1.8:(e.soft?0.7:1.1))/gxScale;
     ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
   });
+  ctx.globalAlpha = 1;
   // nodes
-  gxNodes.forEach(n=>{
+  gxNodes.forEach((n,i)=>{
+    if(!gxCats.has(n.cat)) return;
+    const inFocus = !focus || focus.has(i);
     const col = cColor(n.cat);
     const hl = n===gxHover;
-    const r = n.r*(hl?1.5:1);
+    const r = n.r*(hl?1.4:1);
     const grd = ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,r*3);
     grd.addColorStop(0, col); grd.addColorStop(1, "transparent");
-    ctx.globalAlpha = n.hub?0.5:0.35; ctx.fillStyle = grd;
+    ctx.globalAlpha = inFocus ? (n.hub?0.5:0.35) : 0.05; ctx.fillStyle = grd;
     ctx.beginPath(); ctx.arc(n.x,n.y,r*3,0,Math.PI*2); ctx.fill();
-    ctx.globalAlpha = 1; ctx.fillStyle = col;
+    ctx.globalAlpha = inFocus ? 1 : 0.15; ctx.fillStyle = col;
     ctx.beginPath(); ctx.arc(n.x,n.y,r,0,Math.PI*2); ctx.fill();
     if(n.hub){
+      ctx.globalAlpha = inFocus ? 1 : 0.25;
       ctx.fillStyle="rgba(230,236,255,.92)";
       ctx.font = `700 ${13/gxScale}px Red Hat Display, Segoe UI, sans-serif`;
       ctx.textAlign="center";
       ctx.fillText(n.name, n.x, n.y - (r+10)/1);
-    } else if(gxScale>1.35 || hl){
-      ctx.fillStyle = hl ? "#fff" : "rgba(200,212,255,.75)";
+    } else if(hl || (focus ? inFocus : gxScale>1.35)){
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = hl ? "#fff" : "rgba(200,212,255,.8)";
       ctx.font = `${hl?600:400} ${11/gxScale}px Red Hat Display, Segoe UI, sans-serif`;
       ctx.textAlign="center";
       ctx.fillText(n.name, n.x, n.y - r - 6/gxScale);
     }
+    ctx.globalAlpha = 1;
   });
   ctx.restore();
 }
@@ -929,6 +977,7 @@ function gxNodeAt(px,py){
   const x = (px-cx)/gxScale, y = (py-cy)/gxScale;
   let best=null, bd=Infinity;
   gxNodes.forEach(n=>{
+    if(!gxCats.has(n.cat)) return;
     const d=(n.x-x)**2+(n.y-y)**2, rr=(n.r+8/gxScale)**2;
     if(d<rr && d<bd){best=n;bd=d;}
   });
@@ -966,7 +1015,41 @@ gxCanvas.addEventListener("click", e=>{
   const rect=gxCanvas.getBoundingClientRect();
   const n = gxNodeAt(e.clientX-rect.left, e.clientY-rect.top);
   if(n && !n.hub) openDrawer(n.id);
+  else if(!n && gxLocked){ gxLocked = null; $("gxSearch").value = ""; }  // click empty space clears the search focus
 });
+
+/* galaxy search: find an org, center it, and lock its constellation */
+function gxFocusOn(id){
+  const n = gxNodes.find(x=>x.id===id);
+  if(!n) return;
+  gxLocked = n;
+  gxScale = Math.max(gxScale, 1.5);
+  gxOX = -n.x*gxScale; gxOY = -n.y*gxScale;
+  gxEnergy = Math.max(gxEnergy, 0.3);
+}
+(function initGxSearch(){
+  const inp = $("gxSearch"), res = $("gxResults");
+  inp.addEventListener("input", ()=>{
+    const q = inp.value.trim().toLowerCase();
+    if(!q){ res.classList.remove("open"); res.innerHTML=""; gxLocked = null; return; }
+    const hits = DATA.filter(d =>
+      d.name.toLowerCase().includes(q) || (d.tags||[]).some(t=>t.toLowerCase().includes(q))
+    ).slice(0,8);
+    res.innerHTML = hits.map(d=>
+      `<div data-id="${d.id}"><span class="lg-dot" style="color:${cColor(d.cat)};background:${cColor(d.cat)}"></span>${esc(d.name)}</div>`).join("")
+      || `<div style="color:var(--muted)">No matches</div>`;
+    res.classList.add("open");
+    res.querySelectorAll("div[data-id]").forEach(el=>{
+      el.addEventListener("click", ()=>{
+        res.classList.remove("open"); inp.value = byId[el.dataset.id].name;
+        gxFocusOn(el.dataset.id);
+      });
+    });
+  });
+  document.addEventListener("keydown", e=>{
+    if(e.key==="Escape" && gxLocked){ gxLocked = null; inp.value = ""; res.classList.remove("open"); }
+  });
+})();
 gxCanvas.addEventListener("wheel", e=>{
   e.preventDefault();
   const f = e.deltaY<0 ? 1.12 : 0.89;
