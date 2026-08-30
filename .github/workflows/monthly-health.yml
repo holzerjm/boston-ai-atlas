@@ -1,0 +1,59 @@
+# Monthly health check — the "keep 'verified' true" rails.
+# On the 1st of each month (and on demand): run the link-rot checker and
+# the verification rota, post both to the TOA Slack, and mirror them in
+# the job summary. A report, not a gate — it never fails the build.
+#
+# NOTE: GitHub disables cron workflows after ~60 days without repo
+# activity. This repo's badge-bot commits normally keep it alive; if the
+# repo goes fully quiet for a quarter, re-enable from the Actions tab.
+
+name: Monthly health check
+
+on:
+  schedule:
+    - cron: "0 13 1 * *"   # 1st of the month, 13:00 UTC (~9am Boston)
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Link-rot check
+        run: |
+          node scripts/linkcheck.js | tee linkcheck.txt
+          { echo '## Link check'; echo '```'; cat linkcheck.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verification rota
+        run: |
+          node scripts/stale.js --queue 13 | tee rota.txt
+          { echo '## Verification rota'; echo '```'; cat rota.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Post to Slack
+        continue-on-error: true
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          [ -z "$SLACK_WEBHOOK_URL" ] && { echo "SLACK_WEBHOOK_URL not set — skipping"; exit 0; }
+          SUMMARY=$(head -1 linkcheck.txt)
+          LINKS=$(tail -n +2 linkcheck.txt | grep -E '^(BROKEN|MOVED|  )' | head -25)
+          ROTA=$(tail -n +2 rota.txt | grep '^  ' | head -15)
+          REPO_URL="${{ github.server_url }}/${{ github.repository }}"
+          jq -n --arg summary "$SUMMARY" --arg links "$LINKS" --arg rota "$ROTA" --arg repo "$REPO_URL" '
+            {text: ("🩺 Atlas monthly health check — " + $summary),
+             blocks: ([
+               {type:"header", text:{type:"plain_text", text:"🩺 Atlas monthly health check", emoji:true}},
+               {type:"section", text:{type:"mrkdwn", text:("*" + $summary + "*")}}
+             ]
+             + (if $links != "" then [{type:"section", text:{type:"mrkdwn",
+                 text:("*Needs attention:*\n```" + $links + "```")}}] else [] end)
+             + [{type:"section", text:{type:"mrkdwn",
+                 text:("*This month'\''s ~20-minute verification queue:*\n```" + $rota + "```")}},
+                {type:"context", elements:[{type:"mrkdwn",
+                 text:("Fix an entry: edit data.js on <" + $repo + "|GitHub>, bump lastVerified, merge — it deploys itself.")}]}])
+            }' \
+          | curl -sS -X POST -H 'Content-type: application/json' -d @- "$SLACK_WEBHOOK_URL"

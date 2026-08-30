@@ -5,6 +5,8 @@
    Usage:
      node scripts/stale.js               -> report with 12-month threshold
      node scripts/stale.js --months 6    -> custom threshold
+     node scripts/stale.js --queue 13    -> the N least-recently-verified
+                                            entries (the monthly rota)
 
    lastVerified is the month ("YYYY-MM") a maintainer last confirmed
    the org is real, active, and the entry's facts are right.
@@ -27,6 +29,19 @@ if (i !== -1 && argv[i + 1]) months = parseInt(argv[i + 1], 10);
 for (const a of argv) {
   const m = a.match(/^--months=(\d+)$/);
   if (m) months = parseInt(m[1], 10);
+}
+
+// --- Rota mode: the N least-recently-verified entries, oldest first ---
+const qi = argv.indexOf("--queue");
+if (qi !== -1) {
+  const n = Math.max(1, parseInt(argv[qi + 1], 10) || 13);
+  const queue = [...DATA].sort((a, b) =>
+    (a.lastVerified || "0000-00").localeCompare(b.lastVerified || "0000-00")).slice(0, n);
+  console.log(`Verification rota — the ${queue.length} entries longest without a check:`);
+  for (const d of queue)
+    console.log(`  ${d.lastVerified || "never"}  ${d.name} — ${d.url}`);
+  console.log(`\nOpen each site, fix or confirm the entry, bump lastVerified to the current month, one PR.`);
+  process.exit(0);
 }
 if (!Number.isInteger(months) || months < 1) {
   console.log("Usage: node scripts/stale.js [--months N]  (N must be a positive integer)");

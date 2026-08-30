@@ -224,8 +224,16 @@ git pull
 ## The monthly freshness sweep
 
 Every entry carries a `lastVerified` month — the month a maintainer last confirmed the
-org is real, active, and the entry's facts are right. To keep those honest, do a small
-sweep about once a month:
+org is real, active, and the entry's facts are right.
+
+> **The robot starts this for you.** On the 1st of each month, the "Monthly health
+> check" action posts two lists to the TOA Slack: URLs that are **broken or have
+> moved** (fix these first — a dead link on a "verified" atlas is the worst look),
+> and the ~13 entries longest without a check — your 20-minute queue. The same
+> report is in the action's job summary, or run it yourself:
+> `node scripts/linkcheck.js` and `node scripts/stale.js --queue 13`.
+
+To keep those honest, do a small sweep about once a month:
 
 1. Run `node scripts/stale.js` on your computer — it lists the entries that have gone
    longest without a check. (No terminal? The robot prints the same list in the **job
