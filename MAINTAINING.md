@@ -260,6 +260,10 @@ Every entry has these fields. ⭐ = required.
 | `tags` |  | 2–4 short lowercase tags. | `["robotics", "lab space"]` |
 | `stages` |  | Which founder stages it serves — **numbers**, see table below. | `[1, 3]` |
 | `links` |  | `id`s of related entries (draws lines in the Galaxy view). Optional. | `["csail", "engine"]` |
+| `offers` |  | What founders **get**, 1–4 of: `funding` (invests) · `grants` (equity-free money) · `space` · `compute` · `mentorship` · `community` · `talent` · `customers` (pilots/buyers). Powers the Directory's "I need…" filter. The suggestion form asks this as checkboxes. | `["funding","mentorship"]` |
+| `applyBy` |  | `"rolling"`, or the **current application deadline** as `"YYYY-MM-DD"`. Shows "Applications open" in the app; past dates auto-hide and the robot warns so you clear or roll them. Only for orgs with a real application (accelerators, grants, programs). | `"2026-10-15"` |
+| `applyNote` |  | Short label next to the deadline, max 40 chars. | `"Fall 2026 cohort"` |
+| `facts` |  | Optional "at a glance" table, 1–6 `[label, value]` rows. Labels must be one of: Check size, Stage, Terms, Equity, Board seat, Program length, Cohort size, Focus. Facts rot — only add ones you'd bet on, and re-check them at `lastVerified` time. | `[["Check size","$500K–$2M"]]` |
 | `lastVerified` |  | The month (`"YYYY-MM"`) a maintainer last **confirmed the org is real, active, and the facts are right** — set it when you actually checked the org, not merely when you edited the entry. New entry → today's month. The robot only warns if it's missing, but always set it. | `"2026-08"` |
 
 ### Category (the `cat` field)

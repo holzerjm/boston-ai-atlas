@@ -73,6 +73,20 @@ body:
         - label: "🔧 Build — team, space & compute"
         - label: "💸 Fund — raise your first round"
         - label: "🚀 Scale — grow & lead"
+  - type: checkboxes
+    id: offers
+    attributes:
+      label: What does it offer founders?
+      description: "Pick what the organization actually gives an early-stage founder"
+      options:
+        - label: "💸 Funding (writes checks / invests)"
+        - label: "🎁 Equity-free money (grants, non-dilutive awards)"
+        - label: "🏢 Space (labs, coworking, makerspace)"
+        - label: "🖥️ Compute (GPU/HPC access)"
+        - label: "🧭 Mentorship (structured advising or programs)"
+        - label: "🤝 Community (peer network, meetups)"
+        - label: "🧑‍💻 Talent (hiring or co-founder pipeline)"
+        - label: "🛒 Customers & pilots (design partners, procurement)"
   - type: input
     id: tags
     attributes:

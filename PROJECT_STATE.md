@@ -88,8 +88,14 @@ tips), and `DATA` (the array of entries). One entry:
 `links` must resolve to real ids (they draw Galaxy edges) · `approx: true` when the pin is
 neighbourhood-level · `lastVerified` is the month a maintainer last **actually checked**
 the org (validator warns if missing, errors if malformed; drawer shows "✓ Verified …",
-entries >12 months old get a stale marker). Full reference: `CONTRIBUTING.md`; enforced
-by `scripts/validate.js`.
+entries >12 months old get a stale marker). **Since 2026-08-30 ("decision tool" fields):**
+`offers` — 1-4 of a controlled 8-value vocabulary (funding · grants · space · compute ·
+mentorship · community · talent · customers) powering the Directory's "I need…" filter;
+`applyBy` — `"rolling"` or a `"YYYY-MM-DD"` deadline (past dates auto-hide in the app,
+validator warns until cleared/rolled); `applyNote` — short cohort label; `facts` — an
+optional 1-6-row [label, value] "at a glance" table (whitelisted labels). Tags are a
+canonical ~45-word vocabulary (list in `validate.js`; unknown tags warn-only). Full
+reference: `CONTRIBUTING.md`; enforced by `scripts/validate.js`.
 
 **Current composition (160 entries):** vc 49 · accel 19 · startup 16 · student 13 ·
 university 12 · corporate 12 · gov 9 · space 8 · event 8 · angel 7 · community 7.

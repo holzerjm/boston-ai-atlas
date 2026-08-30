@@ -256,6 +256,22 @@ html:not(.dark) .cluster-chip{background:rgba(255,255,255,.95);color:#1c1a17;
 html:not(.dark) .tour-card{background:#fff;border-color:#ddd;box-shadow:0 12px 40px rgba(0,0,0,.18)}
 html:not(.dark) .tour-card p{color:#444}
 .tour-spot{outline:3px solid #ffc600;outline-offset:3px;border-radius:10px}
+/* offers / application windows / facts */
+.need-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.need-label{font-size:12px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+.need-chip{font:500 12.5px/1 inherit;font-family:inherit;padding:6px 11px;border-radius:999px;cursor:pointer;
+  background:transparent;border:1px solid #2a2f38;color:#b7bdc6}
+.need-chip.on{border-color:#ffc600;color:#ffc600;background:rgba(255,198,0,.08)}
+html:not(.dark) .need-chip{border-color:#d8d3ca;color:#5d574e}
+html:not(.dark) .need-chip.on{border-color:#b45309;color:#b45309;background:rgba(180,83,9,.07)}
+.dr-apply{margin-top:14px;font-size:13.5px;font-weight:500;color:#4ade80}
+html:not(.dark) .dr-apply{color:#15803d}
+.apply-tag{color:#4ade80;border-color:rgba(74,222,128,.4)}
+html:not(.dark) .apply-tag{color:#15803d;border-color:rgba(21,128,61,.35)}
+.dr-facts{margin-top:8px;border-collapse:collapse;font-size:13px;width:100%}
+.dr-facts td{padding:5px 12px 5px 0;border-bottom:1px solid rgba(128,128,128,.15);vertical-align:top}
+.dr-facts td:first-child{color:var(--muted);white-space:nowrap;width:1%}
+.offer-tag{font-size:12.5px}
 .dr-verified{font-size:12px;color:var(--muted);margin-top:16px}
 .dr-verified.stale{color:#fbbf24}
 .stale-tag{color:#fbbf24;border-color:rgba(251,191,36,.4)}
@@ -420,6 +436,7 @@ browse the <a href="e/">full organization index</a> or use the open dataset
     </select>
   </div>
   <div class="cat-chips" id="catChips"></div>
+  <div class="need-chips" id="needChips"></div>
   <div class="dir-count" id="dirCount"></div>
   <div class="cards" id="cards"></div>
 </section>
@@ -520,7 +537,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   const total = DATA.length;
   const nCats = Object.keys(CATS).length;
   const vcs = DATA.filter(d=>d.cat==="vc"||d.cat==="angel").length;
-  const free = DATA.filter(d=>(d.tags||[]).some(t=>/free|equity-free|grants|prizes/.test(t))).length;
+  const free = DATA.filter(d=>(d.offers||[]).includes("grants")).length;
   $("stats").innerHTML = [
     [total,"organizations"], [nCats,"categories"], [vcs,"capital sources"], [free,"equity-free resources"]
   ].map(([b,s])=>`<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("");
@@ -555,6 +572,22 @@ function isStale(d){
   return (now.getFullYear()*12 + now.getMonth()+1) - (+y*12 + +m) > STALE_MONTHS;
 }
 
+/* ---------- offers vocabulary + application windows ---------- */
+const OFFERS_META = {
+  funding:    {icon:"💸", label:"Funding"},
+  grants:     {icon:"🎁", label:"Equity-free money"},
+  space:      {icon:"🏢", label:"Space"},
+  compute:    {icon:"🖥️", label:"Compute"},
+  mentorship: {icon:"🧭", label:"Mentorship"},
+  community:  {icon:"🤝", label:"Community"},
+  talent:     {icon:"🧑‍💻", label:"Talent"},
+  customers:  {icon:"🛒", label:"Customers & pilots"},
+};
+const todayYMD = () => new Date().toISOString().slice(0,10);
+// open = rolling, or a deadline that hasn't passed; expired dates render as nothing
+const applyOpen = d => d.applyBy === "rolling" || (!!d.applyBy && d.applyBy >= todayYMD());
+const fmtDeadline = v => { const [y,m,dd] = v.split("-"); return `${MONTH_NAMES[+m-1]} ${+dd}, ${y}`; };
+
 /* ---------- html escaping (entry text is data, never markup) ---------- */
 const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
   .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
@@ -569,6 +602,11 @@ function openDrawer(id){
   $("drLoc").textContent = "📍 " + d.loc + (d.approx ? " (approx.)" : "");
   let html = `<p>${esc(d.desc)}</p>`;
   if(d.why) html += `<div class="dr-why" style="--cc:${col}"><b>Why it matters for founders</b><div>${esc(d.why)}</div></div>`;
+  if(applyOpen(d)) html += `<div class="dr-apply">⏳ Applications open — ${d.applyBy==="rolling" ? "rolling" : "apply by " + fmtDeadline(d.applyBy)}${d.applyNote ? " · " + esc(d.applyNote) : ""}</div>`;
+  if(d.offers && d.offers.length) html += `<div class="dr-sec">What founders get</div><div class="chips">` +
+    d.offers.map(o=>OFFERS_META[o]).filter(Boolean).map(m=>`<span class="tag offer-tag">${m.icon} ${m.label}</span>`).join(" ") + `</div>`;
+  if(d.facts && d.facts.length) html += `<div class="dr-sec">At a glance</div><table class="dr-facts">` +
+    d.facts.map(f=>`<tr><td>${esc(f[0])}</td><td>${esc(f[1])}</td></tr>`).join("") + `</table>`;
   if(d.tags && d.tags.length) html += `<div class="dr-sec">Tags</div><div class="chips">` +
     d.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join(" ") + `</div>`;
   if(d.stages && d.stages.length) html += `<div class="dr-sec">Founder stages</div><div class="chips">` +
@@ -984,7 +1022,27 @@ renderStepper(); renderJourney();
 
 /* ---------- directory ---------- */
 const dirCats = new Set(Object.keys(CATS));
+const dirNeeds = new Set();
 (function initDirectory(){
+  // "I need…" chips — filter by what an org gives founders, plus open applications
+  const nc = $("needChips");
+  const lab = document.createElement("span");
+  lab.className = "need-label"; lab.textContent = "I need:";
+  nc.appendChild(lab);
+  const needs = Object.entries(OFFERS_META).map(([k,m])=>[k, `${m.icon} ${m.label}`])
+    .concat([["open","⏳ Open to apply now"]]);
+  needs.forEach(([key, label])=>{
+    const el = document.createElement("button");
+    el.className = "need-chip"; el.type = "button"; el.textContent = label;
+    el.setAttribute("aria-pressed","false");
+    el.addEventListener("click", ()=>{
+      if(dirNeeds.has(key)) dirNeeds.delete(key); else dirNeeds.add(key);
+      el.classList.toggle("on", dirNeeds.has(key));
+      el.setAttribute("aria-pressed", String(dirNeeds.has(key)));
+      renderCards();
+    });
+    nc.appendChild(el);
+  });
   // stage options
   STAGES.forEach(s=>{
     const o=document.createElement("option"); o.value=s.n; o.textContent=`${s.icon} Stage ${s.n}: ${s.t}`;
@@ -1015,6 +1073,8 @@ function renderCards(){
   const st=$("dirStage").value;
   let list = DATA.filter(d=>dirCats.has(d.cat));
   if(st) list = list.filter(d=>(d.stages||[]).includes(+st));
+  if(dirNeeds.size) list = list.filter(d=>
+    [...dirNeeds].every(n => n==="open" ? applyOpen(d) : (d.offers||[]).includes(n)));
   if(q) list = list.filter(d=>
     d.name.toLowerCase().includes(q) || d.desc.toLowerCase().includes(q) ||
     (d.why||"").toLowerCase().includes(q) ||
@@ -1030,7 +1090,7 @@ function renderCards(){
       <h3>${esc(d.name)}</h3>
       <div class="c-cat" style="color:${col}">${cLabel(d.cat)} · ${esc(d.loc.split(",")[0])}</div>
       <p>${esc(d.desc.length>150 ? d.desc.slice(0,150)+"…" : d.desc)}</p>
-      <div class="c-meta">${isStale(d)?`<span class="tag stale-tag" title="Last verified ${fmtMonth(d.lastVerified)}">⚠ not recently verified</span>`:""}${d.badge?`<span class="badge">${esc(d.badge)}</span>`:""}${(d.tags||[]).slice(0,3).map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
+      <div class="c-meta">${d.applyBy && d.applyBy!=="rolling" && applyOpen(d) ? `<span class="tag apply-tag">⏳ Apply by ${esc(fmtDeadline(d.applyBy))}</span>`:""}${isStale(d)?`<span class="tag stale-tag" title="Last verified ${fmtMonth(d.lastVerified)}">⚠ not recently verified</span>`:""}${d.badge?`<span class="badge">${esc(d.badge)}</span>`:""}${(d.tags||[]).slice(0,3).map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
     </div>`;
   }).join("") || `<div style="color:var(--muted)">No matches — try clearing filters, or <a href="#" onclick="suggestEntry();return false" style="color:#ffc600">suggest a new entry</a>.</div>`;
 }

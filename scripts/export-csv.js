@@ -51,6 +51,8 @@ const COLUMNS = [
   ["stages",         d => stagesToText(d.stages)],    // e.g. "Build; Fund"
   ["linked_ids",     d => (d.links || []).join("; ")],
   ["last_verified",  d => d.lastVerified || ""],        // "YYYY-MM" month last confirmed
+  ["offers",         d => (d.offers || []).join("; ")], // what founders get (controlled vocab)
+  ["apply_by",       d => d.applyBy || ""],             // "rolling" or "YYYY-MM-DD" deadline
 ];
 
 // --- Build the CSV ---

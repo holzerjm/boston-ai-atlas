@@ -59,15 +59,19 @@ const CAT_BY_LABEL = Object.create(null);
 for (const [key, v] of Object.entries(CATS)) CAT_BY_LABEL[v.label.toLowerCase()] = key;
 
 const STAGE_WORDS = [[/spark/i, 1], [/validate/i, 2], [/build/i, 3], [/fund/i, 4], [/scale/i, 5]];
-function parseStages(section) {
+const OFFER_WORDS = [[/funding \(writes/i, "funding"], [/equity-free money/i, "grants"],
+  [/space \(labs/i, "space"], [/compute/i, "compute"], [/mentorship/i, "mentorship"],
+  [/community \(peer/i, "community"], [/talent \(hiring/i, "talent"], [/customers/i, "customers"]];
+function parseChecked(section, words) {
   const out = [];
-  for (const line of section.split("\n")) {
+  for (const line of (section || "").split("\n")) {
     const m = line.match(/^- \[[xX]\] (.+)$/);
     if (!m) continue;
-    for (const [re, n] of STAGE_WORDS) if (re.test(m[1]) && !out.includes(n)) out.push(n);
+    for (const [re, v] of words) if (re.test(m[1]) && !out.includes(v)) out.push(v);
   }
-  return out.sort();
+  return out;
 }
+const parseStages = (s) => parseChecked(s, STAGE_WORDS).sort();
 
 const name = get("Organization name").replace(/\s+/g, " ").trim();
 let url = get("Official website");
@@ -76,6 +80,7 @@ const loc = get("Address or neighborhood").replace(/\s+/g, " ").trim();
 const desc = get("Description").replace(/\s+/g, " ").trim();
 const why = get("Why it matters for founders").replace(/\s+/g, " ").trim();
 const stages = parseStages(form["Which founder stages does it serve?"] || "");
+const offers = parseChecked(form["What does it offer founders?"] || "", OFFER_WORDS).slice(0, 4);
 const tags = get("Tags").split(",").map(t => t.trim()).filter(Boolean).slice(0, 4);
 const connectionsText = get("Connected entries (optional)");
 
@@ -168,6 +173,7 @@ function geocode(q) {
     (why ? ` why:${J(why)},\n` : "") +
     ` tags:[${tags.map(t => J(t)).join(",")}], stages:[${stages.join(",")}]` +
     (links.length ? `, links:[${links.map(l => J(l)).join(",")}]` : "") +
+    (offers.length ? `, offers:[${offers.map(o => J(o)).join(",")}]` : "") +
     `, lastVerified:${J(month)}},`;
 
   // ---------- splice into the right category section ----------

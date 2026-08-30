@@ -41,6 +41,16 @@ All data lives in [`data.js`](data.js) as one array of plain objects.
   stages: [1, 3],                   // founder stages served: 1 Spark, 2 Validate,
                                     // 3 Build, 4 Fund, 5 Scale
   links: ["csail", "engine"],       // ids of related entries (Galaxy view edges)
+  offers: ["funding","mentorship"], // what founders GET, 1-4 of: funding | grants |
+                                    // space | compute | mentorship | community |
+                                    // talent | customers (powers the "I need…" filter)
+  applyBy: "2026-10-15",            // optional: "rolling", or the current application
+                                    // deadline — past dates auto-hide in the app
+  applyNote: "Fall 2026 cohort",    // optional, max 40 chars, shown next to the deadline
+  facts: [["Check size","$500K–$2M"],
+          ["Equity","6%"]],         // optional "at a glance" table, 1-6 rows; labels:
+                                    // Check size | Stage | Terms | Equity | Board seat |
+                                    // Program length | Cohort size | Focus
   lastVerified: "2026-08"           // month ("YYYY-MM") a maintainer last confirmed the
                                     // org is real, active, and the facts are right
 }

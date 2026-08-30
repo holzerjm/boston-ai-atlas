@@ -16,6 +16,18 @@ const ids = new Set();
 const names = new Set();
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const YYYY_MM = /^\d{4}-(0[1-9]|1[0-2])$/;
+const YMD = /^\d{4}-\d{2}-\d{2}$/;
+const TODAY = new Date().toISOString().slice(0, 10);
+const OFFERS = new Set(["funding","grants","space","compute","mentorship","community","talent","customers"]);
+const FACT_LABELS = new Set(["Check size","Stage","Terms","Equity","Board seat","Program length","Cohort size","Focus"]);
+// canonical tag vocabulary — unknown tags only WARN (contributors may propose new
+// ones; a maintainer either maps them to an existing tag or adds them here)
+const TAGS = new Set(["pre-seed","seed","multi-stage","equity-free","strategic","venture studio",
+  "incubator","research","applied AI","AI-native","generative AI","edge AI","ML","infrastructure",
+  "open source","AI safety","deep tech","robotics","security","policy","defense","enterprise",
+  "consumer","healthcare","biotech","fintech","education","climate","industrial","students",
+  "founders","diverse founders","MIT spinout","co-living","coworking","lab space","events",
+  "hackathons","MIT","Harvard","Tufts","Babson","Northeastern","BU","BC"]);
 const THIS_MONTH = new Date().toISOString().slice(0, 7);   // current UTC month
 const validStages = new Set(STAGES.map(s => s.n));
 
@@ -48,13 +60,42 @@ for (const d of DATA) {
                         ["why", d.why], ["badge", d.badge]])
     if (typeof v === "string" && /[<>]/.test(v))
       err(id, `${f} must not contain < or > (HTML is not allowed in entry text)`);
-  for (const t of d.tags || [])
+  for (const t of d.tags || []) {
     if (typeof t === "string" && /[<>]/.test(t))
       err(id, `tag ${JSON.stringify(t)} must not contain < or > (HTML is not allowed)`);
+    else if (typeof t === "string" && !TAGS.has(t))
+      warn.push(`  ⚠ [${id}] tag ${JSON.stringify(t)} is not in the canonical vocabulary (see scripts/validate.js)`);
+  }
   if (!d.why) warn.push(`  ⚠ [${id}] missing "why it matters" — strongly encouraged`);
   if (!Array.isArray(d.tags) || d.tags.length < 1) warn.push(`  ⚠ [${id}] no tags`);
   for (const s of d.stages || [])
     if (!validStages.has(s)) err(id, `invalid stage ${s} (valid: 1-5)`);
+  if (d.offers === undefined)
+    warn.push(`  ⚠ [${id}] missing offers — what does this org give founders? (funding, grants, space, compute, mentorship, community, talent, customers)`);
+  else if (!Array.isArray(d.offers) || d.offers.length < 1 || d.offers.length > 4)
+    err(id, "offers must be an array of 1-4 values");
+  else for (const o of d.offers)
+    if (!OFFERS.has(o)) err(id, `unknown offer "${o}" (valid: ${[...OFFERS].join(", ")})`);
+  if (d.applyBy !== undefined) {
+    if (d.applyBy !== "rolling" && (typeof d.applyBy !== "string" || !YMD.test(d.applyBy)))
+      err(id, `applyBy must be "rolling" or a "YYYY-MM-DD" date (got ${JSON.stringify(d.applyBy)})`);
+    else if (d.applyBy !== "rolling" && d.applyBy < TODAY)
+      warn.push(`  ⚠ [${id}] applyBy ${d.applyBy} has passed — set the next deadline or remove it`);
+  }
+  if (d.applyNote !== undefined &&
+      (typeof d.applyNote !== "string" || d.applyNote.length > 40 || /[<>]/.test(d.applyNote)))
+    err(id, "applyNote must be a short string (max 40 chars, no HTML)");
+  if (d.facts !== undefined) {
+    if (!Array.isArray(d.facts) || d.facts.length < 1 || d.facts.length > 6)
+      err(id, "facts must be an array of 1-6 [label, value] pairs");
+    else for (const f of d.facts) {
+      if (!Array.isArray(f) || f.length !== 2 || typeof f[0] !== "string" || typeof f[1] !== "string")
+        { err(id, "each fact must be a [label, value] pair of strings"); break; }
+      if (!FACT_LABELS.has(f[0])) err(id, `unknown fact label ${JSON.stringify(f[0])} (valid: ${[...FACT_LABELS].join(", ")})`);
+      if (f[1].length > 48) err(id, `fact "${f[0]}" value too long (max 48 chars)`);
+      if (/[<>]/.test(f[0] + f[1])) err(id, "facts must not contain < or > (HTML is not allowed)");
+    }
+  }
   if (d.lastVerified === undefined)
     warn.push(`  ⚠ [${id}] missing lastVerified — add the month this entry was last confirmed ("YYYY-MM")`);
   else if (typeof d.lastVerified !== "string" || !YYYY_MM.test(d.lastVerified))
