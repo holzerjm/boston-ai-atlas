@@ -4,9 +4,10 @@
 Claude Code (or by any new maintainer) without the original chat history. It captures
 what this project is, how it's built, what's been decided, and what's left.
 
-**Last updated:** 2026-08-29; 144 entries (FoundersEdge and Milemark Capital added via
-issues #12/#13, then 21 verified VCs across two batches from a sweep of the MGMT
-Boston directory).
+**Last updated:** 2026-08-29; 160 entries (FoundersEdge and Milemark Capital via issues
+#12/#13; 21 VCs from the MGMT Boston directory sweep; LabCentral via the suggestion
+bot's first live run, PR #15; then 15 verified gov/space/student orgs from the
+thin-category sourcing pass).
 Repo: <https://github.com/holzerjm/boston-ai-atlas> · Live: <https://the-open-accelerator.com/ecosystem/>
 
 ---
@@ -86,8 +87,8 @@ the org (validator warns if missing, errors if malformed; drawer shows "✓ Veri
 entries >12 months old get a stale marker). Full reference: `CONTRIBUTING.md`; enforced
 by `scripts/validate.js`.
 
-**Current composition (144 entries):** vc 49 · accel 19 · startup 16 · university 12 ·
-corporate 12 · event 8 · angel 7 · community 7 · student 6 · space 4 · gov 4.
+**Current composition (160 entries):** vc 49 · accel 19 · startup 16 · student 13 ·
+university 12 · corporate 12 · gov 9 · space 8 · event 8 · angel 7 · community 7.
 
 ### Editorial voice
 
@@ -218,18 +219,19 @@ live at `/ecosystem/`.
    style, no SLA); Stadia viable but $20/mo for for-profit-backed projects.
 2. **Accessibility pass** — keyboard navigation for the Galaxy canvas, focus states,
    `prefers-reduced-motion` for the animated views, contrast audit.
-5. **Mobile polish** — the Galaxy view is cramped on small screens.
-6. **Self-hosted assets** — vendoring Leaflet/Tailwind/fonts/logo would remove CDN
+3. **Mobile polish** — the Galaxy view is cramped on small screens.
+4. **Self-hosted assets** — vendoring Leaflet/Tailwind/fonts/logo would remove CDN
    dependence and fix the `file://` experience. (Beyond the TOA logo, the favicon and
    `og:image` are also hot-linked — from the-open-accelerator.com and people.redhat.com.)
-7. **Category balance** — `space`, `gov`, `student` are thin (4–6 entries); `vc` is heavy.
-8. **Tailwind Play CDN** prints a console warning about production use; if it ever
+5. **Tailwind Play CDN** prints a console warning about production use; if it ever
    matters, precompile or drop it (most styling is hand-written CSS anyway).
 
 *(Resolved 2026-08-28: README/CONTRIBUTING described a GitHub Pages deploy path that was
 never how this ships — both now describe the real sync-to-site flow. `lastVerified`
 freshness field + `scripts/stale.js` report shipped, all 123 entries backfilled from git
-add-dates. Deep links `?entry=<id>` / `#<view>` + a drawer "Copy link" button shipped.)*
+add-dates. Deep links `?entry=<id>` / `#<view>` + a drawer "Copy link" button shipped.
+Resolved 2026-08-29: category balance — gov 9 · space 8 · student 13 after the verified
+thin-category sourcing pass; `vc` (49) is heavy by design, tracking the real market.)*
 
 **Deliberate non-goals:** no backend/database, no build step, no auto-publishing of
 community submissions, no user accounts.
