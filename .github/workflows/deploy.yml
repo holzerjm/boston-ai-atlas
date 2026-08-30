@@ -42,6 +42,8 @@ jobs:
         run: |
           node scripts/export-json.js
           node scripts/export-csv.js
+      - name: Build entry share pages + sitemap
+        run: node scripts/build-pages.js
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
@@ -50,8 +52,12 @@ jobs:
           ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
       - name: Rsync atlas
         run: |
-          rsync -avz -e "ssh -i ~/.ssh/id_deploy" index.html data.js map-style-dark.json atlas.json atlas.csv \
+          rsync -avz -e "ssh -i ~/.ssh/id_deploy" index.html data.js map-style-dark.json atlas.json atlas.csv site-pages/sitemap.xml \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
+          # entry stubs: --delete is scoped to the e/ subtree only, so removed
+          # entries' share pages clean up without touching anything else
+          rsync -avz --delete -e "ssh -i ~/.ssh/id_deploy" site-pages/e/ \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/e/"
 
       - name: Notify Slack (deployed)
         if: success()

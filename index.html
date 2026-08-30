@@ -274,6 +274,9 @@ html:not(.dark) .dr-verified.stale,html:not(.dark) .stale-tag{color:#b45309;bord
 </style>
 </head>
 <body>
+<noscript><p style="padding:16px">The interactive atlas needs JavaScript. You can still
+browse the <a href="e/">full organization index</a> or use the open dataset
+(<a href="atlas.json">JSON</a> · <a href="atlas.csv">CSV</a>, CC BY 4.0).</p></noscript>
 
 <!-- ============ STANDARD TOA SITE HEADER ============ -->
 <header id="site-header" class="relative z-50 px-4 py-4 md:px-8 bg-white/90 dark:bg-dark-bg/95 backdrop-blur-md border-b border-gray-200 dark:border-white/10">
@@ -965,13 +968,47 @@ function updateURL(){
 }
 function copyLink(btn){
   if(!navigator.clipboard) return;
-  navigator.clipboard.writeText(location.href).then(()=>{
+  // entry links share the /e/<id>/ stub, which unfurls with entry-specific
+  // OG tags in Slack/LinkedIn and instantly redirects into the app
+  const share = drawerId ? new URL(`e/${drawerId}/`, location.origin + location.pathname).href
+                         : location.href;
+  navigator.clipboard.writeText(share).then(()=>{
     if(!btn.dataset.label) btn.dataset.label = btn.textContent;
     btn.textContent = "✓ Copied";
     setTimeout(()=>{ btn.textContent = btn.dataset.label; }, 1500);
   }).catch(()=>{});
 }
 window.copyLink = copyLink;
+
+/* ---------- structured data (SEO) ---------- */
+(function jsonLd(){
+  try{
+    const here = location.origin + location.pathname;
+    const ld = { "@context":"https://schema.org", "@graph":[
+      { "@type":"WebSite", name:"Boston AI Atlas",
+        url:"https://the-open-accelerator.com/ecosystem/" },
+      { "@type":"Dataset", name:"Boston AI Atlas dataset",
+        description:"Verified organizations of Greater Boston's AI ecosystem — VCs, accelerators, labs, spaces, communities and programs.",
+        creator:{ "@type":"Organization", name:"The Open Accelerator" },
+        license:"https://creativecommons.org/licenses/by/4.0/",
+        distribution:[
+          { "@type":"DataDownload", encodingFormat:"application/json", contentUrl:"https://the-open-accelerator.com/ecosystem/atlas.json" },
+          { "@type":"DataDownload", encodingFormat:"text/csv", contentUrl:"https://the-open-accelerator.com/ecosystem/atlas.csv" }
+        ] },
+      { "@type":"ItemList", itemListElement: DATA.map((d,i)=>({
+          "@type":"ListItem", position:i+1, item:{
+            "@type":"Organization", name:d.name, url:d.url, description:d.desc,
+            address:{ "@type":"PostalAddress", addressLocality:d.loc, addressRegion:"MA" },
+            location:{ "@type":"Place", geo:{ "@type":"GeoCoordinates", latitude:d.lat, longitude:d.lng } },
+            sameAs: here + "e/" + d.id + "/"
+          } })) }
+    ]};
+    const s = document.createElement("script");
+    s.type = "application/ld+json";
+    s.textContent = JSON.stringify(ld);
+    document.head.appendChild(s);
+  }catch(e){}
+})();
 // On load: honor #<view> and ?entry=<id>; unknown values are silently ignored.
 (function(){
   const h = location.hash.slice(1);

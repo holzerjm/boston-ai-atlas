@@ -7,3 +7,5 @@
 # local claude config
 .claude/
 atlas.json
+site-pages/
+/e/
