@@ -35,6 +35,7 @@ tailwind.config = {
 <!-- Apply saved theme before render to avoid a flash. Page defaults to dark (its native design); light only if the user chose it. -->
 <script>(function(){try{if(localStorage.getItem('toa-atlas-theme')==='light'){document.documentElement.classList.remove('dark');}}catch(e){}})();</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.24.0/maplibre-gl.min.css">
 <style>
 :root{
   --bg:#0a0a0f; --bg2:#101018; --panel:#12121a; --panel2:#1e1e2a;
@@ -235,6 +236,7 @@ html:not(.dark) .map-results{background:rgba(255,255,255,.97)}
 .dr-why b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:#9fb4ff;margin-bottom:5px}
 .dr-why div{font-size:13px;line-height:1.55;color:#c4cdf0}
 .dr-sec{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin:18px 0 9px}
+.map-home{font-size:18px;line-height:26px}
 .dr-verified{font-size:12px;color:var(--muted);margin-top:16px}
 .dr-verified.stale{color:#fbbf24}
 .stale-tag{color:#fbbf24;border-color:rgba(251,191,36,.4)}
@@ -447,6 +449,8 @@ html:not(.dark) .dr-verified.stale,html:not(.dark) .stale-tag{color:#b45309;bord
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.24.0/maplibre-gl.min.js"></script>
+<script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js"></script>
 <script src="data.js"></script>
 <script>
 /* ============================================================
@@ -577,18 +581,40 @@ window.goToMap = goToMap;
 /* ---------- map ---------- */
 let map, markers = {}, mapTiles;
 const activeCats = new Set(Object.keys(CATS));
-const TILE_URLS = {
-  dark:  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=cb1_2hxx_1_ac6faa2b89817d350e7715f6",
-  light: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_2hxx_1_ac6faa2b89817d350e7715f6"
+// OpenFreeMap vector basemap via maplibre-gl-leaflet — keyless, unlimited,
+// commercial use permitted. Leaflet stays the map engine; only the base layer
+// renders through MapLibre GL. Fallback style host if OpenFreeMap ever
+// degrades: swap the style URLs for VersaTiles (colorful/eclipse).
+const MAP_STYLES = {
+  // dark = our own graft of OpenFreeMap fiord + positron's highway shields,
+  // airport and river labels (see map-style-dark.json; sprites/fonts/tiles
+  // still load from OpenFreeMap). light = stock positron.
+  dark:  "./map-style-dark.json",
+  light: "https://tiles.openfreemap.org/styles/positron"
 };
 const currentTheme = () => document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-function setMapTiles(){ if(mapTiles) mapTiles.setUrl(TILE_URLS[currentTheme()]); }
+const makeBasemap = () => L.maplibreGL({
+  style: MAP_STYLES[currentTheme()],
+  attribution:'&copy; <a href="https://openfreemap.org">OpenFreeMap</a> &copy; <a href="https://www.openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+});
+function setMapTiles(){ if(!map) return; if(mapTiles) map.removeLayer(mapTiles); mapTiles = makeBasemap().addTo(map); }
 (function initMap(){
-  map = L.map("map", {zoomControl:true, attributionControl:true}).setView([42.3595,-71.0760], 13);
-  mapTiles = L.tileLayer(TILE_URLS[currentTheme()], {
-    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-    subdomains:"abcd", maxZoom:19
-  }).addTo(map);
+  const HOME_VIEW = { center:[42.3595,-71.0760], zoom:13 };
+  map = L.map("map", {zoomControl:true, attributionControl:true, maxZoom:19}).setView(HOME_VIEW.center, HOME_VIEW.zoom);
+  mapTiles = makeBasemap().addTo(map);
+
+  // re-center control, below the zoom buttons
+  const homeCtl = L.control({position:"topleft"});
+  homeCtl.onAdd = () => {
+    const div = L.DomUtil.create("div","leaflet-bar");
+    const a = L.DomUtil.create("a","map-home",div);
+    a.href = "#"; a.title = "Re-center on Boston";
+    a.setAttribute("role","button"); a.setAttribute("aria-label","Re-center the map on downtown Boston");
+    a.innerHTML = "⌖";
+    L.DomEvent.on(a,"click",e=>{ L.DomEvent.preventDefault(e); map.flyTo(HOME_VIEW.center, HOME_VIEW.zoom, {duration:.9}); });
+    return div;
+  };
+  homeCtl.addTo(map);
 
   DATA.forEach(d=>{
     const col = cColor(d.cat);

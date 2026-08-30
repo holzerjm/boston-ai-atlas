@@ -23,7 +23,7 @@ name: Deploy to TOA site
 on:
   push:
     branches: [main]
-    paths: ["index.html", "data.js"]
+    paths: ["index.html", "data.js", "map-style-dark.json"]
   workflow_dispatch:
 
 jobs:
@@ -46,7 +46,7 @@ jobs:
           ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
       - name: Rsync atlas
         run: |
-          rsync -avz -e "ssh -i ~/.ssh/id_deploy" index.html data.js \
+          rsync -avz -e "ssh -i ~/.ssh/id_deploy" index.html data.js map-style-dark.json \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
 
       - name: Notify Slack (deployed)

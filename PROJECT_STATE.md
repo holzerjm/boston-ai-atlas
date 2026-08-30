@@ -52,15 +52,19 @@ data.js        ~56KB  CATS, STAGES, DATA — the only file most contributors tou
 - `index.html` loads `data.js` via a plain `<script src="data.js">` — so **relative
   paths matter**: the page must be served at a directory URL (`/ecosystem/`), not
   `/ecosystem`.
-- External runtime deps, all CDN: Leaflet 1.9.4 (map), Tailwind Play CDN, Google Fonts
-  (Red Hat Display), plus the TOA logo hot-linked from `the-open-accelerator.com`.
-- **Map tiles:** CARTO raster basemaps (`dark_all`/`light_all`). Since ~2026-08-25 CARTO
-  watermarks keyless requests ("API KEY REQUIRED"), so the tile URLs in `index.html`
-  carry a `?key=` parameter — a free key (no account; commercial use permitted;
-  5M tiles/month) registered for `the-open-accelerator.com` via
-  <https://carto.com/basemaps/apikey>. The key is public by design (referer-scoped).
-  ⚠️ CARTO says the raster basemaps are *being retired* (no date announced) — see the
-  basemap-migration backlog item.
+- External runtime deps, all CDN: Leaflet 1.9.4 + MapLibre GL 5.24 + maplibre-gl-leaflet
+  (map), Tailwind Play CDN, Google Fonts (Red Hat Display), plus the TOA logo hot-linked
+  from `the-open-accelerator.com`.
+- **Map basemap (since 2026-08-30): OpenFreeMap vector tiles** — keyless, unlimited,
+  commercial use permitted — rendered through MapLibre GL via the `maplibre-gl-leaflet`
+  binding (Leaflet remains the map engine; markers/popups unchanged). Light mode uses the
+  stock `positron` style; dark mode uses **our own `map-style-dark.json`** — OpenFreeMap's
+  `fiord` grafted with positron's highway shields, airport label, and river line-labels
+  (fiord's palette), so the two themes have label parity; fiord's ferry-route labels are
+  kept. The style file deploys alongside `index.html`/`data.js` (deploy.yml + sync script
+  include it). Sprites/fonts/tiles load from OpenFreeMap; if it ever degrades, VersaTiles
+  is a one-line style-URL fallback. The previous CARTO raster tiles (retired-track,
+  key-watermarked as of 2026-08-25) are fully removed.
   *Consequence:* opening `index.html` from `file://` shows a broken TOA logo — expected,
   noted in the README.
 - **Brand:** dark theme, Red Hat red (`#EE0000` / `#ff5c45`) for primary actions, Red Hat
@@ -209,21 +213,13 @@ live at `/ecosystem/`.
 
 **Open items / ideas, roughly by value:**
 
-1. **Basemap migration off CARTO raster** — CARTO's raster basemaps are officially
-   "being retired" (no date); the free `?key=` fix (2026-08-28) is a patch, not a home.
-   Recommended destination (researched 2026-08-28): **OpenFreeMap** via the
-   `maplibre-gl-leaflet` binding — keyless, unlimited, commercial use permitted, dark +
-   light styles, ~15-line buildless change, Leaflet and all marker/popup code untouched;
-   VersaTiles as a one-line fallback style URL. Google Maps rejected (mandatory billing
-   account + key + ToS bars its tiles in Leaflet); raw OSM tiles rejected (no dark
-   style, no SLA); Stadia viable but $20/mo for for-profit-backed projects.
-2. **Accessibility pass** — keyboard navigation for the Galaxy canvas, focus states,
+1. **Accessibility pass** — keyboard navigation for the Galaxy canvas, focus states,
    `prefers-reduced-motion` for the animated views, contrast audit.
-3. **Mobile polish** — the Galaxy view is cramped on small screens.
-4. **Self-hosted assets** — vendoring Leaflet/Tailwind/fonts/logo would remove CDN
+2. **Mobile polish** — the Galaxy view is cramped on small screens.
+3. **Self-hosted assets** — vendoring Leaflet/Tailwind/fonts/logo would remove CDN
    dependence and fix the `file://` experience. (Beyond the TOA logo, the favicon and
    `og:image` are also hot-linked — from the-open-accelerator.com and people.redhat.com.)
-5. **Tailwind Play CDN** prints a console warning about production use; if it ever
+4. **Tailwind Play CDN** prints a console warning about production use; if it ever
    matters, precompile or drop it (most styling is hand-written CSS anyway).
 
 *(Resolved 2026-08-28: README/CONTRIBUTING described a GitHub Pages deploy path that was
