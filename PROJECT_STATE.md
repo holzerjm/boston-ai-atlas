@@ -162,6 +162,7 @@ opens a **draft PR** with a review checklist. It never publishes (merge does tha
 | `scripts/badge.js` | Regenerates `badge.json`. CI runs it; safe to run locally. |
 | `scripts/stale.js` | Freshness report (`lastVerified` older than N months, default 12). Never fails; CI appends it to the job summary. |
 | `scripts/export-csv.js` | Dataset → `atlas.csv` for Sheets/Excel. Output is gitignored. |
+| `scripts/export-json.js` | Dataset → `atlas.json` (versioned envelope). Both exports regenerate at deploy and are served publicly at `/ecosystem/atlas.{json,csv}` under **CC BY 4.0**. |
 | `scripts/sync-to-site.sh` | Copies `index.html` + `data.js` into the TOA site tree. |
 
 ---

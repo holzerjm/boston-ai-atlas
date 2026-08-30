@@ -95,21 +95,34 @@ MAINTAINING.md                    maintainer guide — turn issues & PRs into da
 PROJECT_STATE.md                  architecture, decisions & backlog (start here if new)
 ```
 
-## Export to a spreadsheet
+## The data
 
-Turn the dataset into a CSV you can open in Google Sheets or Excel:
+The atlas is also an **open dataset** — the only maintained, human-verified dataset of
+Greater Boston's AI ecosystem. Two machine-readable endpoints regenerate on every
+deploy:
 
-```bash
-node scripts/export-csv.js          # writes atlas.csv (one row per organization)
-```
+- **JSON** — <https://the-open-accelerator.com/ecosystem/atlas.json> — a versioned
+  envelope (`schema: 1`) with all entries, categories, stages and per-category counts
+- **CSV** — <https://the-open-accelerator.com/ecosystem/atlas.csv> — one row per
+  organization, ready for Google Sheets (*File → Import*) or Excel (*Data → From
+  Text/CSV*)
 
-Then import it — Google Sheets: *File → Import → Upload*; Excel: *Data → From Text/CSV*.
-Columns include name, category, location, lat/lng, website, description, tags, stages
-and the last-verified month.
+Columns/fields include name, category, location, lat/lng, website, description, tags,
+founder stages and the month a maintainer last verified the entry.
 
-## License & data
+To regenerate locally: `node scripts/export-json.js` and `node scripts/export-csv.js`.
 
-Curated since June 2026. Some pin locations are approximate (neighborhood-level) and
-community groups move between venues — check official sites before visiting.
+**Methodology:** every entry is checked by a human against the organization's own
+website plus an independent source before it ships, and re-verified on a rolling
+basis (`lastVerified` records the month; entries more than a year unverified are
+flagged in the app). Defunct or unverifiable organizations are removed.
+
+**License:** the dataset is licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) — free to use, share and
+adapt with attribution to **The Open Accelerator**. Suggested citation:
+*"Boston AI Atlas, The Open Accelerator — the-open-accelerator.com/ecosystem"*.
+
+Some pin locations are approximate (neighborhood-level) and community groups move
+between venues — check official sites before visiting. Curated since June 2026.
 
 © 2026 The Open Accelerator.

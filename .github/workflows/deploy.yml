@@ -38,6 +38,10 @@ jobs:
           node-version: 20
       - name: Validate data.js before shipping
         run: node scripts/validate.js
+      - name: Generate public dataset (atlas.json + atlas.csv)
+        run: |
+          node scripts/export-json.js
+          node scripts/export-csv.js
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
@@ -46,7 +50,7 @@ jobs:
           ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
       - name: Rsync atlas
         run: |
-          rsync -avz -e "ssh -i ~/.ssh/id_deploy" index.html data.js map-style-dark.json \
+          rsync -avz -e "ssh -i ~/.ssh/id_deploy" index.html data.js map-style-dark.json atlas.json atlas.csv \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
 
       - name: Notify Slack (deployed)
