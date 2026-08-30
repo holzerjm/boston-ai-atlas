@@ -142,6 +142,10 @@ html:not(.dark) .map-results{background:rgba(255,255,255,.97)}
 .lg-dot{width:11px;height:11px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}
 .map-search{position:absolute;z-index:1000;top:14px;left:54px;right:auto;width:300px}
 .gx-search{left:14px}
+.gx-home{position:absolute;z-index:1000;top:60px;left:14px;width:34px;height:34px;border-radius:9px;
+  background:rgba(10,15,30,.92);border:1px solid var(--line);color:#e6ecff;font-size:18px;
+  cursor:pointer;line-height:1}
+.gx-home:hover{border-color:#ffc600;color:#ffc600}
 html:not(.dark) .gx-search input{background:rgba(10,15,30,.92);color:#e6ecff} /* galaxy stays dark */
 html:not(.dark) .gx-search .map-results{background:rgba(10,15,30,.97);color:#e6ecff}
 .map-search input{width:100%;background:rgba(10,15,30,.92);border:1px solid var(--line);color:var(--text);
@@ -420,6 +424,8 @@ browse the <a href="e/">full organization index</a> or use the open dataset
       <input id="gxSearch" type="text" placeholder="Find an organization in the galaxy…" autocomplete="off">
       <div class="map-results" id="gxResults"></div>
     </div>
+    <button class="gx-home" onclick="gxHome()" title="Re-center the galaxy"
+      aria-label="Re-center the galaxy view">⌖</button>
     <div class="gx-hint">Drag to pan · scroll to zoom · hover to trace connections · click a node for details</div>
     <div class="gx-tip" id="gxTip"></div>
     <div class="map-legend" id="gxLegend"><h4>Categories · click to toggle</h4></div>
@@ -1017,6 +1023,14 @@ gxCanvas.addEventListener("click", e=>{
   if(n && !n.hub) openDrawer(n.id);
   else if(!n && gxLocked){ gxLocked = null; $("gxSearch").value = ""; }  // click empty space clears the search focus
 });
+
+/* galaxy re-center: default zoom + origin, focus and search cleared */
+function gxHome(){
+  gxScale = 1; gxOX = 0; gxOY = 0;
+  gxLocked = null; $("gxSearch").value = ""; $("gxResults").classList.remove("open");
+  gxEnergy = Math.max(gxEnergy, 0.3);
+}
+window.gxHome = gxHome;
 
 /* galaxy search: find an org, center it, and lock its constellation */
 function gxFocusOn(id){
