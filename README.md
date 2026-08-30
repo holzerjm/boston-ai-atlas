@@ -10,12 +10,16 @@ The living map of Greater Boston's AI ecosystem — built by the community for t
 [The Open Accelerator](https://the-open-accelerator.com) (an initiative between the
 MA AI Hub, Red Hat & IBM).
 
-**Four ways to explore 100+ organizations:**
+**Four ways to explore 160+ verified organizations:**
 
 - 🗺️ **Map** — every VC, lab, accelerator and community pinned across Greater Boston
 - ✨ **Galaxy** — an animated network of how the ecosystem connects (spinouts, funds, hosts)
 - 🧭 **Founder Journey** — resources curated by stage, from first spark to scale
 - 📇 **Directory** — full-text search with category and stage filters
+
+Every entry shows when a maintainer last verified it, and every entry and view is
+linkable — `?entry=csail` opens straight to an organization, `#galaxy` to a view
+(there's a 🔗 Copy link button in each entry's drawer).
 
 ## Run it
 
@@ -33,10 +37,10 @@ images will be broken and it's not how the page ships — prefer the local serve
 
 ## Deploy
 
-**Merging is publishing.** A GitHub Action deploys `index.html` + `data.js` to
-[the live site](https://the-open-accelerator.com/ecosystem/) on every merge to `main`
-that touches them — it re-validates the data first, then rsyncs to the server and
-posts a summary to the TOA Slack. (Not GitHub Pages.)
+**Merging is publishing.** A GitHub Action deploys `index.html`, `data.js` and the
+map style to [the live site](https://the-open-accelerator.com/ecosystem/) on every
+merge to `main` that touches them — it re-validates the data first, then rsyncs to
+the server and posts a summary to the TOA Slack. (Not GitHub Pages.)
 
 Manual fallback, from a checkout with SSH access to the server:
 
@@ -61,7 +65,10 @@ The atlas is community-maintained:
   (or use the Flag button on any entry inside the atlas)
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the entry schema and review process.
-Every PR touching `data.js` is automatically validated by CI.
+Every PR touching `data.js` is automatically validated by CI, and a maintainer can
+hand your suggestion to the **atlas bot**, which drafts it as a pull request
+(geocoded and validated) for human review — nothing publishes without a maintainer
+merge.
 
 **Maintainers** turn accepted issues and PRs into entries — see
 [MAINTAINING.md](MAINTAINING.md) for the step-by-step process.
@@ -69,17 +76,23 @@ Every PR touching `data.js` is automatically validated by CI.
 ## Repo layout
 
 ```
-index.html                      the app (Leaflet, Tailwind & web fonts via CDN; TOA-branded)
-data.js                         the dataset — this is what you edit
-scripts/validate.js             schema validation (runs in CI and locally)
-scripts/badge.js                regenerates badge.json (entry count — CI runs it on merge)
-scripts/export-csv.js           export the dataset to a spreadsheet-friendly CSV
-scripts/sync-to-site.sh         copy index.html + data.js into the TOA site to deploy
-.github/ISSUE_TEMPLATE/         suggest & flag forms
-.github/workflows/validate.yml  CI validation on every data PR
-CONTRIBUTING.md                 entry schema & contributor workflow
-MAINTAINING.md                  maintainer guide — turn issues & PRs into data.js
-PROJECT_STATE.md                architecture, decisions & backlog (start here if new)
+index.html                        the app — one file of HTML/CSS/vanilla JS (Leaflet +
+                                  MapLibre GL, Tailwind & web fonts via CDN; TOA-branded)
+data.js                           the dataset — this is what you edit
+map-style-dark.json               the dark basemap style (OpenFreeMap fiord + our grafts)
+scripts/validate.js               schema validation (runs in CI and locally)
+scripts/badge.js                  regenerates badge.json (entry count — CI runs it on merge)
+scripts/stale.js                  freshness report — entries longest unverified
+scripts/export-csv.js             export the dataset to a spreadsheet-friendly CSV
+scripts/issue-to-entry.js         the suggestion bot's form parser / entry builder
+scripts/sync-to-site.sh           manual deploy fallback (CI normally deploys on merge)
+.github/ISSUE_TEMPLATE/           suggest & flag forms
+.github/workflows/validate.yml    CI validation + freshness summary on every data PR
+.github/workflows/deploy.yml      auto-deploy to the live site + Slack notification
+.github/workflows/suggest-to-pr.yml  the suggestion bot (maintainer-gated, drafts PRs)
+CONTRIBUTING.md                   entry schema & contributor workflow
+MAINTAINING.md                    maintainer guide — turn issues & PRs into data.js
+PROJECT_STATE.md                  architecture, decisions & backlog (start here if new)
 ```
 
 ## Export to a spreadsheet
@@ -91,7 +104,8 @@ node scripts/export-csv.js          # writes atlas.csv (one row per organization
 ```
 
 Then import it — Google Sheets: *File → Import → Upload*; Excel: *Data → From Text/CSV*.
-Columns include name, category, location, lat/lng, website, description, tags and stages.
+Columns include name, category, location, lat/lng, website, description, tags, stages
+and the last-verified month.
 
 ## License & data
 
