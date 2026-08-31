@@ -70,10 +70,11 @@ jobs:
             if(j.events.length>18) out.push("_… and "+(j.events.length-18)+" more on the page_");
             console.log(out.join("\n"));')
           COUNT=$(node -e 'console.log(require("./events.json").total)')
-          jq -n --arg list "$LIST" --arg count "$COUNT" '
-            {text: ("📅 Boston AI events — " + $count + " in the next 10 days"),
+          WEEK=$(TZ=America/New_York date "+%B %-d")
+          jq -n --arg list "$LIST" --arg count "$COUNT" --arg week "$WEEK" '
+            {text: ("🗓️ Boston AI events, week of " + $week + " — " + $count + " in the next 10 days"),
              blocks: [
-               {type:"header", text:{type:"plain_text", text:"📅 This week in Boston AI", emoji:true}},
+               {type:"header", text:{type:"plain_text", text:("🗓️ This week in Boston AI · " + $week), emoji:true}},
                {type:"section", text:{type:"mrkdwn", text:("*" + $count + " events in the next 10 days* — full list at <https://the-open-accelerator.com/ecosystem/events/|the-open-accelerator.com/ecosystem/events>")}},
                {type:"section", text:{type:"mrkdwn", text:$list}},
                {type:"context", elements:[{type:"mrkdwn", text:"Spot a missing event? Reply here or use the ➕ on the events page. Refreshed every Monday 7am."}]}
