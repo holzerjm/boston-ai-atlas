@@ -32,8 +32,11 @@ const OUT = argN("--out", path.join(ROOT, "events.json"));
 const NOW = new Date();
 const HORIZON = new Date(NOW.getTime() + DAYS * 86400e3);
 
-// AI-relevance for general (non-AI-default) sources
+// Relevance for general (non-AI-default) sources: AI proper, plus the
+// data-infrastructure community — in Boston it is the same crowd.
 const AI_RE = /\b(ai|a\.i\.|artificial intelligence|machine learning|\bml\b|llm|genai|gen-ai|generative|agentic|agents?|deep learning|neural|nlp|computer vision|robotics|data science|mlops|rag\b|foundation model|openai|anthropic|hugging ?face)\b/i;
+const DATA_RE = /\b(data (party|engineer\w*|infra\w*|platform|stack|pipeline|meetup)|clickhouse|databricks|snowflake|kafka|duckdb|postgres|analytics|database|vector (db|database|search)|observability|etl)\b/i;
+const relevant = (txt) => AI_RE.test(txt) || DATA_RE.test(txt);
 
 // ---------- tiny ICS parser (only what Luma feeds emit) ----------
 function parseICS(text) {
@@ -90,38 +93,44 @@ async function pullCalendars() {
     try {
       const ics = await get(`https://api.luma.com/ics/get?entity=calendar&id=${cal.id}`, "text/calendar");
       for (const e of parseICS(ics))
-        push(e, `luma:${cal.slug}`, cal.ai_default || AI_RE.test(e.title + " " + e.desc));
+        push(e, `luma:${cal.slug}`, cal.ai_default || relevant(e.title + " " + e.desc));
     } catch (err) { errors.push(`calendar ${cal.slug}: ${err.message}`); }
   }
 }
 
 // ---------- 2. Luma discover (best-effort; undocumented API) ----------
+// Two passes: the AI category feed (everything is in-scope) and the
+// unfiltered Boston city feed, keyword-screened for AI/data relevance.
 async function pullDiscover() {
-  const { latitude, longitude, slug } = SOURCES.luma_discover;
-  let cursor = "", pages = 0;
-  try {
-    while (pages++ < 6) {
-      const qs = new URLSearchParams({ latitude, longitude, slug, pagination_limit: "25" });
-      if (cursor) qs.set("pagination_cursor", cursor);
-      const data = JSON.parse(await get(`https://api.luma.com/discover/get-paginated-events?${qs}`, "application/json"));
-      for (const it of data.entries || []) {
-        const ev = it.event || it;
-        push({
-          title: ev.name || "",
-          start: ev.start_at ? new Date(ev.start_at) : null,
-          end: ev.end_at ? new Date(ev.end_at) : null,
-          url: ev.url ? `https://luma.com/${ev.url}` : "",
-          venue: (ev.geo_address_info && (ev.geo_address_info.address || ev.geo_address_info.city_state)) || "",
-          organizer: (it.calendar && it.calendar.name) || ((ev.hosts || [])[0] || {}).name || "",
-          desc: "",
-        }, "luma:discover-ai", true);
+  for (const cfg of SOURCES.luma_discover) {
+    const label = cfg.slug ? `luma:discover-${cfg.slug}` : "luma:discover-boston";
+    let cursor = "", pages = 0;
+    try {
+      while (pages++ < 8) {
+        const qs = new URLSearchParams({ latitude: cfg.latitude, longitude: cfg.longitude, pagination_limit: "25" });
+        if (cfg.slug) qs.set("slug", cfg.slug);
+        if (cursor) qs.set("pagination_cursor", cursor);
+        const data = JSON.parse(await get(`https://api.luma.com/discover/get-paginated-events?${qs}`, "application/json"));
+        for (const it of data.entries || []) {
+          const ev = it.event || it;
+          const organizer = (it.calendar && it.calendar.name) || ((ev.hosts || [])[0] || {}).name || "";
+          push({
+            title: ev.name || "",
+            start: ev.start_at ? new Date(ev.start_at) : null,
+            end: ev.end_at ? new Date(ev.end_at) : null,
+            url: ev.url ? `https://luma.com/${ev.url}` : "",
+            venue: (ev.geo_address_info && (ev.geo_address_info.address || ev.geo_address_info.city_state)) || "",
+            organizer,
+            desc: "",
+          }, label, cfg.ai_default || relevant((ev.name || "") + " " + organizer));
+        }
+        if (!data.has_more || !data.next_cursor) break;
+        const last = (data.entries || []).map(x => (x.event || x).start_at).filter(Boolean).pop();
+        if (last && new Date(last) > HORIZON) break;
+        cursor = data.next_cursor;
       }
-      if (!data.has_more || !data.next_cursor) break;
-      const last = (data.entries || []).map(x => (x.event || x).start_at).filter(Boolean).pop();
-      if (last && new Date(last) > HORIZON) break;
-      cursor = data.next_cursor;
-    }
-  } catch (err) { errors.push(`luma discover: ${err.message} (best-effort source — page still builds)`); }
+    } catch (err) { errors.push(`${label}: ${err.message} (best-effort source — page still builds)`); }
+  }
 }
 
 // ---------- 3. AI Tinkerers Boston ----------

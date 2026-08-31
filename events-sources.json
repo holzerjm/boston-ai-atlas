@@ -5,6 +5,9 @@
     { "id": "cal-qk07YDF6ZivCcE0", "slug": "toa", "name": "The Open Accelerator", "ai_default": true },
     { "id": "cal-EnsrRAJPfkZzBsv", "slug": "ai-furnace-boston", "name": "The AI Furnace (Boston)", "ai_default": true }
   ],
-  "luma_discover": { "latitude": 42.3601, "longitude": -71.0589, "slug": "ai" },
+  "luma_discover": [
+    { "latitude": 42.3601, "longitude": -71.0589, "slug": "ai", "ai_default": true },
+    { "latitude": 42.3601, "longitude": -71.0589, "slug": null, "ai_default": false }
+  ],
   "aitinkerers": { "base": "https://boston.aitinkerers.org" }
 }
