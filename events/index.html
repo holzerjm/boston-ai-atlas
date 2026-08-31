@@ -37,7 +37,11 @@ tailwind.config = {
     --muted:#9aa1ab;--faint:#6b7280;--gold:#ffc600;--red:#ff5c45;--ok:#4ade80}
   html:not(.dark){--bg:#faf9f7;--panel:#ffffff;--panel2:#f3f1ee;--line:#e2ddd6;--text:#1c1a17;
     --muted:#5d574e;--faint:#8a8478;--gold:#b45309;--red:#ee0000;--ok:#15803d}
-  *{margin:0;box-sizing:border-box}
+  *{margin:0;padding:0;box-sizing:border-box}
+  /* Tailwind preflight is off (matching the atlas): restore the border base
+     its utilities rely on, and the link reset for the ported chrome. */
+  *,::before,::after{border-width:0;border-style:solid}
+  #site-header a,#mobile-nav a{text-decoration:none}
   body{background:var(--bg);color:var(--text);font-family:"Red Hat Text",-apple-system,sans-serif;
     font-size:15.5px;line-height:1.5}
   .wrap{max-width:780px;margin:0 auto;padding:40px 20px 90px}
