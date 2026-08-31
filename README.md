@@ -85,11 +85,15 @@ scripts/badge.js                  regenerates badge.json (entry count — CI run
 scripts/stale.js                  freshness report — entries longest unverified
 scripts/export-csv.js             export the dataset to a spreadsheet-friendly CSV
 scripts/issue-to-entry.js         the suggestion bot's form parser / entry builder
+scripts/fetch-events.js           events aggregator — feeds /ecosystem/events/ weekly
+scripts/build-events-page.js      assembles events/index.html (generated — see docs/)
 scripts/sync-to-site.sh           manual deploy fallback (CI normally deploys on merge)
 .github/ISSUE_TEMPLATE/           suggest & flag forms
 .github/workflows/validate.yml    CI validation + freshness summary on every data PR
 .github/workflows/deploy.yml      auto-deploy to the live site + Slack notification
 .github/workflows/suggest-to-pr.yml  the suggestion bot (maintainer-gated, drafts PRs)
+.github/workflows/weekly-events.yml  Monday 7am ET events refresh + Slack post
+docs/events-guide.md              how the events page & weekly refresh work
 CONTRIBUTING.md                   entry schema & contributor workflow
 MAINTAINING.md                    maintainer guide — turn issues & PRs into data.js
 PROJECT_STATE.md                  architecture, decisions & backlog (start here if new)
