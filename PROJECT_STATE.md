@@ -169,6 +169,7 @@ opens a **draft PR** with a review checklist. It never publishes (merge does tha
 | `scripts/badge.js` | Regenerates `badge.json`. CI runs it; safe to run locally. |
 | `scripts/stale.js` | Freshness report (`lastVerified` older than N months, default 12); `--queue N` prints the monthly verification rota. Never fails; CI appends it to the job summary. |
 | `scripts/linkcheck.js` | Link-rot checker — probes every entry URL, classifies broken/moved/blocked. A report, always exits 0. Run monthly by `monthly-health.yml` (with the rota), posted to Slack. |
+| `scripts/fetch-events.js` | Builds `events.json` (gitignored) for **/ecosystem/events/** — Boston AI events, next 10 days, from Luma calendar ICS feeds (`events-sources.json`), Luma's discover API (best-effort, undocumented), AI Tinkerers (`llms-full.txt` + JSON-LD, per their agents.md), and `events-manual.json`. Runs Mondays 7am ET via `weekly-events.yml`, which rsyncs the JSON and posts to the Scouts Slack (`SLACK_SCOUTS_WEBHOOK_URL`). The static page `events/index.html` deploys with the atlas; suggestions arrive via `suggest-event.yml` (label `event-suggestion`). Builds on nkpng2k/startup-event-scraper (Apache-2.0, credited). |
 | `scripts/export-csv.js` | Dataset → `atlas.csv` for Sheets/Excel. Output is gitignored. |
 | `scripts/export-json.js` | Dataset → `atlas.json` (versioned envelope). Both exports regenerate at deploy and are served publicly at `/ecosystem/atlas.{json,csv}` under **CC BY 4.0**. |
 | `scripts/sync-to-site.sh` | Copies `index.html` + `data.js` into the TOA site tree. |

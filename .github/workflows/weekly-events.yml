@@ -1,0 +1,81 @@
+# Weekly events refresh — builds events.json (Boston AI events, next 10 days),
+# ships it to /ecosystem/events.json, and posts the list to the TOA Scouts
+# Slack. Runs Monday 7am Eastern year-round: two UTC crons with a gate that
+# checks the local hour, so DST is handled honestly.
+#
+# Secrets: DEPLOY_* (shared with deploy.yml) ship the file;
+# SLACK_SCOUTS_WEBHOOK_URL posts the list (skipped silently if unset).
+
+name: Weekly events refresh
+
+on:
+  schedule:
+    - cron: "0 11 * * 1"   # 7am EDT
+    - cron: "0 12 * * 1"   # 7am EST
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Gate on 7am Eastern (skip the wrong-DST cron)
+        id: gate
+        run: |
+          H=$(TZ=America/New_York date +%H)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$H" = "07" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"; echo "Local hour is $H, not 07 — the other cron covers this week."
+          fi
+
+      - name: Fetch events
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          node scripts/fetch-events.js | tee fetch.log
+          { echo '## Events refresh'; echo '```'; cat fetch.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Ship events.json
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+          rsync -avz -e "ssh -i ~/.ssh/id_deploy" events.json \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
+
+      - name: Post to TOA Scouts Slack
+        if: steps.gate.outputs.run == 'true'
+        continue-on-error: true
+        env:
+          SLACK_SCOUTS_WEBHOOK_URL: ${{ secrets.SLACK_SCOUTS_WEBHOOK_URL }}
+        run: |
+          [ -z "$SLACK_SCOUTS_WEBHOOK_URL" ] && { echo "SLACK_SCOUTS_WEBHOOK_URL not set — skipping"; exit 0; }
+          LIST=$(node -e '
+            const j=require("./events.json");
+            const tz={timeZone:"America/New_York"};
+            const day=d=>new Intl.DateTimeFormat("en-US",{weekday:"short",month:"short",day:"numeric",...tz}).format(d);
+            const tm=d=>new Intl.DateTimeFormat("en-US",{hour:"numeric",minute:"2-digit",...tz}).format(d);
+            let cur="", out=[];
+            for(const e of j.events.slice(0,18)){
+              const d=new Date(e.start), k=day(d);
+              if(k!==cur){ out.push("*"+k+"*"); cur=k; }
+              out.push("• "+tm(d)+" — <"+e.url+"|"+e.title.replace(/[<>|]/g," ")+">"+(e.organizer?" · "+e.organizer.replace(/[<>|]/g," "):""));
+            }
+            if(j.events.length>18) out.push("_… and "+(j.events.length-18)+" more on the page_");
+            console.log(out.join("\n"));')
+          COUNT=$(node -e 'console.log(require("./events.json").total)')
+          jq -n --arg list "$LIST" --arg count "$COUNT" '
+            {text: ("📅 Boston AI events — " + $count + " in the next 10 days"),
+             blocks: [
+               {type:"header", text:{type:"plain_text", text:"📅 This week in Boston AI", emoji:true}},
+               {type:"section", text:{type:"mrkdwn", text:("*" + $count + " events in the next 10 days* — full list at <https://the-open-accelerator.com/ecosystem/events/|the-open-accelerator.com/ecosystem/events>")}},
+               {type:"section", text:{type:"mrkdwn", text:$list}},
+               {type:"context", elements:[{type:"mrkdwn", text:"Spot a missing event? Reply here or use the ➕ on the events page. Refreshed every Monday 7am."}]}
+             ]}' \
+          | curl -sS -X POST -H 'Content-type: application/json' -d @- "$SLACK_SCOUTS_WEBHOOK_URL"

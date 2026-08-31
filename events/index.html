@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boston AI Events — the next 10 days</title>
+<meta name="description" content="AI community events across Greater Boston for the next 10 days — meetups, workshops, demo nights and hackathons. Refreshed every Monday by the Boston AI Atlas.">
+<link rel="canonical" href="https://the-open-accelerator.com/ecosystem/events/">
+<meta property="og:title" content="Boston AI Events — the next 10 days">
+<meta property="og:description" content="AI community events across Greater Boston, refreshed every Monday. A companion to the Boston AI Atlas by The Open Accelerator.">
+<meta property="og:url" content="https://the-open-accelerator.com/ecosystem/events/">
+<meta property="og:image" content="https://people.redhat.com/jholzer/TOA/android-icon-192x192.png">
+<link rel="icon" href="https://the-open-accelerator.com/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@500;700;900&family=Red+Hat+Text:ital,wght@0,400;0,500;1,400&family=Red+Hat+Mono:wght@400;500&display=swap">
+<script>(function(){try{if(localStorage.getItem('toa-atlas-theme')==='light'){document.documentElement.classList.remove('dark');}}catch(e){}})();</script>
+<style>
+  :root{--bg:#0d0f12;--panel:#16191e;--panel2:#1c2027;--line:#272c35;--text:#e8eaed;
+    --muted:#9aa1ab;--faint:#6b7280;--gold:#ffc600;--red:#ff5c45;--ok:#4ade80}
+  html:not(.dark){--bg:#faf9f7;--panel:#ffffff;--panel2:#f3f1ee;--line:#e2ddd6;--text:#1c1a17;
+    --muted:#5d574e;--faint:#8a8478;--gold:#b45309;--red:#ee0000;--ok:#15803d}
+  *{margin:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:"Red Hat Text",-apple-system,sans-serif;
+    font-size:15.5px;line-height:1.5}
+  .wrap{max-width:780px;margin:0 auto;padding:40px 20px 90px}
+  .eyebrow{font-family:"Red Hat Mono",monospace;font-size:11.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--red);margin-bottom:10px}
+  h1{font-family:"Red Hat Display",sans-serif;font-weight:900;font-size:36px;line-height:1.05;
+    margin-bottom:8px;text-wrap:balance}
+  .stand{color:var(--muted);max-width:62ch}
+  .topnav{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:20px 0 0;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:11px 2px;font-size:13.5px}
+  .topnav a{color:var(--gold);text-decoration:none}
+  .topnav a:hover{text-decoration:underline}
+  .topnav .meta{color:var(--faint);margin-left:auto;font-size:12px}
+  .day{margin-top:34px}
+  .day h2{font-family:"Red Hat Display",sans-serif;font-weight:700;font-size:17px;
+    display:flex;align-items:baseline;gap:10px}
+  .day h2 .dow{color:var(--red)}
+  .day h2 .tonight{font-size:11px;font-family:"Red Hat Mono",monospace;letter-spacing:.08em;
+    color:var(--gold);border:1px solid var(--gold);border-radius:999px;padding:2px 8px}
+  .ev{display:flex;gap:14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);
+    padding:13px 15px;margin-top:9px;text-decoration:none;color:var(--text);transition:border-color .15s}
+  .ev:hover{border-color:var(--gold)}
+  .ev .time{font-family:"Red Hat Mono",monospace;font-size:12.5px;color:var(--muted);
+    min-width:72px;padding-top:2px;white-space:nowrap}
+  .ev b{font-weight:500;font-size:15px}
+  .ev .sub{color:var(--muted);font-size:13px;margin-top:3px}
+  .ev .sub .atlas{color:var(--gold)}
+  .empty{color:var(--muted);border:1px dashed var(--line);border-radius:10px;padding:22px;
+    margin-top:26px;text-align:center}
+  .contrib{margin-top:44px;border:1px solid var(--line);border-left:3px solid var(--red);
+    border-radius:10px;background:var(--panel);padding:16px 20px}
+  .contrib h3{font-family:"Red Hat Display",sans-serif;font-size:16px;margin-bottom:6px}
+  .contrib p{color:var(--muted);font-size:14px}
+  .contrib a{color:var(--gold);text-decoration:none}
+  .contrib a:hover{text-decoration:underline}
+  .foot{margin-top:40px;border-top:1px solid var(--line);padding-top:14px;color:var(--faint);font-size:12px}
+  .foot a{color:var(--faint)}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  @media (max-width:520px){h1{font-size:29px}.ev{flex-direction:column;gap:4px}.ev .time{min-width:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">The Open Accelerator · Boston AI Atlas</p>
+  <h1>Boston AI Events</h1>
+  <p class="stand">Every AI community event we can find across Greater Boston for the next
+  10 days — meetups, workshops, demo nights, hackathons. Refreshed every Monday morning.</p>
+  <div class="topnav">
+    <a href="../">🗺️ The Atlas</a>
+    <a href="https://the-open-accelerator.com/calendar/">📅 TOA's own calendar</a>
+    <a href="#add">➕ Add your event</a>
+    <span class="meta" id="genLine">loading…</span>
+  </div>
+
+  <div id="list"><div class="empty">Loading events…</div></div>
+
+  <div class="contrib" id="add">
+    <h3>Get your event on this list</h3>
+    <p>Three ways, easiest first: run your events on a public
+    <b>Luma calendar</b> and <a href="https://github.com/holzerjm/boston-ai-atlas/issues/new?template=suggest-event.yml">tell us its address</a>
+    (we'll ingest everything you publish, forever) · submit it to
+    <a href="https://luma.com/toa">TOA's Luma calendar</a> (admin-approved) · or
+    <a href="https://github.com/holzerjm/boston-ai-atlas/issues/new?template=suggest-event.yml">suggest a one-off event</a>.
+    AI-relevant, Greater Boston, open to the community — that's the whole bar.</p>
+  </div>
+
+  <div class="foot">
+    A companion to the <a href="../">Boston AI Atlas</a> · sources: community Luma calendars,
+    Luma's Boston AI feed, and <a href="https://boston.aitinkerers.org/">AI Tinkerers Boston</a> ·
+    aggregation approach builds on <a href="https://github.com/nkpng2k/startup-event-scraper">nkpng2k's startup-event-scraper</a> (Apache-2.0) ·
+    © 2026 The Open Accelerator
+  </div>
+</div>
+<script>
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+  .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+const TZ = "America/New_York";
+const fmtTime = d => new Intl.DateTimeFormat("en-US",{hour:"numeric",minute:"2-digit",timeZone:TZ}).format(d);
+const dayKey = d => new Intl.DateTimeFormat("en-CA",{dateStyle:"short",timeZone:TZ}).format(d);
+const fmtDay = d => ({
+  dow: new Intl.DateTimeFormat("en-US",{weekday:"long",timeZone:TZ}).format(d),
+  rest: new Intl.DateTimeFormat("en-US",{month:"long",day:"numeric",timeZone:TZ}).format(d),
+});
+(async () => {
+  const list = document.getElementById("list");
+  let data;
+  try { data = await (await fetch("../events.json", {cache:"no-cache"})).json(); }
+  catch(e){ list.innerHTML = '<div class="empty">Couldn’t load events right now — try again shortly.</div>'; return; }
+  const gen = new Date(data.generated);
+  document.getElementById("genLine").textContent =
+    "refreshed " + new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",timeZone:TZ}).format(gen);
+  const upcoming = (data.events||[]).map(e=>({...e, startD:new Date(e.start)}))
+    .filter(e=>e.startD > new Date(Date.now()-3*3600e3))   // hide events >3h underway
+    .sort((a,b)=>a.startD-b.startD);
+  if(!upcoming.length){
+    list.innerHTML = '<div class="empty">Quiet stretch — no AI events found for the coming days.<br>Know one we missed? Add it below. 👇</div>';
+    return;
+  }
+  const today = dayKey(new Date());
+  const groups = new Map();
+  for(const e of upcoming){ const k=dayKey(e.startD); if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(e); }
+  let html = "";
+  for(const [k, evs] of groups){
+    const {dow, rest} = fmtDay(evs[0].startD);
+    html += `<section class="day"><h2><span class="dow">${esc(dow)}</span> ${esc(rest)}` +
+      (k===today ? ' <span class="tonight">today</span>' : "") + `</h2>`;
+    for(const e of evs){
+      const who = [e.organizer, e.venue].filter(Boolean).map(esc).join(" · ");
+      const atlas = e.atlasId ? ` <a class="atlas" href="../?entry=${encodeURIComponent(e.atlasId)}" onclick="event.stopPropagation()">→ on the atlas</a>` : "";
+      html += `<a class="ev" href="${esc(e.url)}" target="_blank" rel="noopener">` +
+        `<span class="time">${esc(fmtTime(e.startD))}</span>` +
+        `<span><b>${esc(e.title)}</b><div class="sub">${who}${atlas}</div></span></a>`;
+    }
+    html += `</section>`;
+  }
+  list.innerHTML = html;
+})();
+</script>
+</body>
+</html>

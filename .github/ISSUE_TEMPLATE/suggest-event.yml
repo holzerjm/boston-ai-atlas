@@ -1,0 +1,46 @@
+name: "📅 Suggest an event or calendar"
+description: "Get an AI community event (or your whole event calendar) onto the-open-accelerator.com/ecosystem/events"
+title: "[Event] "
+labels: ["event-suggestion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Two ways to get on the list — pick one:
+        **A calendar** (best): if you run events on a public Luma calendar, give us its
+        address once and everything you publish flows in automatically, forever.
+        **A one-off event**: fill in the details below.
+        The bar: AI-relevant · Greater Boston · open to the community.
+  - type: input
+    id: calendar
+    attributes:
+      label: Your Luma calendar (option A)
+      description: "The public calendar page, e.g. https://luma.com/your-org"
+      placeholder: "https://luma.com/…"
+  - type: input
+    id: event-name
+    attributes:
+      label: Event name (option B)
+      placeholder: "e.g. Boston RAG Builders Night"
+  - type: input
+    id: event-url
+    attributes:
+      label: Event page / RSVP link
+      placeholder: "https://…"
+  - type: input
+    id: when
+    attributes:
+      label: Date and start time (Eastern)
+      placeholder: "e.g. 2026-09-12 6:00 PM"
+  - type: input
+    id: where
+    attributes:
+      label: Venue
+      placeholder: "e.g. CIC Cambridge, 1 Broadway"
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: "This is a real, AI-relevant, Greater-Boston community event (not promotional spam)"
+          required: true

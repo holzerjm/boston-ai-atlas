@@ -23,7 +23,7 @@ name: Deploy to TOA site
 on:
   push:
     branches: [main]
-    paths: ["index.html", "data.js", "map-style-dark.json"]
+    paths: ["index.html", "data.js", "map-style-dark.json", "events/**"]
   workflow_dispatch:
 
 jobs:
@@ -54,6 +54,8 @@ jobs:
         run: |
           rsync -avz -e "ssh -i ~/.ssh/id_deploy" index.html data.js map-style-dark.json atlas.json atlas.csv site-pages/sitemap.xml \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
+          rsync -avz -e "ssh -i ~/.ssh/id_deploy" events/index.html \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/events/"
           # entry stubs: --delete is scoped to the e/ subtree only, so removed
           # entries' share pages clean up without touching anything else
           rsync -avz --delete -e "ssh -i ~/.ssh/id_deploy" site-pages/e/ \
