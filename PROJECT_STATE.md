@@ -201,6 +201,18 @@ dedicated ed25519 key whose `authorized_keys` line on the server is
 Manual fallback: `./scripts/sync-to-site.sh <dest>` from a local checkout with SSH
 access. The atlas is **not** on GitHub Pages.
 
+**The site-wide deploy must never touch `/ecosystem/`.** The rest of
+the-open-accelerator.com deploys separately via Eleventy from
+`~/notes/OpenAccelerator/TOAsite` (`npm run deploy` → rsync `_site/` to the docroot,
+sometimes with `--delete`). On 2026-08-31 a stale June snapshot in that tree
+(`src/ecosystem/`) overwrote a fresh atlas deploy (CARTO-era `index.html`, 121-entry
+`data.js`); a `--delete` run would have wiped the whole server dir. Guarded since then
+by two lines there: `eleventyConfig.ignores.add("src/ecosystem/**")` in
+`eleventy.config.js` (the folder never reaches `_site`) and `/ecosystem/` in
+`.rsync-exclude` (never shipped, and protected from `--delete`). If the atlas ever
+regresses on the live site right after a TOA site publish, check those guards first —
+recovery is one manual `workflow_dispatch` of `deploy.yml`.
+
 `index.html` carries `<link rel="canonical">` and `og:url` pointing at
 `https://the-open-accelerator.com/ecosystem/`, so that URL stays canonical even if a
 GitHub Pages copy exists.
