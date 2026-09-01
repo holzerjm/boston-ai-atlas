@@ -103,8 +103,10 @@ stamps it automatically). Powers the "✨ New" chips, the once-a-month new-orgs 
 and the Directory's "Recently added" sort. Validator warns if missing, errors if
 malformed or future. Full reference: `CONTRIBUTING.md`; enforced by `scripts/validate.js`.
 
-**Current composition (158 entries):** vc 49 · accel 18 · startup 15 · student 13 ·
+**Current composition (171 entries):** vc 49 · startup 28 · accel 18 · student 13 ·
 university 12 · corporate 12 · gov 9 · space 8 · event 8 · angel 7 · community 7.
+(Startup bar raised 15 → 28 on 2026-09-01: a 20-candidate research list was independently
+verified by a 4-agent workflow — 13 passed, 4 held, 1 skipped for NYC HQ, 2 were dupes.)
 
 ### Editorial voice
 
@@ -233,7 +235,7 @@ GitHub Pages copy exists.
 
 ## 6. Status & known gaps
 
-**Done:** four views · 158 verified entries · TOA branding · GitHub contribution loop ·
+**Done:** four views · 171 verified entries · TOA branding · GitHub contribution loop ·
 CI validation + auto badge · auto-deploy on merge + Slack notifications · suggestion bot
 (issue → draft PR) · maintainer docs · CSV export · `lastVerified` freshness field + stale
 report · shareable deep links (`?entry=` / `#view`) · HTML-escaped rendering · MIT licence ·
