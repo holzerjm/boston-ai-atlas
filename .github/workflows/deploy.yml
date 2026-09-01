@@ -106,7 +106,13 @@ jobs:
             DELTA="${DELTA}✏️ *Updated:* ${UPDATED} entr$( [ "$UPDATED" = 1 ] && echo y || echo ies)"
           fi
 
+          # Feature releases: bullet lines ("- " / "* ") in the head commit's body
+          # become their own "What shipped" section, so the notification can say
+          # more than one subject line when a release warrants it.
+          FEATURES=$(git log -1 --pretty=%b | sed -nE 's/^[-*] +/• /p' | head -8)
+
           jq -n --arg count "$COUNT" --arg subjects "$SUBJECTS" --arg delta "$DELTA" \
+                --arg features "$FEATURES" \
                 --arg run "$RUN_URL" --arg commit "$COMMIT_URL" --arg sha "$SHORT_SHA" '
             {text: ("🗺️ Boston AI Atlas updated — " + $count + " organizations live"),
              blocks: ([
@@ -114,6 +120,7 @@ jobs:
                {type:"section", text:{type:"mrkdwn",
                  text:("*" + $count + " organizations* live at <https://the-open-accelerator.com/ecosystem/|the-open-accelerator.com/ecosystem>\n" + $subjects)}}
              ]
+             + (if $features != "" then [{type:"section", text:{type:"mrkdwn", text:("*What shipped*\n" + $features)}}] else [] end)
              + (if $delta != "" then [{type:"section", text:{type:"mrkdwn", text:$delta}}] else [] end)
              + [{type:"context", elements:[{type:"mrkdwn",
                  text:("<" + $commit + "|`" + $sha + "`> · <" + $run + "|deploy log> · via GitHub Actions")}]}])

@@ -174,7 +174,7 @@ function geocode(q) {
     ` tags:[${tags.map(t => J(t)).join(",")}], stages:[${stages.join(",")}]` +
     (links.length ? `, links:[${links.map(l => J(l)).join(",")}]` : "") +
     (offers.length ? `, offers:[${offers.map(o => J(o)).join(",")}]` : "") +
-    `, lastVerified:${J(month)}},`;
+    `, added:${J(month)}, lastVerified:${J(month)}},`;
 
   // ---------- splice into the right category section ----------
   const BANNER = {

@@ -82,7 +82,7 @@ Copy this template and fill it in. Field-by-field help is in
  badge:"", desc:"",
  why:"",
  tags:[], stages:[], links:[],
- lastVerified:""},
+ added:"", lastVerified:""},
 ```
 
 Three fields need a quick "translation" from the form's words into the code's words —
@@ -97,8 +97,9 @@ the tables in Appendix A do this for you:
   GitHub file view, press **`/`** or `Ctrl/Cmd-F` and search the id).
 
 Leave `badge` empty (or delete the line) if there's nothing special. `links` is
-optional — see Appendix A. For `lastVerified`, put **today's month** as `"YYYY-MM"`
-(e.g. `"2026-08"`) — you just verified the org by building this entry.
+optional — see Appendix A. For `added` **and** `lastVerified`, put **today's month** as
+`"YYYY-MM"` (e.g. `"2026-08"`) — the entry joins the atlas now, and you just verified
+the org by building it.
 
 ### Step 4 — Add it to `data.js` (right in the browser)
 
@@ -272,6 +273,7 @@ Every entry has these fields. ⭐ = required.
 | `applyBy` |  | `"rolling"`, or the **current application deadline** as `"YYYY-MM-DD"`. Shows "Applications open" in the app; past dates auto-hide and the robot warns so you clear or roll them. Only for orgs with a real application (accelerators, grants, programs). | `"2026-10-15"` |
 | `applyNote` |  | Short label next to the deadline, max 40 chars. | `"Fall 2026 cohort"` |
 | `facts` |  | Optional "at a glance" table, 1–6 `[label, value]` rows. Labels must be one of: Check size, Stage, Terms, Equity, Board seat, Program length, Cohort size, Focus. Facts rot — only add ones you'd bet on, and re-check them at `lastVerified` time. | `[["Check size","$500K–$2M"]]` |
+| `added` |  | The month (`"YYYY-MM"`) the entry **joined the atlas** — set it once to the current month and never change it. Powers the "✨ New" chips, the new-this-month banner, and the "Recently added" sort. | `"2026-08"` |
 | `lastVerified` |  | The month (`"YYYY-MM"`) a maintainer last **confirmed the org is real, active, and the facts are right** — set it when you actually checked the org, not merely when you edited the entry. New entry → today's month. The robot only warns if it's missing, but always set it. | `"2026-08"` |
 
 ### Category (the `cat` field)
@@ -331,7 +333,7 @@ You look up `1 Broadway, Cambridge` in Google Maps → `42.3629, -71.0838`, and 
  desc:"Robotics-AI startup building warehouse pick-and-place arms.",
  why:"Hires interns straight out of MIT hackathons.",
  tags:["robotics","warehouse"], stages:[3,4], links:[],
- lastVerified:"2026-08"},
+ added:"2026-08", lastVerified:"2026-08"},
 ```
 
 …and paste it into the `// ---------- AI COMPANIES & STARTUPS ----------` section of

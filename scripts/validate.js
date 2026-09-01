@@ -96,6 +96,12 @@ for (const d of DATA) {
       if (/[<>]/.test(f[0] + f[1])) err(id, "facts must not contain < or > (HTML is not allowed)");
     }
   }
+  if (d.added === undefined)
+    warn.push(`  ⚠ [${id}] missing added — the month the entry joined the atlas ("YYYY-MM")`);
+  else if (typeof d.added !== "string" || !YYYY_MM.test(d.added))
+    err(id, `added must be a "YYYY-MM" string (got ${JSON.stringify(d.added)})`);
+  else if (d.added > THIS_MONTH)
+    err(id, `added ${d.added} is in the future`);
   if (d.lastVerified === undefined)
     warn.push(`  ⚠ [${id}] missing lastVerified — add the month this entry was last confirmed ("YYYY-MM")`);
   else if (typeof d.lastVerified !== "string" || !YYYY_MM.test(d.lastVerified))

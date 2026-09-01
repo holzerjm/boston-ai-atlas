@@ -82,7 +82,8 @@ tips), and `DATA` (the array of entries). One entry:
  lat:42.3629, lng:-71.0838, approx:true, url:"https://acme.ai", badge:"Applications open",
  desc:"1–2 factual sentences, max 400 chars.",
  why:"Why an early-stage founder should care.",
- tags:["robotics","warehouse"], stages:[3,4], links:["csail"], lastVerified:"2026-08"},
+ tags:["robotics","warehouse"], stages:[3,4], links:["csail"],
+ added:"2026-08", lastVerified:"2026-08"},
 ```
 
 `id` kebab-case & unique · `cat` ∈ CATS keys · lat/lng inside MA bounds · `url` https ·
@@ -95,8 +96,12 @@ mentorship · community · talent · customers) powering the Directory's "I need
 `applyBy` — `"rolling"` or a `"YYYY-MM-DD"` deadline (past dates auto-hide in the app,
 validator warns until cleared/rolled); `applyNote` — short cohort label; `facts` — an
 optional 1-6-row [label, value] "at a glance" table (whitelisted labels). Tags are a
-canonical ~45-word vocabulary (list in `validate.js`; unknown tags warn-only). Full
-reference: `CONTRIBUTING.md`; enforced by `scripts/validate.js`.
+canonical ~45-word vocabulary (list in `validate.js`; unknown tags warn-only).
+**Since 2026-08-31:** `added` — the month (`"YYYY-MM"`) the entry joined the atlas, set
+once and never changed (backfilled for all entries from git first-commit dates; the bot
+stamps it automatically). Powers the "✨ New" chips, the once-a-month new-orgs banner,
+and the Directory's "Recently added" sort. Validator warns if missing, errors if
+malformed or future. Full reference: `CONTRIBUTING.md`; enforced by `scripts/validate.js`.
 
 **Current composition (158 entries):** vc 49 · accel 18 · startup 15 · student 13 ·
 university 12 · corporate 12 · gov 9 · space 8 · event 8 · angel 7 · community 7.
@@ -216,10 +221,15 @@ GitHub Pages copy exists.
 
 ## 6. Status & known gaps
 
-**Done:** four views · 144 verified entries · TOA branding · GitHub contribution loop ·
+**Done:** four views · 158 verified entries · TOA branding · GitHub contribution loop ·
 CI validation + auto badge · auto-deploy on merge + Slack notifications · suggestion bot
 (issue → draft PR) · maintainer docs · CSV export · `lastVerified` freshness field + stale
 report · shareable deep links (`?entry=` / `#view`) · HTML-escaped rendering · MIT licence ·
+OpenFreeMap vector basemap (repo-owned dark style) · guided tour · Galaxy search + focus ·
+monthly health rails (link-check + verification rota → Slack) · events page (`/events/`,
+weekly Luma/AI-Tinkerers fetch) · founder stickiness: ★ shortlist (localStorage +
+`?list=` share links + print), ⚖ compare (up to 3 funders side-by-side), ✨ new-this-month
+(banner, chips, "Recently added" sort), 🎟 event ribbons on cards/drawer via `events.json` ·
 live at `/ecosystem/`.
 
 **Open items / ideas, roughly by value:**

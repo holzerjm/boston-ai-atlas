@@ -51,6 +51,8 @@ All data lives in [`data.js`](data.js) as one array of plain objects.
           ["Equity","6%"]],         // optional "at a glance" table, 1-6 rows; labels:
                                     // Check size | Stage | Terms | Equity | Board seat |
                                     // Program length | Cohort size | Focus
+  added: "2026-08",                 // month ("YYYY-MM") the entry joined the atlas —
+                                    // set once, never changed; powers the "✨ New" highlight
   lastVerified: "2026-08"           // month ("YYYY-MM") a maintainer last confirmed the
                                     // org is real, active, and the facts are right
 }

@@ -264,6 +264,55 @@ html:not(.dark) .cluster-chip{background:rgba(255,255,255,.95);color:#1c1a17;
 html:not(.dark) .tour-card{background:#fff;border-color:#ddd;box-shadow:0 12px 40px rgba(0,0,0,.18)}
 html:not(.dark) .tour-card p{color:#444}
 .tour-spot{outline:3px solid #ffc600;outline-offset:3px;border-radius:10px}
+/* shortlist + compare + new-this-month */
+.card{position:relative}
+.card-tools{position:absolute;top:10px;right:10px;display:flex;gap:6px}
+.card-tool{width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:14px;line-height:1;
+  background:rgba(128,140,160,.12);border:1px solid transparent;color:#8a93a3}
+.card-tool:hover{color:#ffc600;border-color:rgba(255,198,0,.4)}
+.card-tool.on{color:#ffc600;border-color:rgba(255,198,0,.55);background:rgba(255,198,0,.1)}
+.card-tool.cmp.on{color:#60a5fa;border-color:rgba(96,165,250,.55);background:rgba(96,165,250,.1)}
+.card h3{padding-right:72px}
+.new-tag{color:#ffc600;border-color:rgba(255,198,0,.45)}
+.event-tag{color:#f472b6;border-color:rgba(244,114,182,.4)}
+.dr-event{color:#f472b6}
+html:not(.dark) .new-tag{color:#b45309;border-color:rgba(180,83,9,.4)}
+html:not(.dark) .event-tag,html:not(.dark) .dr-event{color:#be185d;border-color:rgba(190,24,93,.35)}
+.new-banner{position:sticky;top:0;z-index:900;display:flex;gap:8px;align-items:center;justify-content:center;
+  padding:8px 40px;font-size:13.5px;background:rgba(255,198,0,.12);border-bottom:1px solid rgba(255,198,0,.3);color:#ffc600}
+.new-banner a{color:#ffc600;text-decoration:underline}
+html:not(.dark) .new-banner{background:rgba(180,83,9,.08);border-color:rgba(180,83,9,.3);color:#b45309}
+html:not(.dark) .new-banner a{color:#b45309}
+.nb-x{position:absolute;right:12px;background:none;border:none;color:inherit;cursor:pointer;font-size:14px}
+.modal{position:fixed;inset:0;z-index:9400;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-card{background:#14171c;border:1px solid #2a2f38;border-radius:14px;max-width:520px;width:100%;
+  max-height:82vh;overflow:auto;padding:18px 20px;box-shadow:0 16px 48px rgba(0,0,0,.5)}
+.modal-wide{max-width:860px}
+html:not(.dark) .modal-card{background:#fff;border-color:#ddd}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:16px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+.sl-row{display:flex;align-items:center;gap:10px;padding:9px 2px;border-top:1px solid rgba(128,128,128,.15)}
+.sl-main{flex:1;min-width:0}
+.sl-main a{color:inherit}
+.sl-sub{display:block;font-size:12px;color:var(--muted)}
+.sl-url{opacity:.8}
+.sl-x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:4px}
+.sl-x:hover{color:#ff5c45}
+.cmp-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9300;display:flex;gap:14px;
+  align-items:center;background:#14171c;border:1px solid #2a2f38;border-radius:999px;padding:8px 10px 8px 18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.45);font-size:14px}
+html:not(.dark) .cmp-bar{background:#fff;border-color:#ddd}
+.cmp-table{border-collapse:collapse;width:100%;font-size:13.5px}
+.cmp-table td{padding:8px 12px;border-bottom:1px solid rgba(128,128,128,.15);vertical-align:top;min-width:130px}
+.cmp-table td:first-child{color:var(--muted);white-space:nowrap;min-width:0}
+@media print{
+  body.shortlist-open > :not(#shortlistModal){display:none!important}
+  body.shortlist-open #shortlistModal{position:static;background:none;padding:0;display:block!important}
+  body.shortlist-open .modal-card{box-shadow:none;border:none;max-height:none;max-width:none;background:#fff;color:#000}
+  body.shortlist-open .modal-actions,body.shortlist-open .sl-x{display:none!important}
+  body.shortlist-open .sl-row::before{content:"☐ ";font-size:15px}
+  body.shortlist-open .sl-sub,body.shortlist-open .sl-main a{color:#000!important}
+}
 /* offers / application windows / facts */
 .need-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
 .need-label{font-size:12px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
@@ -320,6 +369,36 @@ html:not(.dark) .dr-verified.stale,html:not(.dark) .stale-tag{color:#b45309;bord
 <noscript><p style="padding:16px">The interactive atlas needs JavaScript. You can still
 browse the <a href="e/">full organization index</a> or use the open dataset
 (<a href="atlas.json">JSON</a> · <a href="atlas.csv">CSV</a>, CC BY 4.0).</p></noscript>
+
+<div id="newBanner" class="new-banner" style="display:none">
+  <span id="newBannerText"></span>
+  <a href="#" onclick="switchView('directory');document.getElementById('dirSort').value='new';renderCards();return false">see what's new</a>
+  <button class="nb-x" aria-label="Dismiss" onclick="dismissNewBanner()">✕</button>
+</div>
+
+<div id="shortlistModal" class="modal" style="display:none" role="dialog" aria-label="Shortlist">
+  <div class="modal-card">
+    <div class="modal-head"><b id="slTitle">Your shortlist</b><button class="sl-x" aria-label="Close" onclick="closeShortlist()">✕</button></div>
+    <div id="slBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-sec" id="slAdopt" style="display:none" onclick="adoptShortlist()">★ Save all to my shortlist</button>
+      <button class="btn btn-sec" id="slShare" onclick="shareShortlist(this)">🔗 Copy share link</button>
+      <button class="btn btn-pri" id="slPrint" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+</div>
+
+<div id="compareModal" class="modal" style="display:none" role="dialog" aria-label="Compare">
+  <div class="modal-card modal-wide">
+    <div class="modal-head"><b>Side by side</b><button class="sl-x" aria-label="Close" onclick="closeCompare()">✕</button></div>
+    <div id="cmpBody" style="overflow-x:auto"></div>
+  </div>
+</div>
+
+<div id="cmpBar" class="cmp-bar" style="display:none">
+  <span>⚖ <span id="cmpBarCount">0</span> selected</span>
+  <button class="btn btn-pri" id="cmpBarGo" onclick="openCompare()" disabled>Compare</button>
+</div>
 
 <div id="tourCard" class="tour-card" style="display:none" role="dialog" aria-label="Quick tour">
   <div class="tour-head"><b id="tourTitle"></b><span id="tourStep" class="tour-step"></span></div>
@@ -400,6 +479,7 @@ browse the <a href="e/">full organization index</a> or use the open dataset
     <button class="tab" data-view="journey"><span class="ico">🧭</span>Founder Journey</button>
     <button class="tab" data-view="directory"><span class="ico">📇</span>Directory</button>
     <div class="nav-spacer"></div>
+    <button class="tab" id="starNav" style="display:none" title="Your saved shortlist" onclick="openShortlist()">★ <span id="starCount">0</span></button>
     <button class="tab suggest" id="suggestBtn" title="Propose a new organization for the atlas">➕ Suggest an entry</button>
     <span class="nav-hint">Click any colored icon for details · <a href="#" onclick="startTour();return false" style="color:#ffc600">Take the quick tour</a></span>
     <a id="ghLink" class="nav-gh" target="_blank" rel="noopener" title="Contribute on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
@@ -448,6 +528,7 @@ browse the <a href="e/">full organization index</a> or use the open dataset
     <select class="dir-select" id="dirSort">
       <option value="name">Sort: A → Z</option>
       <option value="cat">Sort: Category</option>
+      <option value="new">Sort: Recently added</option>
     </select>
   </div>
   <div class="cat-chips" id="catChips"></div>
@@ -599,6 +680,33 @@ const OFFERS_META = {
   customers:  {icon:"🛒", label:"Customers & pilots"},
 };
 const todayYMD = () => new Date().toISOString().slice(0,10);
+// "new" = added this month or last month (local months — UTC would misfire
+// on month boundaries)
+const localYM = dt => `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}`;
+const isNew = d => {
+  if(!d.added) return false;
+  const now = new Date();
+  return d.added === localYM(now) || d.added === localYM(new Date(now.getFullYear(), now.getMonth()-1, 15));
+};
+// shortlist / compare state (declared early — renderCards reads them on first paint)
+let starSet = new Set();
+try{ starSet = new Set(JSON.parse(localStorage.getItem("toa-atlas-stars")||"[]")); }catch(e){}
+const cmpSet = new Set();
+let sharedList = null;   // set when viewing a ?list= URL someone shared
+
+// orgs hosting an event in the next 7 days (events.json is produced by the
+// weekly events pipeline and served next to the app; absent locally — fail silent)
+let eventHosts = {};
+fetch("events.json").then(r => r.ok ? r.json() : null).then(j => {
+  if(!j || !j.events) return;
+  const now = Date.now(), horizon = now + 7*864e5;
+  for(const e of j.events){
+    const t = Date.parse(e.start);
+    if(!e.atlasId || isNaN(t) || t < now - 864e5 || t > horizon) continue;
+    if(!eventHosts[e.atlasId] || t < Date.parse(eventHosts[e.atlasId].start)) eventHosts[e.atlasId] = e;
+  }
+  if(Object.keys(eventHosts).length && typeof renderCards === "function") renderCards();
+}).catch(()=>{});
 // open = rolling, or a deadline that hasn't passed; expired dates render as nothing
 const applyOpen = d => d.applyBy === "rolling" || (!!d.applyBy && d.applyBy >= todayYMD());
 const fmtDeadline = v => { const [y,m,dd] = v.split("-"); return `${MONTH_NAMES[+m-1]} ${+dd}, ${y}`; };
@@ -618,6 +726,7 @@ function openDrawer(id){
   let html = `<p>${esc(d.desc)}</p>`;
   if(d.why) html += `<div class="dr-why" style="--cc:${col}"><b>Why it matters for founders</b><div>${esc(d.why)}</div></div>`;
   if(applyOpen(d)) html += `<div class="dr-apply">⏳ Applications open — ${d.applyBy==="rolling" ? "rolling" : "apply by " + fmtDeadline(d.applyBy)}${d.applyNote ? " · " + esc(d.applyNote) : ""}</div>`;
+  if(eventHosts[d.id]) html += `<div class="dr-apply dr-event">🎟 Hosting: ${esc(eventHosts[d.id].title)} — <a href="events/" target="_blank" rel="noopener">all events</a></div>`;
   if(d.offers && d.offers.length) html += `<div class="dr-sec">What founders get</div><div class="chips">` +
     d.offers.map(o=>OFFERS_META[o]).filter(Boolean).map(m=>`<span class="tag offer-tag">${m.icon} ${m.label}</span>`).join(" ") + `</div>`;
   if(d.facts && d.facts.length) html += `<div class="dr-sec">At a glance</div><table class="dr-facts">` +
@@ -637,6 +746,7 @@ function openDrawer(id){
   html += `<div class="dr-actions">
     <a class="btn btn-pri" href="${esc(d.url)}" target="_blank" rel="noopener">Visit website ↗</a>
     <button class="btn btn-sec" onclick="goToMap('${d.id}')">Show on map</button>
+    <button class="btn btn-sec" onclick="toggleStar('${d.id}');openDrawer('${d.id}')" title="Save to your shortlist">${starSet.has(d.id)?"★ Saved":"☆ Save"}</button>
     <button class="btn btn-sec" onclick="copyLink(this)" title="Copy a shareable link to this entry">🔗 Copy link</button>
     <button class="btn btn-sec" onclick="flagEntry('${d.id}')" title="Report this entry as outdated, miscategorized, or no longer active">🚩 Flag</button>
   </div>`;
@@ -1179,15 +1289,18 @@ function renderCards(){
     d.loc.toLowerCase().includes(q) || cLabel(d.cat).toLowerCase().includes(q));
   const sort=$("dirSort").value;
   list.sort((a,b)=> sort==="cat" ? (a.cat===b.cat ? a.name.localeCompare(b.name) : a.cat.localeCompare(b.cat))
+                  : sort==="new" ? ((b.added||"").localeCompare(a.added||"") || a.name.localeCompare(b.name))
                                  : a.name.localeCompare(b.name));
   $("dirCount").textContent = `${list.length} of ${DATA.length} organizations`;
   $("cards").innerHTML = list.map(d=>{
     const col=cColor(d.cat);
+    const canCompare = d.cat==="vc" || d.cat==="accel" || d.cat==="angel";
     return `<div class="card" style="--cc:${col}" onclick="openDrawer('${d.id}')">
+      <div class="card-tools">${canCompare?`<button class="card-tool cmp ${cmpSet.has(d.id)?'on':''}" title="Compare" aria-label="Add ${esc(d.name)} to comparison" onclick="event.stopPropagation();toggleCompare('${d.id}')">⚖</button>`:""}<button class="card-tool star ${starSet.has(d.id)?'on':''}" title="Save to shortlist" aria-label="Save ${esc(d.name)} to your shortlist" onclick="event.stopPropagation();toggleStar('${d.id}')">${starSet.has(d.id)?"★":"☆"}</button></div>
       <h3>${esc(d.name)}</h3>
       <div class="c-cat" style="color:${col}">${cLabel(d.cat)} · ${esc(d.loc.split(",")[0])}</div>
       <p>${esc(d.desc.length>150 ? d.desc.slice(0,150)+"…" : d.desc)}</p>
-      <div class="c-meta">${d.applyBy && d.applyBy!=="rolling" && applyOpen(d) ? `<span class="tag apply-tag">⏳ Apply by ${esc(fmtDeadline(d.applyBy))}</span>`:""}${isStale(d)?`<span class="tag stale-tag" title="Last verified ${fmtMonth(d.lastVerified)}">⚠ not recently verified</span>`:""}${d.badge?`<span class="badge">${esc(d.badge)}</span>`:""}${(d.tags||[]).slice(0,3).map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
+      <div class="c-meta">${isNew(d)?`<span class="tag new-tag">✨ New</span>`:""}${eventHosts[d.id]?`<span class="tag event-tag" title="${esc(eventHosts[d.id].title)}">🎟 event this week</span>`:""}${d.applyBy && d.applyBy!=="rolling" && applyOpen(d) ? `<span class="tag apply-tag">⏳ Apply by ${esc(fmtDeadline(d.applyBy))}</span>`:""}${isStale(d)?`<span class="tag stale-tag" title="Last verified ${fmtMonth(d.lastVerified)}">⚠ not recently verified</span>`:""}${d.badge?`<span class="badge">${esc(d.badge)}</span>`:""}${(d.tags||[]).slice(0,3).map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
     </div>`;
   }).join("") || `<div style="color:var(--muted)">No matches — try clearing filters, or <a href="#" onclick="suggestEntry();return false" style="color:#ffc600">suggest a new entry</a>.</div>`;
 }
@@ -1215,11 +1328,107 @@ function copyLink(btn){
 }
 window.copyLink = copyLink;
 
+/* ---------- shortlist (★) + compare (⚖) ---------- */
+function saveStars(){ try{ localStorage.setItem("toa-atlas-stars", JSON.stringify([...starSet])); }catch(e){} }
+function toggleStar(id){
+  if(starSet.has(id)) starSet.delete(id); else starSet.add(id);
+  saveStars(); syncStarUI();
+}
+function syncStarUI(){
+  const n = starSet.size;
+  const btn = $("starNav");
+  btn.style.display = n ? "" : "none";
+  $("starCount").textContent = n;
+  if(typeof renderCards === "function") renderCards();
+  if($("shortlistModal").style.display !== "none") renderShortlist(shortlistIds());
+}
+function shortlistIds(){ return sharedList || [...starSet]; }
+
+function renderShortlist(ids){
+  const list = ids.map(i=>byId[i]).filter(Boolean);
+  $("slBody").innerHTML = list.map(d=>`
+    <div class="sl-row">
+      <span class="lg-dot" style="color:${cColor(d.cat)};background:${cColor(d.cat)}"></span>
+      <div class="sl-main"><a href="#" onclick="closeShortlist();openDrawer('${d.id}');return false"><b>${esc(d.name)}</b></a>
+        <span class="sl-sub">${cLabel(d.cat)} · ${esc(d.loc.split(",")[0])} · <span class="sl-url">${esc(d.url.replace(/^https:\/\/(www\.)?/,""))}</span></span></div>
+      ${sharedList ? "" : `<button class="sl-x" aria-label="Remove ${esc(d.name)}" onclick="toggleStar('${d.id}')">✕</button>`}
+    </div>`).join("") || `<p style="color:var(--muted)">Nothing saved yet — hit ☆ on any card or entry.</p>`;
+  $("slTitle").textContent = sharedList ? "A shared shortlist" : "Your shortlist";
+  $("slAdopt").style.display = sharedList ? "" : "none";
+  $("slShare").style.display = list.length ? "" : "none";
+  $("slPrint").style.display = list.length ? "" : "none";
+}
+function openShortlist(){ renderShortlist(shortlistIds()); $("shortlistModal").style.display="flex"; document.body.classList.add("shortlist-open"); }
+function closeShortlist(){ $("shortlistModal").style.display="none"; document.body.classList.remove("shortlist-open"); sharedList=null; }
+function shareShortlist(btn){
+  if(!navigator.clipboard) return;
+  const url = location.origin + location.pathname + "?list=" + shortlistIds().join(",");
+  navigator.clipboard.writeText(url).then(()=>{
+    if(!btn.dataset.label) btn.dataset.label = btn.textContent;
+    btn.textContent = "✓ Copied"; setTimeout(()=>{ btn.textContent = btn.dataset.label; }, 1500);
+  }).catch(()=>{});
+}
+function adoptShortlist(){ (sharedList||[]).forEach(id=>starSet.add(id)); sharedList=null; saveStars(); syncStarUI(); renderShortlist(shortlistIds()); }
+window.toggleStar=toggleStar; window.openShortlist=openShortlist; window.closeShortlist=closeShortlist;
+window.shareShortlist=shareShortlist; window.adoptShortlist=adoptShortlist;
+
+function toggleCompare(id){
+  if(cmpSet.has(id)) cmpSet.delete(id);
+  else { if(cmpSet.size>=3){ return; } cmpSet.add(id); }
+  const bar=$("cmpBar");
+  bar.style.display = cmpSet.size>=1 ? "" : "none";
+  $("cmpBarCount").textContent = cmpSet.size;
+  $("cmpBarGo").disabled = cmpSet.size<2;
+  renderCards();
+}
+function openCompare(){
+  const list=[...cmpSet].map(i=>byId[i]).filter(Boolean);
+  if(list.length<2) return;
+  const factLabels=[...new Set(list.flatMap(d=>(d.facts||[]).map(f=>f[0])))];
+  const cell=(d,l)=>{ const f=(d.facts||[]).find(x=>x[0]===l); return f?esc(f[1]):"—"; };
+  const rows=[
+    ["", list.map(d=>`<b>${esc(d.name)}</b><br><span style="color:${cColor(d.cat)}">${cLabel(d.cat)}</span>`)],
+    ["Location", list.map(d=>esc(d.loc))],
+    ["What you get", list.map(d=>(d.offers||[]).map(o=>OFFERS_META[o]?.icon+" "+OFFERS_META[o]?.label).join("<br>")||"—")],
+    ["Applications", list.map(d=>applyOpen(d) ? (d.applyBy==="rolling"?"Open — rolling":"Open — by "+esc(fmtDeadline(d.applyBy))) : "—")],
+    ...factLabels.map(l=>[esc(l), list.map(d=>cell(d,l))]),
+    ["Stages", list.map(d=>(d.stages||[]).map(n=>STAGES.find(s=>s.n===n)?.t).join(", ")||"—")],
+    ["", list.map(d=>`<a href="#" onclick="closeCompare();openDrawer('${d.id}');return false">Full entry →</a>`)],
+  ];
+  $("cmpBody").innerHTML = `<table class="cmp-table">` +
+    rows.map(([label,cells])=>`<tr><td>${label}</td>${cells.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("") + `</table>`;
+  $("compareModal").style.display="flex";
+}
+function closeCompare(){ $("compareModal").style.display="none"; }
+window.toggleCompare=toggleCompare; window.openCompare=openCompare; window.closeCompare=closeCompare;
+
+/* stickiness init: saved stars, shared ?list= URLs, the new-this-month banner */
+function dismissNewBanner(){
+  $("newBanner").style.display="none";
+  try{ localStorage.setItem("toa-atlas-newbanner", localYM(new Date())); }catch(e){}
+}
+window.dismissNewBanner = dismissNewBanner;
+(function initStickiness(){
+  const lp = new URLSearchParams(location.search).get("list");
+  if(lp){
+    const ids = lp.split(",").filter(id=>byId[id]).slice(0,50);
+    if(ids.length){ sharedList = ids; setTimeout(openShortlist, 500); }
+  }
+  syncStarUI();
+  const month = localYM(new Date());
+  const fresh = DATA.filter(d=>d.added===month).length;
+  let seen = null; try{ seen = localStorage.getItem("toa-atlas-newbanner"); }catch(e){}
+  if(fresh >= 2 && seen !== month && !lp){
+    $("newBannerText").textContent = `✨ ${fresh} organizations added this month — `;
+    $("newBanner").style.display = "";
+  }
+})();
+
 /* ---------- guided tour (first visit, or via the nav link) ---------- */
 const TOUR = [
   { view:"map", sel:".nav-inner",
     title:"Welcome to the Boston AI Atlas 👋",
-    text:"160 verified organizations — VCs, labs, accelerators, spaces and communities — in four views: the Map, the Galaxy of connections, a stage-by-stage Founder Journey, and a searchable Directory." },
+    text:`${DATA.length} verified organizations — VCs, labs, accelerators, spaces and communities — in four views: the Map, the Galaxy of connections, a stage-by-stage Founder Journey, and a searchable Directory.` },
   { view:"map", sel:"#mapSearch",
     title:"The Map",
     text:"Search anything, toggle categories in the legend, and click any colored pin for details. ⌖ re-centers on downtown Boston; ∴ groups or un-groups nearby pins." },
@@ -1264,7 +1473,7 @@ document.addEventListener("keydown", e=>{ if(e.key === "Escape" && tourStep >= 0
 // auto-start for first-time visitors — but never over a shared deep link
 (function(){
   let seen = null; try{ seen = localStorage.getItem("toa-atlas-tour"); }catch(e){}
-  if(!seen && !location.search.includes("entry=") && !location.hash) setTimeout(startTour, 1400);
+  if(!seen && !location.search && !location.hash) setTimeout(startTour, 1400);  // never over a shared link
 })();
 
 /* ---------- structured data (SEO) ---------- */

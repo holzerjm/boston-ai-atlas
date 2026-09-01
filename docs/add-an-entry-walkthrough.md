@@ -40,7 +40,7 @@ Copy this template into a notes app and replace the blanks:
  desc:"",
  why:"",
  tags:[], stages:[], links:[],
- lastVerified:""},
+ added:"", lastVerified:""},
 ```
 
 | Field | What to put |
@@ -56,6 +56,7 @@ Copy this template into a notes app and replace the blanks:
 | `tags` | 2–4 short lowercase tags, each in quotes: `["robotics","lab space"]` |
 | `stages` | The founder stages it serves, as **numbers** — see the table below: `[1,3]` |
 | `links` | Usually leave as `[]`. (Advanced: ids of related entries.) |
+| `added` | Today's month as `"YYYY-MM"` (e.g. `"2026-08"`) — when the entry joined the atlas. The app uses it for the "✨ New" highlight. |
 | `lastVerified` | Today's month as `"YYYY-MM"` (e.g. `"2026-08"`) — you just verified it by building this entry. |
 
 **Category — form label → `cat` code:**
@@ -129,7 +130,7 @@ A suggestion comes in: *Epipelagic Ventures · https://www.epipelagic.vc · Vent
  desc:"A founder-first venture studio in Kendall Square that surrounds early-stage startups with capital, mentorship and hands-on operational support to reach their next milestone.",
  why:"A hands-on venture-studio model for pre-seed founders — especially edtech, consumer, health and wellness, or moonshot ideas — pairing funding with active build support.",
  tags:["venture studio","early stage"], stages:[3,4], links:[],
- lastVerified:"2026-08"},
+ added:"2026-08", lastVerified:"2026-08"},
 ```
 
 …then paste it into the `// ---------- VENTURE CAPITAL ----------` section. Done.
