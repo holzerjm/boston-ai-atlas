@@ -10,6 +10,8 @@ The living map of Greater Boston's AI ecosystem — built by the community for t
 [The Open Accelerator](https://the-open-accelerator.com) (an initiative between the
 MA AI Hub, Red Hat & IBM).
 
+[![A 30-second tour: the Map, an entry drawer, the Galaxy, the Directory with side-by-side compare, and the events radar](docs/demo.gif)](https://the-open-accelerator.com/ecosystem/)
+
 **Four ways to explore 160+ verified organizations:**
 
 - 🗺️ **Map** — every VC, lab, accelerator and community pinned across Greater Boston
