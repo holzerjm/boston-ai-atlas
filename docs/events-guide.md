@@ -58,8 +58,9 @@ The workflow is [`weekly-events.yml`](../.github/workflows/weekly-events.yml):
 3. **Ship**: `events.json` is rsync'd to the web server (same deploy key as
    the atlas). It is **never committed to git** — the repo stays clean.
 4. **Announce**: the day-grouped list posts to Slack
-   (`SLACK_SCOUTS_WEBHOOK_URL` secret — currently the test channel; point it
-   at the real Scouts channel by re-setting the secret, no code change).
+   (`SLACK_SCOUTS_WEBHOOK_URL` secret — the live TOA Scouts channel; to
+   redirect it, for example to a test channel, re-set the secret, no code
+   change).
 5. Everything the run did is in the workflow's **job summary** on the Actions
    tab.
 
