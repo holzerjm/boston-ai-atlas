@@ -1,7 +1,14 @@
 # Weekly events refresh — builds events.json (Boston AI events, next 10 days),
 # ships it to /ecosystem/events.json, and posts the list to the TOA Scouts
-# Slack. Runs Monday 7am Eastern year-round: two UTC crons with a gate that
-# checks the local hour, so DST is handled honestly.
+# Slack. Target: Monday 7am Eastern, year-round.
+#
+# GitHub cron is best-effort: firings are often late (hours, at times) and
+# occasionally dropped, worst at the top of the hour. So: three Monday firings
+# at :07 past the hour, and a gate that lets through the FIRST one that is
+# (a) at or after 7am Eastern and (b) sees a live events.json that has not
+# been regenerated since 7am Eastern today. Late firings still run, dropped
+# firings are covered by the next, extra firings skip. EDT/EST needs no
+# special handling: the gate looks at the clock, not at which cron fired.
 #
 # Secrets: DEPLOY_* (shared with deploy.yml) ship the file;
 # SLACK_SCOUTS_WEBHOOK_URL posts the list (skipped silently if unset).
@@ -10,9 +17,15 @@ name: Weekly events refresh
 
 on:
   schedule:
-    - cron: "0 11 * * 1"   # 7am EDT
-    - cron: "0 12 * * 1"   # 7am EST
+    - cron: "7 11 * * 1"   # 7:07am EDT / 6:07am EST (gate skips before 7am)
+    - cron: "7 12 * * 1"   # 8:07am EDT / 7:07am EST
+    - cron: "7 13 * * 1"   # catch-up an hour later, in case both were dropped
   workflow_dispatch:
+    inputs:
+      check_gate:
+        description: "Evaluate the cron gate instead of forcing a run (for testing)"
+        type: boolean
+        default: false
 
 jobs:
   refresh:
@@ -23,14 +36,34 @@ jobs:
         with:
           node-version: 20
 
-      - name: Gate on 7am Eastern (skip the wrong-DST cron)
+      - name: Gate (first firing at or after 7am Eastern that finds a stale live file)
         id: gate
+        env:
+          LIVE_URL: https://the-open-accelerator.com/ecosystem/events.json
+          CHECK_GATE: ${{ github.event.inputs.check_gate }}
         run: |
-          H=$(TZ=America/New_York date +%H)
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$H" = "07" ]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
+          decide() { echo "run=$1" >> "$GITHUB_OUTPUT"; echo "Gate: $2"; echo "**Gate:** $2" >> "$GITHUB_STEP_SUMMARY"; }
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && [ "$CHECK_GATE" != "true" ]; then
+            decide true "running (manual dispatch)"; exit 0
+          fi
+          NOW_ET=$(TZ=America/New_York date "+%Y-%m-%dT%H:%M:%S")
+          HOUR=$(TZ=America/New_York date "+%-H")
+          if [ "$HOUR" -lt 7 ]; then
+            decide false "skipped — $NOW_ET Eastern is before 7am; a later firing covers this week"; exit 0
+          fi
+          GEN=$(curl -fsS --max-time 20 -H 'Cache-Control: no-cache' "$LIVE_URL?cb=$(date +%s)" | jq -r '.generated // empty' 2>/dev/null || true)
+          GEN_ET=""
+          if [ -n "$GEN" ]; then
+            GEN_ET=$(TZ=America/New_York date -d "$GEN" "+%Y-%m-%dT%H:%M:%S" 2>/dev/null || true)
+          fi
+          TODAY7=$(TZ=America/New_York date "+%Y-%m-%dT07:00:00")
+          if [ -n "$GEN_ET" ] && [[ "$GEN_ET" > "$TODAY7" || "$GEN_ET" == "$TODAY7" ]]; then
+            decide false "skipped — live events.json already regenerated at $GEN_ET Eastern; this Monday's refresh is done"; exit 0
+          fi
+          if [ -n "$GEN_ET" ]; then
+            decide true "running — $NOW_ET Eastern; live file last generated $GEN_ET Eastern"
           else
-            echo "run=false" >> "$GITHUB_OUTPUT"; echo "Local hour is $H, not 07 — the other cron covers this week."
+            decide true "running — $NOW_ET Eastern; could not read the live file, refreshing to be safe"
           fi
 
       - name: Fetch events

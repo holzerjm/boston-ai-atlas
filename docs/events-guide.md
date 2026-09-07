@@ -42,11 +42,17 @@ organizer matches one ("→ on the atlas").
 
 The workflow is [`weekly-events.yml`](../.github/workflows/weekly-events.yml):
 
-1. **Two alarm clocks, one gate.** GitHub cron only speaks UTC, and "7am
-   Eastern" moves with daylight saving — so the workflow is scheduled at both
-   11:00 and 12:00 UTC on Mondays, and a first step checks the real Boston
-   hour. The wrong firing exits silently; the right one proceeds. Net effect:
-   it is always 7am ET, year-round.
+1. **Three alarm clocks, one gate.** GitHub's cron is best-effort: firings
+   are often late (by hours, some weeks) and occasionally dropped, worst at
+   the top of the hour. So the workflow is scheduled three times on Mondays —
+   11:07, 12:07 and 13:07 UTC — and a first step decides whether *this*
+   firing should do the work: it must be at or after 7am Boston time, and the
+   live `events.json` must not have been regenerated since 7am today. The
+   first firing that passes both checks runs; every other one exits quietly.
+   A late firing still runs, a dropped one is covered by the next, and
+   daylight-saving needs no special handling because the gate reads the clock
+   rather than caring which cron fired. Its decision is printed as a
+   `Gate:` line in the run's job summary.
 2. **Fetch**: `node scripts/fetch-events.js` pulls all sources and writes
    `events.json`.
 3. **Ship**: `events.json` is rsync'd to the web server (same deploy key as
@@ -57,7 +63,9 @@ The workflow is [`weekly-events.yml`](../.github/workflows/weekly-events.yml):
 5. Everything the run did is in the workflow's **job summary** on the Actions
    tab.
 
-**Run it right now** (any day, any time — the gate only applies to cron):
+**Run it right now** (any day, any time — a manual run bypasses the gate;
+tick *check_gate* on the run dialog only when you want to test the gate's
+decision instead):
 Actions tab → *Weekly events refresh* → *Run workflow*, or:
 
 ```bash
@@ -95,6 +103,12 @@ node scripts/fetch-events.js          # writes events.json locally, prints a per
   "Boston Data Party" prompted the data-community keywords.)
 - **A junk event got in.** Tighten the same keyword lists, or if a whole
   calendar is noisy, set its `ai_default: false`.
+- **No Monday post, or the page shows last week's list.** Open the Actions
+  tab: a normal Monday shows up to three *Weekly events refresh* runs, all
+  green — read each run's job summary `Gate:` line to find the one that did
+  the work (the others say "skipped" and why). If none ran at all, GitHub
+  dropped or delayed the firings (it happens; see the step-by-step section
+  above) — just run it manually, the gate is bypassed for manual runs.
 - **The page says "Couldn't load events".** The last shipped `events.json` is
   stale or missing — check the latest *Weekly events refresh* run on the
   Actions tab; its log names the failing step. Re-run manually after fixing.
