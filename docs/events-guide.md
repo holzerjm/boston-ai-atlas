@@ -45,8 +45,9 @@ The workflow is [`weekly-events.yml`](../.github/workflows/weekly-events.yml):
 1. **The alarm clock lives on the web server, not on GitHub.** GitHub's own
    cron scheduler proved unreliable for this repo — Monday firings arrived
    5-6 hours late one week and not at all by mid-morning the next — so the
-   origin server (`toa-forge`) runs a plain cron at 11:00 and 12:00 UTC on
-   Mondays (7am EDT / 7am EST) that asks GitHub to start the workflow. The
+   origin server (`toa-forge`) runs a plain cron at 11:01, 12:01 and 13:01 UTC on
+   Mondays (7am EDT / 7am EST, plus a spare) and 12:01 UTC on Tuesdays (a
+   retry if Monday never happened) that asks GitHub to start the workflow. The
    script is `scripts/trigger-weekly-events.sh`, installed as
    `~/bin/trigger-weekly-events.sh` for the `forge` user, logging to
    `~/.local/log/weekly-events.log`. GitHub's own crons stay in place as
@@ -72,9 +73,10 @@ The workflow is [`weekly-events.yml`](../.github/workflows/weekly-events.yml):
 6. Everything the run did is in the workflow's **job summary** on the Actions
    tab.
 
-**Run it right now** (any day, any time — a manual run bypasses the gate;
-tick *check_gate* on the run dialog only when you want to test the gate's
-decision instead):
+**Run it right now** (any day, any time). A plain manual run goes through the
+same once-a-week gate, so it refreshes only if this week's refresh is missing;
+tick *force* on the run dialog (or add `-f force=true` below) to refresh and
+post regardless — for example to publish a just-approved event mid-week:
 Actions tab → *Weekly events refresh* → *Run workflow*, or:
 
 ```bash
@@ -125,8 +127,9 @@ node scripts/fetch-events.js          # writes events.json locally, prints a per
   discover feeds are the fragile ones (undocumented API). The page degrades
   gracefully — the fix is usually "wait" or "add the calendar as an ICS
   source instead", which is sturdier.
-- **No Slack post.** The webhook secret is unset or was rotated; the run still
-  ships the page either way.
+- **No Slack post.** If the secret is unset the step skips quietly; if Slack
+  rejects the post the run goes red (the file is already live). Fix the webhook,
+  then re-run with *force* ticked to post.
 
 ## Housekeeping facts
 
@@ -141,13 +144,25 @@ node scripts/fetch-events.js          # writes events.json locally, prints a per
   re-run it.
 - The server trigger authenticates with a **fine-grained GitHub token** that can
   do exactly one thing — start Actions workflows in this repo — stored at
-  `~/.config/boston-ai-atlas/github-token` on `toa-forge` (mode 600). Fine-grained
-  tokens expire (one year at most). When it does, nothing breaks loudly: the
+  `~/.config/boston-ai-atlas/github-token` on `toa-forge` (mode 600). Optionally
+  put a Slack incoming-webhook URL (the deploy channel's works) in
+  `~/.config/boston-ai-atlas/alert-webhook` and the script will post there when
+  a dispatch fails, instead of only logging to `~/.local/log/weekly-events.log`.
+  The script also re-enables the workflow if GitHub disabled it for inactivity.
+  Fine-grained tokens expire (one year at most). When it does, nothing breaks loudly: the
   Monday refresh quietly falls back to GitHub's own late crons. Rotate it at
   github.com/settings/personal-access-tokens (repository access: this repo only;
   permissions: Actions → Read and write), replace the file, and test with
   `~/bin/trigger-weekly-events.sh` — the workflow run it starts should show
   `Gate: skipped` if the week's refresh already happened.
+- Three guards keep a bad week from locking itself in: a refresh that looks
+  broken (3+ sources failed, or nothing found while something failed) is not
+  shipped; after shipping, a Verify step re-reads the live file and fails the
+  run if it does not show the refresh (a refresh the gate could never see would
+  otherwise repeat every firing); and a Slack rejection turns the run red.
+- The gate reads the live `events.json` through Cloudflare. Today the edge does
+  not cache it (`cf-cache-status: DYNAMIC`) and the gate adds a cache-buster;
+  never add a Cloudflare cache rule that caches JSON *and* ignores query strings.
 - GitHub pauses cron workflows after ~60 days of repo inactivity; the atlas's
   normal commit traffic keeps this from happening, but if the repo ever goes
   fully quiet for a quarter, re-enable from the Actions tab.

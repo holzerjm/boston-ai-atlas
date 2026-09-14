@@ -30,8 +30,8 @@ on:
     - cron: "7 12 * * 3"
   workflow_dispatch:
     inputs:
-      check_gate:
-        description: "Evaluate the cron gate instead of forcing a run (for testing)"
+      force:
+        description: "Skip the once-a-week gate: refresh and post to Slack right now"
         type: boolean
         default: false
 
@@ -44,6 +44,8 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    env:
+      LIVE_URL: https://the-open-accelerator.com/ecosystem/events.json
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -53,18 +55,18 @@ jobs:
       - name: Gate (once per week — first run at/after Monday 7am Eastern that finds a stale live file)
         id: gate
         env:
-          LIVE_URL: https://the-open-accelerator.com/ecosystem/events.json
-          CHECK_GATE: ${{ github.event.inputs.check_gate }}
+          FORCE: ${{ github.event.inputs.force }}
         run: |
           decide() { echo "run=$1" >> "$GITHUB_OUTPUT"; echo "Gate: $2"; echo "**Gate:** $2" >> "$GITHUB_STEP_SUMMARY"; }
-          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && [ "$CHECK_GATE" != "true" ]; then
-            decide true "running (manual dispatch)"; exit 0
-          fi
           # Reference point: 7am Eastern on the most recent Monday (today, if it is Monday).
           NOW_ET=$(TZ=America/New_York date "+%Y-%m-%dT%H:%M:%S")
           TODAY_ET=$(TZ=America/New_York date "+%Y-%m-%d")
           SINCE_MON=$(( $(TZ=America/New_York date "+%u") - 1 ))
           MON7="$(TZ=America/New_York date -d "$TODAY_ET $SINCE_MON days ago" "+%Y-%m-%d")T07:00:00"
+          echo "monday=${MON7%%T*}" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && [ "$FORCE" = "true" ]; then
+            decide true "running (forced by manual dispatch)"; exit 0
+          fi
           if [[ "$NOW_ET" < "$MON7" ]]; then
             decide false "skipped — $NOW_ET Eastern is before this Monday's 7am; a later firing covers this week"; exit 0
           fi
@@ -79,7 +81,7 @@ jobs:
           if [ -n "$GEN_ET" ]; then
             decide true "running — $NOW_ET Eastern; live file last generated $GEN_ET Eastern, before this Monday 7am"
           else
-            decide true "running — $NOW_ET Eastern; could not read the live file, refreshing to be safe"
+            decide true "running — $NOW_ET Eastern; could not read the live file, refreshing to be safe (the Verify step will fail loudly if it stays unreadable)"
           fi
 
       - name: Fetch events
@@ -87,6 +89,11 @@ jobs:
         run: |
           node scripts/fetch-events.js | tee fetch.log
           { echo '## Events refresh'; echo '```'; cat fetch.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          # Do not ship a broken refresh: it would lock the week with a fresh timestamp and post "0 events".
+          # A genuinely quiet week (0 events, 0 errors) is fine; 3+ failed sources, or nothing found while something failed, is not.
+          if ! jq -e '((.errors | length) < 3) and (.total > 0 or (.errors | length) == 0)' events.json >/dev/null; then
+            echo "::error::refresh looks broken, not shipping: $(jq -c '{total, errors}' events.json)"; exit 1
+          fi
 
       - name: Ship events.json
         if: steps.gate.outputs.run == 'true'
@@ -98,11 +105,24 @@ jobs:
           rsync -avz -e "ssh -i ~/.ssh/id_deploy" events.json \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
 
+      - name: Verify the live file shows this refresh
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          # The gate decides by reading this URL; if a refresh can never be seen there, every later
+          # firing would run again. Make that one red run here instead of a week of Slack posts.
+          WANT=$(jq -r .generated events.json)
+          for i in 1 2 3 4 5 6; do
+            GOT=$(curl -fsS --max-time 20 -H 'Cache-Control: no-cache' "$LIVE_URL?cb=$RANDOM$i" | jq -r '.generated // empty' 2>/dev/null || true)
+            if [ "$GOT" = "$WANT" ]; then echo "live file confirmed: generated=$GOT"; exit 0; fi
+            echo "attempt $i: live generated='$GOT', want '$WANT'"; sleep 10
+          done
+          echo "::error::the live events.json does not show the refresh just shipped (want generated=$WANT). The gate would never see it — check DEPLOY_PATH and Cloudflare cache rules."; exit 1
+
       - name: Post to TOA Scouts Slack
         if: steps.gate.outputs.run == 'true'
-        continue-on-error: true
         env:
           SLACK_SCOUTS_WEBHOOK_URL: ${{ secrets.SLACK_SCOUTS_WEBHOOK_URL }}
+          MONDAY: ${{ steps.gate.outputs.monday }}
         run: |
           [ -z "$SLACK_SCOUTS_WEBHOOK_URL" ] && { echo "SLACK_SCOUTS_WEBHOOK_URL not set — skipping"; exit 0; }
           LIST=$(node -e '
@@ -110,17 +130,21 @@ jobs:
             const tz={timeZone:"America/New_York"};
             const day=d=>new Intl.DateTimeFormat("en-US",{weekday:"short",month:"short",day:"numeric",...tz}).format(d);
             const tm=d=>new Intl.DateTimeFormat("en-US",{hour:"numeric",minute:"2-digit",...tz}).format(d);
-            let cur="", out=[];
-            for(const e of j.events.slice(0,18)){
-              const d=new Date(e.start), k=day(d);
-              if(k!==cur){ out.push("*"+k+"*"); cur=k; }
-              out.push("• "+tm(d)+" — <"+e.url+"|"+e.title.replace(/[<>|]/g," ")+">"+(e.organizer?" · "+e.organizer.replace(/[<>|]/g," "):""));
+            const LIMIT=2700; // Slack caps a section at 3000 chars; leave room for the trailer
+            let cur="", out=[], len=0, shown=0;
+            for(const e of j.events){
+              const d=new Date(e.start), k=day(d), lines=[];
+              if(k!==cur) lines.push("*"+k+"*");
+              lines.push("• "+tm(d)+" — <"+e.url+"|"+e.title.replace(/[<>|]/g," ")+">"+(e.organizer?" · "+e.organizer.replace(/[<>|]/g," "):""));
+              const add=lines.join("\n").length+1;
+              if(len+add>LIMIT || shown>=18) break;
+              out.push(...lines); len+=add; shown++; cur=k;
             }
-            if(j.events.length>18) out.push("_… and "+(j.events.length-18)+" more on the page_");
+            if(shown<j.events.length) out.push("_… and "+(j.events.length-shown)+" more on the page_");
             console.log(out.join("\n"));')
           COUNT=$(node -e 'console.log(require("./events.json").total)')
-          WEEK=$(TZ=America/New_York date "+%B %-d")
-          jq -n --arg list "$LIST" --arg count "$COUNT" --arg week "$WEEK" '
+          WEEK=$(date -d "$MONDAY" "+%B %-d")   # the Monday this post belongs to, even on a Tue/Wed fallback
+          RESP=$(jq -n --arg list "$LIST" --arg count "$COUNT" --arg week "$WEEK" '
             {text: ("🗓️ Boston AI events, week of " + $week + " — " + $count + " in the next 10 days"),
              blocks: [
                {type:"header", text:{type:"plain_text", text:("🗓️ This week in Boston AI · " + $week), emoji:true}},
@@ -128,4 +152,8 @@ jobs:
                {type:"section", text:{type:"mrkdwn", text:$list}},
                {type:"context", elements:[{type:"mrkdwn", text:"Spot a missing event? Reply here or use the ➕ on the events page. Refreshed every Monday 7am."}]}
              ]}' \
-          | curl -sS -X POST -H 'Content-type: application/json' -d @- "$SLACK_SCOUTS_WEBHOOK_URL"
+          | curl -sS --max-time 30 -X POST -H 'Content-type: application/json' -d @- "$SLACK_SCOUTS_WEBHOOK_URL" || true)
+          if [ "$RESP" != "ok" ]; then
+            echo "::error::Slack did not accept the post (response: '${RESP:-none}'). The file is live; re-run with force=true after fixing the webhook."; exit 1
+          fi
+          echo "Slack: ok"
