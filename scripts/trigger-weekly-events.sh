@@ -36,28 +36,28 @@ ATTEMPTS="${ATTEMPTS:-3}"
 API="https://api.github.com/repos/$REPO/actions/workflows/$WORKFLOW"
 
 log() { echo "$(date -u '+%Y-%m-%dT%H:%M:%SZ') $*"; }
-alert() {   # log loudly, shout to Slack if configured, exit 1
-  log "ERROR: $*"
-  if [ -r "$ALERT_FILE" ]; then
-    local msg="⚠️ Weekly events refresh: the server-side trigger on $(hostname) failed — $*"
-    msg=${msg//\"/\'}; msg=${msg//\\/ }
-    curl -sS --max-time 20 -X POST -H 'Content-type: application/json' \
-      -d "{\"text\":\"$msg\"}" "$(tr -d '[:space:]' < "$ALERT_FILE")" >/dev/null 2>&1 || log "(alert webhook also failed)"
-  fi
-  exit 1
+shout() {   # post to the alert webhook, if configured
+  [ -r "$ALERT_FILE" ] || return 0
+  local msg="$*"; msg=${msg//\"/\'}; msg=${msg//\\/ }; msg=$(printf '%s' "$msg" | tr -d '\000-\037')
+  curl -sS --max-time 20 -X POST -H 'Content-type: application/json' \
+    -d "{\"text\":\"$msg\"}" "$(tr -d '[:space:]' < "$ALERT_FILE")" >/dev/null 2>&1 || log "(alert webhook also failed)"
 }
+alert() {   # log loudly, shout, exit 1
+  log "ERROR: $*"; shout "⚠️ Weekly events refresh: the server-side trigger on $(hostname) failed — $*"; exit 1
+}
+trap 'alert "unexpected failure at line $LINENO"' ERR
 
 [ -r "$TOKEN_FILE" ] || alert "token file $TOKEN_FILE is missing or unreadable (see the header of this script)"
 TOKEN=$(tr -d '[:space:]' < "$TOKEN_FILE")
 [ -n "$TOKEN" ] || alert "token file $TOKEN_FILE is empty"
 
-BODY=$(mktemp); trap 'rm -f "$BODY"' EXIT
+BODY=$(mktemp); HDRS=$(mktemp); trap 'rm -f "$BODY" "$HDRS"' EXIT
 gh_api() {   # gh_api METHOD URL [JSON] → sets CODE, response body in $BODY
-  local args=(-sS --max-time 30 -o "$BODY" -w '%{http_code}' -X "$1"
+  local args=(-sS --max-time 30 -o "$BODY" -D "$HDRS" -w '%{http_code}' -X "$1"
               -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json"
               -H "X-GitHub-Api-Version: 2022-11-28")
   [ -n "${3:-}" ] && args+=(-d "$3")
-  CODE=$(curl "${args[@]}" "$2" 2>/dev/null || echo "000")
+  CODE=$(curl "${args[@]}" "$2" 2>/dev/null) || CODE="000"
 }
 msg() { grep -o '"message": *"[^"]*"' "$BODY" 2>/dev/null | head -1 | sed 's/"message": *"//; s/"$//'; }
 
@@ -65,11 +65,23 @@ msg() { grep -o '"message": *"[^"]*"' "$BODY" 2>/dev/null | head -1 | sed 's/"me
 gh_api GET "$API"
 case "$CODE" in
   200)
-    STATE=$(grep -o '"state": *"[^"]*"' "$BODY" | head -1 | sed 's/.*: *"//; s/"$//')
-    if [ "$STATE" != "active" ]; then
-      log "workflow state is '$STATE' — re-enabling it"
-      gh_api PUT "$API/enable"
-      [ "$CODE" = "204" ] || alert "could not re-enable the workflow (HTTP $CODE $(msg))"
+    STATE=$(grep -o '"state": *"[^"]*"' "$BODY" | head -1 | sed 's/.*: *"//; s/"$//' || true)
+    case "$STATE" in
+      active) ;;
+      disabled_inactivity)
+        log "workflow was disabled for inactivity — re-enabling it"
+        gh_api PUT "$API/enable"
+        [ "$CODE" = "204" ] || alert "could not re-enable the workflow (HTTP $CODE $(msg))" ;;
+      *) alert "workflow state is '${STATE:-unknown}' — someone disabled it on purpose? Not touching it" ;;
+    esac
+    # Fine-grained tokens expire (max 1 year). Warn for the last two weeks, while there is still time.
+    EXP=$(grep -i '^github-authentication-token-expiration:' "$HDRS" | head -1 | sed 's/^[^:]*: *//; s/[[:space:]]*$//' || true)
+    if [ -n "$EXP" ]; then
+      EXP_S=$(date -d "$EXP" +%s 2>/dev/null || echo 0)
+      if [ "$EXP_S" -gt 0 ] && [ $(( (EXP_S - $(date +%s)) / 86400 )) -lt 14 ]; then
+        log "WARNING: the GitHub token expires on $EXP — rotate it (docs/events-guide.md)"
+        shout "⚠️ Weekly events refresh: the server-side GitHub token on $(hostname) expires on $EXP — rotate it before then (docs/events-guide.md)"
+      fi
     fi ;;
   401|403) alert "GitHub rejected the token (HTTP $CODE: $(msg)) — expired or wrong scopes? Rotate it, see docs/events-guide.md" ;;
   404)     alert "workflow $WORKFLOW not found in $REPO (HTTP 404) — was it renamed?" ;;

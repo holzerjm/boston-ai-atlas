@@ -83,6 +83,7 @@ const events = [];   // {title,start,end,url,venue,organizer,source,ai}
 const errors = [];
 const push = (e, source, ai) => {
   if (!e.title || !e.start || !e.url) return;
+  if (!(e.start instanceof Date) || isNaN(e.start)) return; // a bad date in events-manual.json must not crash the whole refresh
   if (e.start < NOW || e.start > HORIZON) return;
   events.push({ ...e, source, ai });
 };

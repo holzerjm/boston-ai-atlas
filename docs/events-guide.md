@@ -115,11 +115,12 @@ node scripts/fetch-events.js          # writes events.json locally, prints a per
 - **A junk event got in.** Tighten the same keyword lists, or if a whole
   calendar is noisy, set its `ai_default: false`.
 - **No Monday post, or the page shows last week's list.** Open the Actions
-  tab: a normal Monday shows up to three *Weekly events refresh* runs, all
-  green — read each run's job summary `Gate:` line to find the one that did
+  tab: a normal Monday shows several *Weekly events refresh* runs (the
+  server-triggered ones plus GitHub's fallbacks), all green — read each run's job summary `Gate:` line to find the one that did
   the work (the others say "skipped" and why). If none ran at all, GitHub
   dropped or delayed the firings (it happens; see the step-by-step section
-  above) — just run it manually, the gate is bypassed for manual runs.
+  above) — run it manually with *force* ticked (on Mondays, only after 7am, or
+  the 7am firing will post a second time).
 - **The page says "Couldn't load events".** The last shipped `events.json` is
   stale or missing — check the latest *Weekly events refresh* run on the
   Actions tab; its log names the failing step. Re-run manually after fixing.
@@ -149,20 +150,24 @@ node scripts/fetch-events.js          # writes events.json locally, prints a per
   `~/.config/boston-ai-atlas/alert-webhook` and the script will post there when
   a dispatch fails, instead of only logging to `~/.local/log/weekly-events.log`.
   The script also re-enables the workflow if GitHub disabled it for inactivity.
-  Fine-grained tokens expire (one year at most). When it does, nothing breaks loudly: the
-  Monday refresh quietly falls back to GitHub's own late crons. Rotate it at
+  Fine-grained tokens expire (one year at most). For the last two weeks before expiry the
+  script warns (in its log, and via the alert webhook if configured); after
+  expiry the Monday refresh depends on GitHub's own unreliable crons. Rotate it at
   github.com/settings/personal-access-tokens (repository access: this repo only;
   permissions: Actions → Read and write), replace the file, and test with
   `~/bin/trigger-weekly-events.sh` — the workflow run it starts should show
   `Gate: skipped` if the week's refresh already happened.
 - Three guards keep a bad week from locking itself in: a refresh that looks
-  broken (3+ sources failed, or nothing found while something failed) is not
+  broken (most sources failed, or nothing found while something failed) is not
   shipped; after shipping, a Verify step re-reads the live file and fails the
   run if it does not show the refresh (a refresh the gate could never see would
   otherwise repeat every firing); and a Slack rejection turns the run red.
 - The gate reads the live `events.json` through Cloudflare. Today the edge does
   not cache it (`cf-cache-status: DYNAMIC`) and the gate adds a cache-buster;
   never add a Cloudflare cache rule that caches JSON *and* ignores query strings.
+- A forced run queued behind an in-progress run can show as *Cancelled* if
+  another automatic firing arrives meanwhile (one pending run per group) — just
+  run it again.
 - GitHub pauses cron workflows after ~60 days of repo inactivity; the atlas's
   normal commit traffic keeps this from happening, but if the repo ever goes
   fully quiet for a quarter, re-enable from the Actions tab.

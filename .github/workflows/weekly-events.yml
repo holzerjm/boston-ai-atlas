@@ -3,7 +3,8 @@
 # Slack. Target: Monday 7am Eastern, year-round.
 #
 # Who starts it: a plain cron on the origin server (toa-forge) dispatches this
-# workflow at 11:00 and 12:00 UTC on Mondays via scripts/trigger-weekly-events.sh
+# workflow at 11:01, 12:01 and 13:01 UTC on Mondays (and 12:01 UTC Tuesdays as a
+# retry) via scripts/trigger-weekly-events.sh
 # — GitHub's own scheduler delivered this repo's Monday firings 5-6 hours late
 # (2026-09-07) and not at all by mid-morning (2026-09-14). GitHub's crons below
 # stay as fallbacks: Monday every couple of hours, then Tuesday and Wednesday.
@@ -18,6 +19,9 @@
 # SLACK_SCOUTS_WEBHOOK_URL posts the list (skipped silently if unset).
 
 name: Weekly events refresh
+
+permissions:
+  contents: read   # nothing here uses GITHUB_TOKEN beyond checkout
 
 on:
   schedule:
@@ -44,6 +48,10 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    timeout-minutes: 15          # a hung ssh/rsync must not hold the concurrency group for hours
+    defaults:
+      run:
+        shell: bash              # bash -eo pipefail: a crash behind a pipe (node | tee) is a red step
     env:
       LIVE_URL: https://the-open-accelerator.com/ecosystem/events.json
     steps:
@@ -70,7 +78,9 @@ jobs:
           if [[ "$NOW_ET" < "$MON7" ]]; then
             decide false "skipped — $NOW_ET Eastern is before this Monday's 7am; a later firing covers this week"; exit 0
           fi
-          GEN=$(curl -fsS --max-time 20 -H 'Cache-Control: no-cache' "$LIVE_URL?cb=$(date +%s)" | jq -r '.generated // empty' 2>/dev/null || true)
+          # Retry hard: a single transient failure here on a firing AFTER this week's refresh would
+          # read as "stale" and produce a second refresh and a second Slack post.
+          GEN=$(curl -fsS --retry 5 --retry-all-errors --retry-delay 10 --max-time 20 -H 'Cache-Control: no-cache' "$LIVE_URL?cb=$(date +%s%N)" | jq -r '.generated // empty' 2>/dev/null || true)
           GEN_ET=""
           if [ -n "$GEN" ]; then
             GEN_ET=$(TZ=America/New_York date -d "$GEN" "+%Y-%m-%dT%H:%M:%S" 2>/dev/null || true)
@@ -90,8 +100,10 @@ jobs:
           node scripts/fetch-events.js | tee fetch.log
           { echo '## Events refresh'; echo '```'; cat fetch.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           # Do not ship a broken refresh: it would lock the week with a fresh timestamp and post "0 events".
-          # A genuinely quiet week (0 events, 0 errors) is fine; 3+ failed sources, or nothing found while something failed, is not.
-          if ! jq -e '((.errors | length) < 3) and (.total > 0 or (.errors | length) == 0)' events.json >/dev/null; then
+          # A genuinely quiet week (0 events, 0 errors) is fine. Refuse when most of the 8 source slots failed
+          # (5+), or when nothing was found while something failed. One host outage (e.g. both AI Tinkerers
+          # slots) plus a Luma flake must still ship.
+          if ! jq -e '((.errors | length) <= 4) and (.total > 0 or (.errors | length) == 0)' events.json >/dev/null; then
             echo "::error::refresh looks broken, not shipping: $(jq -c '{total, errors}' events.json)"; exit 1
           fi
 
@@ -102,7 +114,7 @@ jobs:
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
           ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
-          rsync -avz -e "ssh -i ~/.ssh/id_deploy" events.json \
+          rsync -avz -e "ssh -i ~/.ssh/id_deploy -o ConnectTimeout=20" events.json \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
 
       - name: Verify the live file shows this refresh
@@ -112,11 +124,11 @@ jobs:
           # firing would run again. Make that one red run here instead of a week of Slack posts.
           WANT=$(jq -r .generated events.json)
           for i in 1 2 3 4 5 6; do
-            GOT=$(curl -fsS --max-time 20 -H 'Cache-Control: no-cache' "$LIVE_URL?cb=$RANDOM$i" | jq -r '.generated // empty' 2>/dev/null || true)
+            GOT=$(curl -fsS --retry 3 --retry-all-errors --retry-delay 5 --max-time 20 -H 'Cache-Control: no-cache' "$LIVE_URL?cb=$(date +%s%N)" | jq -r '.generated // empty' 2>/dev/null || true)
             if [ "$GOT" = "$WANT" ]; then echo "live file confirmed: generated=$GOT"; exit 0; fi
             echo "attempt $i: live generated='$GOT', want '$WANT'"; sleep 10
           done
-          echo "::error::the live events.json does not show the refresh just shipped (want generated=$WANT). The gate would never see it — check DEPLOY_PATH and Cloudflare cache rules."; exit 1
+          echo "::error::the live events.json does not show the refresh just shipped (want generated=$WANT). Slack was NOT posted, and later firings this week will skip because the file is now fresh. Check DEPLOY_PATH and Cloudflare cache rules; once the live file shows the new generated value, re-run with force=true to post."; exit 1
 
       - name: Post to TOA Scouts Slack
         if: steps.gate.outputs.run == 'true'
@@ -141,6 +153,7 @@ jobs:
               out.push(...lines); len+=add; shown++; cur=k;
             }
             if(shown<j.events.length) out.push("_… and "+(j.events.length-shown)+" more on the page_");
+            if(!out.length) out.push("_Quiet stretch — no AI events found for the coming days. Know of one? Reply here or use ➕ on the page._");
             console.log(out.join("\n"));')
           COUNT=$(node -e 'console.log(require("./events.json").total)')
           WEEK=$(date -d "$MONDAY" "+%B %-d")   # the Monday this post belongs to, even on a Tue/Wed fallback
