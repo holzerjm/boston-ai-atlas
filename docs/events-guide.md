@@ -42,26 +42,34 @@ organizer matches one ("→ on the atlas").
 
 The workflow is [`weekly-events.yml`](../.github/workflows/weekly-events.yml):
 
-1. **Three alarm clocks, one gate.** GitHub's cron is best-effort: firings
-   are often late (by hours, some weeks) and occasionally dropped, worst at
-   the top of the hour. So the workflow is scheduled three times on Mondays —
-   11:07, 12:07 and 13:07 UTC — and a first step decides whether *this*
-   firing should do the work: it must be at or after 7am Boston time, and the
-   live `events.json` must not have been regenerated since 7am today. The
-   first firing that passes both checks runs; every other one exits quietly.
-   A late firing still runs, a dropped one is covered by the next, and
-   daylight-saving needs no special handling because the gate reads the clock
-   rather than caring which cron fired. Its decision is printed as a
+1. **The alarm clock lives on the web server, not on GitHub.** GitHub's own
+   cron scheduler proved unreliable for this repo — Monday firings arrived
+   5-6 hours late one week and not at all by mid-morning the next — so the
+   origin server (`toa-forge`) runs a plain cron at 11:00 and 12:00 UTC on
+   Mondays (7am EDT / 7am EST) that asks GitHub to start the workflow. The
+   script is `scripts/trigger-weekly-events.sh`, installed as
+   `~/bin/trigger-weekly-events.sh` for the `forge` user, logging to
+   `~/.local/log/weekly-events.log`. GitHub's own crons stay in place as
+   fallbacks: Monday 11:07, 12:07, 13:07, 15:07 and 17:07 UTC, then Tuesday
+   and Wednesday 12:07 UTC.
+2. **One gate decides, however a run started.** A first step lets a run do the
+   work only if it is at or after 7am Boston time on the most recent Monday
+   *and* the live `events.json` has not been regenerated since then. The first
+   run that passes both checks does the work; every later one exits quietly.
+   That is what makes the server cron and GitHub's crons safe together: no
+   double posts, a late firing still runs, a completely missed Monday is
+   self-healed by the Tuesday fallback, and daylight-saving needs no special
+   handling because the gate reads the clock. The decision is printed as a
    `Gate:` line in the run's job summary.
-2. **Fetch**: `node scripts/fetch-events.js` pulls all sources and writes
+3. **Fetch**: `node scripts/fetch-events.js` pulls all sources and writes
    `events.json`.
-3. **Ship**: `events.json` is rsync'd to the web server (same deploy key as
+4. **Ship**: `events.json` is rsync'd to the web server (same deploy key as
    the atlas). It is **never committed to git** — the repo stays clean.
-4. **Announce**: the day-grouped list posts to Slack
+5. **Announce**: the day-grouped list posts to Slack
    (`SLACK_SCOUTS_WEBHOOK_URL` secret — the live TOA Scouts channel; to
    redirect it, for example to a test channel, re-set the secret, no code
    change).
-5. Everything the run did is in the workflow's **job summary** on the Actions
+6. Everything the run did is in the workflow's **job summary** on the Actions
    tab.
 
 **Run it right now** (any day, any time — a manual run bypasses the gate;
@@ -131,6 +139,15 @@ node scripts/fetch-events.js          # writes events.json locally, prints a per
   two pages can never drift apart. To change the events page, edit that
   script and re-run it; to change the shared chrome, edit `index.html` and
   re-run it.
+- The server trigger authenticates with a **fine-grained GitHub token** that can
+  do exactly one thing — start Actions workflows in this repo — stored at
+  `~/.config/boston-ai-atlas/github-token` on `toa-forge` (mode 600). Fine-grained
+  tokens expire (one year at most). When it does, nothing breaks loudly: the
+  Monday refresh quietly falls back to GitHub's own late crons. Rotate it at
+  github.com/settings/personal-access-tokens (repository access: this repo only;
+  permissions: Actions → Read and write), replace the file, and test with
+  `~/bin/trigger-weekly-events.sh` — the workflow run it starts should show
+  `Gate: skipped` if the week's refresh already happened.
 - GitHub pauses cron workflows after ~60 days of repo inactivity; the atlas's
   normal commit traffic keeps this from happening, but if the repo ever goes
   fully quiet for a quarter, re-enable from the Actions tab.

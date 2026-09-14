@@ -89,6 +89,7 @@ scripts/export-csv.js             export the dataset to a spreadsheet-friendly C
 scripts/issue-to-entry.js         the suggestion bot's form parser / entry builder
 scripts/fetch-events.js           events aggregator — feeds /ecosystem/events/ weekly
 scripts/build-events-page.js      assembles events/index.html (generated — see docs/)
+scripts/trigger-weekly-events.sh  server-side cron that starts the weekly refresh (GitHub cron is late)
 scripts/sync-to-site.sh           manual deploy fallback (CI normally deploys on merge)
 .github/ISSUE_TEMPLATE/           suggest & flag forms
 .github/workflows/validate.yml    CI validation + freshness summary on every data PR

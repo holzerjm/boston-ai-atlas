@@ -2,13 +2,17 @@
 # ships it to /ecosystem/events.json, and posts the list to the TOA Scouts
 # Slack. Target: Monday 7am Eastern, year-round.
 #
-# GitHub cron is best-effort: firings are often late (hours, at times) and
-# occasionally dropped, worst at the top of the hour. So: three Monday firings
-# at :07 past the hour, and a gate that lets through the FIRST one that is
-# (a) at or after 7am Eastern and (b) sees a live events.json that has not
-# been regenerated since 7am Eastern today. Late firings still run, dropped
-# firings are covered by the next, extra firings skip. EDT/EST needs no
-# special handling: the gate looks at the clock, not at which cron fired.
+# Who starts it: a plain cron on the origin server (toa-forge) dispatches this
+# workflow at 11:00 and 12:00 UTC on Mondays via scripts/trigger-weekly-events.sh
+# — GitHub's own scheduler delivered this repo's Monday firings 5-6 hours late
+# (2026-09-07) and not at all by mid-morning (2026-09-14). GitHub's crons below
+# stay as fallbacks: Monday every couple of hours, then Tuesday and Wednesday.
+#
+# Why that is safe: one gate decides. A run does the work only if it is at or
+# after 7am Eastern on the most recent Monday AND the live events.json has not
+# been regenerated since then. So the first arrival does the work, every later
+# one skips in seconds, a missed Monday is self-healed on Tuesday, and EDT/EST
+# needs no special handling because the gate reads the clock, not the cron.
 #
 # Secrets: DEPLOY_* (shared with deploy.yml) ship the file;
 # SLACK_SCOUTS_WEBHOOK_URL posts the list (skipped silently if unset).
@@ -17,15 +21,25 @@ name: Weekly events refresh
 
 on:
   schedule:
-    - cron: "7 11 * * 1"   # 7:07am EDT / 6:07am EST (gate skips before 7am)
+    - cron: "7 11 * * 1"   # 7:07am EDT (6:07am EST → gate skips)
     - cron: "7 12 * * 1"   # 8:07am EDT / 7:07am EST
-    - cron: "7 13 * * 1"   # catch-up an hour later, in case both were dropped
+    - cron: "7 13 * * 1"   # Monday fallbacks — GitHub often delivers these hours late
+    - cron: "7 15 * * 1"
+    - cron: "7 17 * * 1"
+    - cron: "7 12 * * 2"   # Tue/Wed: run only if Monday was missed entirely
+    - cron: "7 12 * * 3"
   workflow_dispatch:
     inputs:
       check_gate:
         description: "Evaluate the cron gate instead of forcing a run (for testing)"
         type: boolean
         default: false
+
+# Serialize runs: if the server dispatch and a GitHub cron land together, the
+# second waits, then its gate sees the freshly shipped file and skips.
+concurrency:
+  group: weekly-events-refresh
+  cancel-in-progress: false
 
 jobs:
   refresh:
@@ -36,7 +50,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Gate (first firing at or after 7am Eastern that finds a stale live file)
+      - name: Gate (once per week — first run at/after Monday 7am Eastern that finds a stale live file)
         id: gate
         env:
           LIVE_URL: https://the-open-accelerator.com/ecosystem/events.json
@@ -46,22 +60,24 @@ jobs:
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && [ "$CHECK_GATE" != "true" ]; then
             decide true "running (manual dispatch)"; exit 0
           fi
+          # Reference point: 7am Eastern on the most recent Monday (today, if it is Monday).
           NOW_ET=$(TZ=America/New_York date "+%Y-%m-%dT%H:%M:%S")
-          HOUR=$(TZ=America/New_York date "+%-H")
-          if [ "$HOUR" -lt 7 ]; then
-            decide false "skipped — $NOW_ET Eastern is before 7am; a later firing covers this week"; exit 0
+          TODAY_ET=$(TZ=America/New_York date "+%Y-%m-%d")
+          SINCE_MON=$(( $(TZ=America/New_York date "+%u") - 1 ))
+          MON7="$(TZ=America/New_York date -d "$TODAY_ET $SINCE_MON days ago" "+%Y-%m-%d")T07:00:00"
+          if [[ "$NOW_ET" < "$MON7" ]]; then
+            decide false "skipped — $NOW_ET Eastern is before this Monday's 7am; a later firing covers this week"; exit 0
           fi
           GEN=$(curl -fsS --max-time 20 -H 'Cache-Control: no-cache' "$LIVE_URL?cb=$(date +%s)" | jq -r '.generated // empty' 2>/dev/null || true)
           GEN_ET=""
           if [ -n "$GEN" ]; then
             GEN_ET=$(TZ=America/New_York date -d "$GEN" "+%Y-%m-%dT%H:%M:%S" 2>/dev/null || true)
           fi
-          TODAY7=$(TZ=America/New_York date "+%Y-%m-%dT07:00:00")
-          if [ -n "$GEN_ET" ] && [[ "$GEN_ET" > "$TODAY7" || "$GEN_ET" == "$TODAY7" ]]; then
-            decide false "skipped — live events.json already regenerated at $GEN_ET Eastern; this Monday's refresh is done"; exit 0
+          if [ -n "$GEN_ET" ] && [[ "$GEN_ET" > "$MON7" || "$GEN_ET" == "$MON7" ]]; then
+            decide false "skipped — live events.json already regenerated at $GEN_ET Eastern, after Monday 7am; this week's refresh is done"; exit 0
           fi
           if [ -n "$GEN_ET" ]; then
-            decide true "running — $NOW_ET Eastern; live file last generated $GEN_ET Eastern"
+            decide true "running — $NOW_ET Eastern; live file last generated $GEN_ET Eastern, before this Monday 7am"
           else
             decide true "running — $NOW_ET Eastern; could not read the live file, refreshing to be safe"
           fi
