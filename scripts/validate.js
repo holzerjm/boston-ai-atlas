@@ -72,8 +72,12 @@ for (const d of DATA) {
     if (!validStages.has(s)) err(id, `invalid stage ${s} (valid: 1-5)`);
   if (d.offers === undefined)
     warn.push(`  ⚠ [${id}] missing offers — what does this org give founders? (funding, grants, space, compute, mentorship, community, talent, customers)`);
-  else if (!Array.isArray(d.offers) || d.offers.length < 1 || d.offers.length > 4)
-    err(id, "offers must be an array of 1-4 values");
+  // Cap is 6, not 4: a full-service accelerator genuinely provides space, mentorship,
+  // community, funding, grants and customer intros, and the old cap of 4 made it
+  // impossible to say so — which pushed maintainers toward tagging only the headline
+  // offering and left the "I need…" filter matching on less than the truth.
+  else if (!Array.isArray(d.offers) || d.offers.length < 1 || d.offers.length > 6)
+    err(id, "offers must be an array of 1-6 values");
   else for (const o of d.offers)
     if (!OFFERS.has(o)) err(id, `unknown offer "${o}" (valid: ${[...OFFERS].join(", ")})`);
   if (d.applyBy !== undefined) {

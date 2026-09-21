@@ -41,7 +41,7 @@ All data lives in [`data.js`](data.js) as one array of plain objects.
   stages: [1, 3],                   // founder stages served: 1 Spark, 2 Validate,
                                     // 3 Build, 4 Fund, 5 Scale
   links: ["csail", "engine"],       // ids of related entries (Galaxy view edges)
-  offers: ["funding","mentorship"], // what founders GET, 1-4 of: funding | grants |
+  offers: ["funding","mentorship"], // what founders GET, 1-6 of: funding | grants |
                                     // space | compute | mentorship | community |
                                     // talent | customers (powers the "I need…" filter)
   applyBy: "2026-10-15",            // optional: "rolling", or the current application

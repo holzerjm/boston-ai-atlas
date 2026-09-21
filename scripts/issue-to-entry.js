@@ -80,7 +80,7 @@ const loc = get("Address or neighborhood").replace(/\s+/g, " ").trim();
 const desc = get("Description").replace(/\s+/g, " ").trim();
 const why = get("Why it matters for founders").replace(/\s+/g, " ").trim();
 const stages = parseStages(form["Which founder stages does it serve?"] || "");
-const offers = parseChecked(form["What does it offer founders?"] || "", OFFER_WORDS).slice(0, 4);
+const offers = parseChecked(form["What does it offer founders?"] || "", OFFER_WORDS).slice(0, 6);
 const tags = get("Tags").split(",").map(t => t.trim()).filter(Boolean).slice(0, 4);
 const connectionsText = get("Connected entries (optional)");
 

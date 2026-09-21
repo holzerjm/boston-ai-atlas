@@ -91,7 +91,7 @@ tips), and `DATA` (the array of entries). One entry:
 neighbourhood-level · `lastVerified` is the month a maintainer last **actually checked**
 the org (validator warns if missing, errors if malformed; drawer shows "✓ Verified …",
 entries >12 months old get a stale marker). **Since 2026-08-30 ("decision tool" fields):**
-`offers` — 1-4 of a controlled 8-value vocabulary (funding · grants · space · compute ·
+`offers` — 1-6 of a controlled 8-value vocabulary (funding · grants · space · compute ·
 mentorship · community · talent · customers) powering the Directory's "I need…" filter;
 `applyBy` — `"rolling"` or a `"YYYY-MM-DD"` deadline (past dates auto-hide in the app,
 validator warns until cleared/rolled); `applyNote` — short cohort label; `facts` — an

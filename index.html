@@ -1286,18 +1286,38 @@ function renderCards(){
   // ⏳ gates the list; it is a fact about the org, not a need it satisfies, so it
   // must never become a term in need matching (or, later, in need scoring).
   if(dirOpenOnly) list = list.filter(applyOpen);
-  if(dirNeeds.size) list = list.filter(d=>
-    [...dirNeeds].every(n => (d.offers||[]).includes(n)));
   if(q) list = list.filter(d=>
     d.name.toLowerCase().includes(q) || d.desc.toLowerCase().includes(q) ||
     (d.why||"").toLowerCase().includes(q) ||
     (d.tags||[]).some(t=>t.toLowerCase().includes(q)) ||
     d.loc.toLowerCase().includes(q) || cLabel(d.cat).toLowerCase().includes(q));
+  // Needs run last, against whatever the hard filters left, and they relax instead
+  // of dead-ending: show the entries meeting the most selected needs that anything
+  // here meets. 97 of 171 orgs offer exactly one thing, so demanding all of three
+  // returned nothing in 40 of 56 combinations — an empty page while a good answer
+  // sat one band below. The band is constant across the result set, so the sort the
+  // reader chose still means what it says.
+  let band = 0;
+  if(dirNeeds.size){
+    const needs = [...dirNeeds];
+    const met = d => needs.reduce((n,x)=>n + ((d.offers||[]).includes(x) ? 1 : 0), 0);
+    band = list.reduce((hi,d)=>Math.max(hi, met(d)), 0);
+    // Relax, but never all the way down to "meets any one of these" — with two or
+    // more chips that band is not an answer, it is the whole directory wearing a
+    // filter (funding+talent would return 130 of 171). Measured: this floor leaves
+    // 3- and 4-chip results untouched and cuts the 2-chip worst case from 130 to 22.
+    // Below the floor we show nothing, which is the honest report that no org here
+    // does both — the very thing the founder was asking.
+    if(needs.length > 1 && band < 2) band = 0;
+    list = band ? list.filter(d=>met(d) === band) : [];
+  }
+  const relaxed = dirNeeds.size > 1 && band > 0 && band < dirNeeds.size;
   const sort=$("dirSort").value;
   list.sort((a,b)=> sort==="cat" ? (a.cat===b.cat ? a.name.localeCompare(b.name) : a.cat.localeCompare(b.cat))
                   : sort==="new" ? ((b.added||"").localeCompare(a.added||"") || a.name.localeCompare(b.name))
                                  : a.name.localeCompare(b.name));
-  $("dirCount").textContent = `${list.length} of ${DATA.length} organizations`;
+  $("dirCount").textContent = `${list.length} of ${DATA.length} organizations`
+    + (relaxed ? ` · none offer all ${dirNeeds.size} — these meet ${band}` : "");
   $("cards").innerHTML = list.map(d=>{
     const col=cColor(d.cat);
     const canCompare = d.cat==="vc" || d.cat==="accel" || d.cat==="angel";
@@ -1306,7 +1326,7 @@ function renderCards(){
       <h3>${esc(d.name)}</h3>
       <div class="c-cat" style="color:${col}">${cLabel(d.cat)} · ${esc(d.loc.split(",")[0])}</div>
       <p>${esc(d.desc.length>150 ? d.desc.slice(0,150)+"…" : d.desc)}</p>
-      <div class="c-meta">${isNew(d)?`<span class="tag new-tag">✨ New</span>`:""}${eventHosts[d.id]?`<span class="tag event-tag" title="${esc(eventHosts[d.id].title)}">🎟 event this week</span>`:""}${d.applyBy && d.applyBy!=="rolling" && applyOpen(d) ? `<span class="tag apply-tag">⏳ Apply by ${esc(fmtDeadline(d.applyBy))}</span>`:""}${isStale(d)?`<span class="tag stale-tag" title="Last verified ${fmtMonth(d.lastVerified)}">⚠ not recently verified</span>`:""}${d.badge?`<span class="badge">${esc(d.badge)}</span>`:""}${(d.tags||[]).slice(0,3).map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
+      <div class="c-meta">${relaxed ? (d.offers||[]).filter(o=>dirNeeds.has(o)).map(o=>OFFERS_META[o]).filter(Boolean).map(m=>`<span class="tag offer-tag">${m.icon} ${m.label}</span>`).join("") : ""}${isNew(d)?`<span class="tag new-tag">✨ New</span>`:""}${eventHosts[d.id]?`<span class="tag event-tag" title="${esc(eventHosts[d.id].title)}">🎟 event this week</span>`:""}${d.applyBy && d.applyBy!=="rolling" && applyOpen(d) ? `<span class="tag apply-tag">⏳ Apply by ${esc(fmtDeadline(d.applyBy))}</span>`:""}${isStale(d)?`<span class="tag stale-tag" title="Last verified ${fmtMonth(d.lastVerified)}">⚠ not recently verified</span>`:""}${d.badge?`<span class="badge">${esc(d.badge)}</span>`:""}${(d.tags||[]).slice(0,3).map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
     </div>`;
   }).join("") || `<div style="color:var(--muted)">No matches — try clearing filters, or <a href="#" onclick="suggestEntry();return false" style="color:#ffc600">suggest a new entry</a>.</div>`;
 }
