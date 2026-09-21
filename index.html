@@ -1229,7 +1229,8 @@ renderStepper(); renderJourney();
 
 /* ---------- directory ---------- */
 const dirCats = new Set(Object.keys(CATS));
-const dirNeeds = new Set();
+const dirNeeds = new Set();   // soft needs — values from the `offers` vocabulary
+let dirOpenOnly = false;      // ⏳ hard constraint: is this org accepting applications?
 (function initDirectory(){
   // "I need…" chips — filter by what an org gives founders, plus open applications
   const nc = $("needChips");
@@ -1243,9 +1244,11 @@ const dirNeeds = new Set();
     el.className = "need-chip"; el.type = "button"; el.textContent = label;
     el.setAttribute("aria-pressed","false");
     el.addEventListener("click", ()=>{
-      if(dirNeeds.has(key)) dirNeeds.delete(key); else dirNeeds.add(key);
-      el.classList.toggle("on", dirNeeds.has(key));
-      el.setAttribute("aria-pressed", String(dirNeeds.has(key)));
+      let on;
+      if(key === "open") on = (dirOpenOnly = !dirOpenOnly);
+      else { dirNeeds.has(key) ? dirNeeds.delete(key) : dirNeeds.add(key); on = dirNeeds.has(key); }
+      el.classList.toggle("on", on);
+      el.setAttribute("aria-pressed", String(on));
       renderCards();
     });
     nc.appendChild(el);
@@ -1280,8 +1283,11 @@ function renderCards(){
   const st=$("dirStage").value;
   let list = DATA.filter(d=>dirCats.has(d.cat));
   if(st) list = list.filter(d=>(d.stages||[]).includes(+st));
+  // ⏳ gates the list; it is a fact about the org, not a need it satisfies, so it
+  // must never become a term in need matching (or, later, in need scoring).
+  if(dirOpenOnly) list = list.filter(applyOpen);
   if(dirNeeds.size) list = list.filter(d=>
-    [...dirNeeds].every(n => n==="open" ? applyOpen(d) : (d.offers||[]).includes(n)));
+    [...dirNeeds].every(n => (d.offers||[]).includes(n)));
   if(q) list = list.filter(d=>
     d.name.toLowerCase().includes(q) || d.desc.toLowerCase().includes(q) ||
     (d.why||"").toLowerCase().includes(q) ||
@@ -1309,10 +1315,13 @@ renderCards();
 /* ---------- deep links (shareable URLs) ---------- */
 let drawerId = null;
 function updateURL(){
-  const url = location.pathname
-    + (drawerId ? `?entry=${drawerId}` : "")
-    + (currentView !== "map" ? `#${currentView}` : "");
-  try{ history.replaceState(null, "", url); }catch(e){}
+  // Merge, never rebuild. This used to reconstruct the URL from location.pathname,
+  // which silently dropped every other query param — so a shared ?list= shortlist
+  // link lost its list the first time the recipient opened a drawer or switched views.
+  const u = new URL(location.href);
+  if(drawerId) u.searchParams.set("entry", drawerId); else u.searchParams.delete("entry");
+  u.hash = currentView !== "map" ? currentView : "";
+  try{ history.replaceState(null, "", u.pathname + u.search + u.hash); }catch(e){}
 }
 function copyLink(btn){
   if(!navigator.clipboard) return;
