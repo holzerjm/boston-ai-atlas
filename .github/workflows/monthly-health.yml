@@ -6,6 +6,15 @@
 # NOTE: GitHub disables cron workflows after ~60 days without repo
 # activity. This repo's badge-bot commits normally keep it alive; if the
 # repo goes fully quiet for a quarter, re-enable from the Actions tab.
+#
+# Timeouts are not decoration. On 2026-09-01 the link check printed its
+# full report in 40 seconds and then never exited (Node's fetch holds
+# pooled sockets open); with no timeout anywhere, the job idled until
+# GitHub's 6-hour cap cancelled it mid-step, so the rota and the Slack
+# post never ran and the month's report was lost in the logs. The script
+# now exits explicitly; these timeouts are the backstop, and the link
+# check is continue-on-error so a bad sweep degrades the report instead
+# of silently costing us the whole month's health check.
 
 name: Monthly health check
 
@@ -17,6 +26,7 @@ on:
 jobs:
   health:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -24,6 +34,8 @@ jobs:
           node-version: 20
 
       - name: Link-rot check
+        timeout-minutes: 12      # 8 workers × ~170 URLs × 15s+retry fits well inside this
+        continue-on-error: true  # a stalled sweep must not cost us the rota and the Slack post
         run: |
           node scripts/linkcheck.js | tee linkcheck.txt
           { echo '## Link check'; echo '```'; cat linkcheck.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
@@ -34,14 +46,19 @@ jobs:
           { echo '## Verification rota'; echo '```'; cat rota.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Post to Slack
+        if: always()          # the month's report goes out even if a step above stumbled
         continue-on-error: true
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           [ -z "$SLACK_WEBHOOK_URL" ] && { echo "SLACK_WEBHOOK_URL not set — skipping"; exit 0; }
-          SUMMARY=$(head -1 linkcheck.txt)
-          LINKS=$(tail -n +2 linkcheck.txt | grep -E '^(BROKEN|MOVED|  )' | head -25)
-          ROTA=$(tail -n +2 rota.txt | grep '^  ' | head -15)
+          # `|| true` so a missing report file cannot abort this step under bash -e
+          SUMMARY=$(head -1 linkcheck.txt 2>/dev/null || true)
+          LINKS=$(tail -n +2 linkcheck.txt 2>/dev/null | grep -E '^(BROKEN|MOVED|  )' | head -25 || true)
+          ROTA=$(tail -n +2 rota.txt 2>/dev/null | grep '^  ' | head -15 || true)
+          # Say so out loud rather than posting a blank-looking all-clear
+          [ -z "$SUMMARY" ] && SUMMARY="Link check did not finish — see the run log"
+          [ -z "$ROTA" ] && ROTA="  (rota unavailable — see the run log)"
           REPO_URL="${{ github.server_url }}/${{ github.repository }}"
           jq -n --arg summary "$SUMMARY" --arg links "$LINKS" --arg rota "$ROTA" --arg repo "$REPO_URL" '
             {text: ("🩺 Atlas monthly health check — " + $summary),

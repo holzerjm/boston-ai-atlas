@@ -64,4 +64,17 @@ async function probe(url) {
   if (by("moved").length) console.log(`\nMOVED — update the url field:\n` + by("moved").map(line).join("\n"));
   if (!plain && by("blocked").length)
     console.log(`\nBLOCKED — the site refuses bots; open it in a browser before assuming it's fine:\n` + by("blocked").map(line).join("\n"));
+
+  // Exit explicitly. Node's fetch keeps pooled sockets alive after the last
+  // response, which can hold the event loop open indefinitely once we have
+  // swept ~170 hosts: on 2026-09-01 this printed the whole report in 40s and
+  // then idled until GitHub's 6-hour cap cancelled the job, so the rota and
+  // the Slack post never ran. Flush stdout first — it is a pipe under `| tee`,
+  // where writes are async and process.exit() would truncate the report — and
+  // race a short timer so a stuck flush can never hang the job either.
+  await Promise.race([
+    new Promise(resolve => process.stdout.write("", resolve)),
+    new Promise(resolve => setTimeout(resolve, 2000)),
+  ]);
+  process.exit(0);
 })();
