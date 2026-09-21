@@ -23,6 +23,13 @@ const { DATA } = mod.exports;
 const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36 boston-ai-atlas-linkcheck";
 const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return ""; } };
 
+// Hosts that refuse every automated request with something other than 403/429/503,
+// so the status says nothing about the entry's URL. metacareers.com answers HTTP 400
+// to every path including its own root and a nonsense path; it loads fine in a real
+// browser. Without this, it reports BROKEN every month and trains us to skim the
+// report. Verified by hand 2026-09-21 — drop a host from here if it starts behaving.
+const BOT_WALLED = new Set(["metacareers.com", "meta.com"]);
+
 async function probe(url) {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), 15000);
@@ -31,6 +38,8 @@ async function probe(url) {
       headers: { "User-Agent": UA, "Accept": "text/html,*/*" } });
     clearTimeout(timer);
     if ([403, 429, 503].includes(res.status)) return { cls: "blocked", note: `HTTP ${res.status}` };
+    if (!res.ok && BOT_WALLED.has(host(url)))
+      return { cls: "blocked", note: `HTTP ${res.status} — host refuses all bots` };
     if (!res.ok) return { cls: "broken", note: `HTTP ${res.status}` };
     if (host(res.url) && host(res.url) !== host(url)) return { cls: "moved", note: `now at ${res.url}` };
     return { cls: "ok" };

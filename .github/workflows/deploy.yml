@@ -16,7 +16,7 @@
 #
 # data.js is validated before anything is copied, so a broken dataset can
 # never ship even if it somehow reaches main. Manual fallback if this
-# workflow is ever unavailable: scripts/sync-toa.sh from a local checkout.
+# workflow is ever unavailable: scripts/sync-to-site.sh from a local checkout.
 
 name: Deploy to TOA site
 
