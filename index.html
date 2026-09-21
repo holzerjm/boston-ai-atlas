@@ -46,6 +46,21 @@ tailwind.config = {
   --c-startup:#5eead4; --c-vc:#a78bfa; --c-angel:#f472b6; --c-accel:#fbbf24;
   --c-university:#60a5fa; --c-corporate:#94a3b8; --c-community:#4ade80;
   --c-event:#fb923c; --c-gov:#f87171; --c-space:#22d3ee; --c-student:#e879f9;
+  /* Gold is the brand colour but only 1.58:1 on white, so light mode needs a
+     darker ink for gold TEXT. Backgrounds and borders keep the real gold. */
+  --gold-ink:#ffc600;
+}
+
+/* ---------- accessibility ---------- */
+/* A visible focus ring everywhere. Before this, only two inputs had one, so a
+   keyboard user could not see where they were. */
+:focus-visible{outline:2px solid var(--gold-ink);outline-offset:2px;border-radius:4px}
+/* Honour a stated preference for less motion: the drifting background, the map
+   fly-to and the galaxy's perpetual settling all stop. Nothing is lost — the
+   galaxy still lays itself out, it just stops moving once it has. */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important;scroll-behavior:auto!important}
 }
 *{margin:0;padding:0;box-sizing:border-box}
 /* Tailwind preflight is disabled, so provide the border base its utilities (border-t/border-b) rely on. Low specificity (*) lets explicit app borders and Tailwind classes both win. */
@@ -61,6 +76,7 @@ body{background:var(--bg);color:var(--text);font-family:'Red Hat Display','Segoe
 html:not(.dark){
   --bg:#ffffff; --bg2:#f6f7fb; --panel:#ffffff; --panel2:#eef1f7;
   --line:rgba(15,23,42,.12); --text:#15171f; --muted:#5b6478;
+  --gold-ink:#96690a;   /* 4.86:1 on white — brand gold reads at 1.58:1 */
 }
 html:not(.dark) body{background:var(--bg);color:var(--text)}
 html:not(.dark) .nav{background:rgba(255,255,255,.9)}
@@ -99,7 +115,7 @@ html:not(.dark) .map-results{background:rgba(255,255,255,.97)}
 .brand-divider{width:1px;height:42px;background:var(--line)}
 .brand h1{font-size:25px;letter-spacing:.5px;font-weight:800}
 .brand h1 span{background:linear-gradient(90deg,#ffd54f,#ffc600);-webkit-background-clip:text;background-clip:text;color:transparent}
-.eyebrow{margin-top:12px;font-size:12px;text-transform:uppercase;letter-spacing:1.6px;color:var(--gold);font-weight:700}
+.eyebrow{margin-top:12px;font-size:12px;text-transform:uppercase;letter-spacing:1.6px;color:var(--gold-ink);font-weight:700}
 .tagline{margin-top:8px;color:var(--muted);font-size:14.5px;max-width:900px;line-height:1.55}
 .hero-cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
 .stats{display:flex;gap:26px;margin-top:18px;flex-wrap:wrap}
@@ -114,7 +130,7 @@ html:not(.dark) .map-results{background:rgba(255,255,255,.97)}
   display:flex;gap:8px;align-items:center;transition:.18s}
 .tab:hover{color:var(--text);background:rgba(148,163,255,.08)}
 .tab.active{color:#000;background:linear-gradient(90deg,#ffd54f,#ffc600);box-shadow:0 4px 18px rgba(255,198,0,.35)}
-.tab.suggest{border:1px solid rgba(255,198,0,.45);color:var(--gold)}
+.tab.suggest{border:1px solid rgba(255,198,0,.45);color:var(--gold-ink)}
 .tab.suggest:hover{background:rgba(255,198,0,.12);color:var(--gold-light)}
 .tab .ico{font-size:15px}
 .nav-spacer{flex:1}
@@ -136,7 +152,8 @@ html:not(.dark) .map-results{background:rgba(255,255,255,.97)}
 .map-legend{position:absolute;z-index:1000;left:14px;bottom:14px;background:rgba(10,15,30,.92);
   border:1px solid var(--line);border-radius:14px;padding:12px 14px;max-width:230px;backdrop-filter:blur(8px)}
 .map-legend h4{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin-bottom:8px}
-.lg-item{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:3px 4px;border-radius:7px;cursor:pointer;user-select:none}
+.lg-item{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:3px 4px;border-radius:7px;cursor:pointer;user-select:none;
+  background:none;border:0;color:inherit;font-family:inherit;text-align:left;width:100%}
 .lg-item:hover{background:rgba(148,163,255,.1)}
 .lg-item.off{opacity:.32}
 .lg-dot{width:11px;height:11px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}
@@ -267,13 +284,15 @@ html:not(.dark) .tour-card p{color:#444}
 /* shortlist + compare + new-this-month */
 .card{position:relative}
 .card-tools{position:absolute;top:10px;right:10px;display:flex;gap:6px}
+/* the org name is a button for keyboard users but must look like the heading it sits in */
+.card-open{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer;width:100%}
 .card-tool{width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:14px;line-height:1;
   background:rgba(128,140,160,.12);border:1px solid transparent;color:#8a93a3}
 .card-tool:hover{color:#ffc600;border-color:rgba(255,198,0,.4)}
 .card-tool.on{color:#ffc600;border-color:rgba(255,198,0,.55);background:rgba(255,198,0,.1)}
 .card-tool.cmp.on{color:#60a5fa;border-color:rgba(96,165,250,.55);background:rgba(96,165,250,.1)}
 .card h3{padding-right:72px}
-.new-tag{color:#ffc600;border-color:rgba(255,198,0,.45)}
+.new-tag{color:var(--gold-ink);border-color:rgba(255,198,0,.45)}
 .event-tag{color:#f472b6;border-color:rgba(244,114,182,.4)}
 .dr-event{color:#f472b6}
 html:not(.dark) .new-tag{color:#b45309;border-color:rgba(180,83,9,.4)}
@@ -318,7 +337,7 @@ html:not(.dark) .cmp-bar{background:#fff;border-color:#ddd}
 .need-label{font-size:12px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
 .need-chip{font:500 12.5px/1 inherit;font-family:inherit;padding:6px 11px;border-radius:999px;cursor:pointer;
   background:transparent;border:1px solid #2a2f38;color:#b7bdc6}
-.need-chip.on{border-color:#ffc600;color:#ffc600;background:rgba(255,198,0,.08)}
+.need-chip.on{border-color:#ffc600;color:var(--gold-ink);background:rgba(255,198,0,.08)}
 html:not(.dark) .need-chip{border-color:#d8d3ca;color:#5d574e}
 html:not(.dark) .need-chip.on{border-color:#b45309;color:#b45309;background:rgba(180,83,9,.07)}
 .dr-apply{margin-top:14px;font-size:13.5px;font-weight:500;color:#4ade80}
@@ -376,7 +395,7 @@ browse the <a href="e/">full organization index</a> or use the open dataset
   <button class="nb-x" aria-label="Dismiss" onclick="dismissNewBanner()">✕</button>
 </div>
 
-<div id="shortlistModal" class="modal" style="display:none" role="dialog" aria-label="Shortlist">
+<div id="shortlistModal" class="modal" style="display:none" role="dialog" aria-modal="true" aria-label="Shortlist" tabindex="-1">
   <div class="modal-card">
     <div class="modal-head"><b id="slTitle">Your shortlist</b><button class="sl-x" aria-label="Close" onclick="closeShortlist()">✕</button></div>
     <div id="slBody"></div>
@@ -388,7 +407,7 @@ browse the <a href="e/">full organization index</a> or use the open dataset
   </div>
 </div>
 
-<div id="compareModal" class="modal" style="display:none" role="dialog" aria-label="Compare">
+<div id="compareModal" class="modal" style="display:none" role="dialog" aria-modal="true" aria-label="Compare" tabindex="-1">
   <div class="modal-card modal-wide">
     <div class="modal-head"><b>Side by side</b><button class="sl-x" aria-label="Close" onclick="closeCompare()">✕</button></div>
     <div id="cmpBody" style="overflow-x:auto"></div>
@@ -481,7 +500,7 @@ browse the <a href="e/">full organization index</a> or use the open dataset
     <div class="nav-spacer"></div>
     <button class="tab" id="starNav" style="display:none" title="Your saved shortlist" onclick="openShortlist()">★ <span id="starCount">0</span></button>
     <button class="tab suggest" id="suggestBtn" title="Propose a new organization for the atlas">➕ Suggest an entry</button>
-    <span class="nav-hint">Click any colored icon for details · <a href="#" onclick="startTour();return false" style="color:#ffc600">Take the quick tour</a></span>
+    <span class="nav-hint">Click any colored icon for details · <a href="#" onclick="startTour();return false" style="color:var(--gold-ink)">Take the quick tour</a></span>
     <a id="ghLink" class="nav-gh" target="_blank" rel="noopener" title="Contribute on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
   </div>
 </nav>
@@ -499,7 +518,7 @@ browse the <a href="e/">full organization index</a> or use the open dataset
 
 <section id="view-galaxy" class="view view-full">
   <div class="galaxy-wrap">
-    <canvas id="galaxy"></canvas>
+    <canvas id="galaxy" role="img" aria-label="Network diagram of how Greater Boston's AI organizations connect. The same information is available as text in the Directory; use the search box below to find and focus any organization."></canvas>
     <div class="map-search gx-search">
       <input id="gxSearch" type="text" placeholder="Find an organization in the galaxy…" autocomplete="off">
       <div class="map-results" id="gxResults"></div>
@@ -533,12 +552,15 @@ browse the <a href="e/">full organization index</a> or use the open dataset
   </div>
   <div class="cat-chips" id="catChips"></div>
   <div class="need-chips" id="needChips"></div>
-  <div class="dir-count" id="dirCount"></div>
+  <!-- announced on change, so a screen-reader user hears the consequence of a
+       filter, not just the chip's own pressed state. Search is debounced so this
+       does not fire once per keystroke. -->
+  <div class="dir-count" id="dirCount" role="status" aria-live="polite"></div>
   <div class="cards" id="cards"></div>
 </section>
 
 <div class="overlay" id="overlay"></div>
-<aside class="drawer" id="drawer">
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drName" tabindex="-1">
   <div class="dr-head">
     <button class="dr-close" id="drClose">✕</button>
     <div class="dr-cat" id="drCat"></div>
@@ -709,6 +731,10 @@ fetch("events.json").then(r => r.ok ? r.json() : null).then(j => {
 }).catch(()=>{});
 // open = rolling, or a deadline that hasn't passed; expired dates render as nothing
 const applyOpen = d => d.applyBy === "rolling" || (!!d.applyBy && d.applyBy >= todayYMD());
+// Checked at call time, not cached: the preference can change mid-session.
+const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+// CSS handles animations and transitions; these are the motions JS drives.
+const mapGoTo = (ll, z) => reduceMotion() ? map.setView(ll, z) : map.flyTo(ll, z, {duration:.9});
 const fmtDeadline = v => { const [y,m,dd] = v.split("-"); return `${MONTH_NAMES[+m-1]} ${+dd}, ${y}`; };
 
 /* ---------- html escaping (entry text is data, never markup) ---------- */
@@ -755,19 +781,57 @@ function openDrawer(id){
   $("overlay").classList.add("on");
   drawerId = d.id;
   updateURL();
+  dialogOpened($("drawer"));
 }
 window.openDrawer = openDrawer;
-function closeDrawer(){ $("drawer").classList.remove("open"); $("overlay").classList.remove("on"); drawerId = null; updateURL(); }
+function closeDrawer(){ $("drawer").classList.remove("open"); $("overlay").classList.remove("on"); drawerId = null; updateURL(); dialogClosed(); }
 $("drClose").addEventListener("click", closeDrawer);
 $("overlay").addEventListener("click", closeDrawer);
-document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeDrawer(); });
+
+/* ---------- dialog focus management ---------- */
+// A keyboard user has to land inside an opened dialog, stay inside it while
+// tabbing, and return to where they were when it closes. Before this the drawer
+// opened with focus still on <body>: a screen reader announced nothing, and Tab
+// walked the page behind the panel instead of its contents.
+const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])';
+let focusReturn = null;
+function openDialogEl(){
+  if($("drawer").classList.contains("open")) return $("drawer");
+  for(const id of ["compareModal","shortlistModal"]) if($(id).style.display === "flex") return $(id);
+  return null;
+}
+function dialogOpened(el){
+  focusReturn = document.activeElement;
+  const first = el.querySelector(FOCUSABLE);
+  (first || el).focus();
+}
+function dialogClosed(){
+  const back = focusReturn; focusReturn = null;
+  if(back && document.contains(back) && back.focus) back.focus();
+}
+document.addEventListener("keydown", e=>{
+  if(e.key !== "Tab") return;
+  const el = openDialogEl(); if(!el) return;
+  const items = [...el.querySelectorAll(FOCUSABLE)].filter(n => n.offsetParent !== null);
+  if(!items.length) return;
+  const first = items[0], last = items[items.length-1];
+  if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+  else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+});
+// Escape closes whatever is actually on top, not always the drawer.
+document.addEventListener("keydown", e=>{
+  if(e.key !== "Escape") return;
+  if($("compareModal").style.display === "flex") closeCompare();
+  else if($("shortlistModal").style.display === "flex") closeShortlist();
+  else closeDrawer();
+});
 
 function goToMap(id){
   closeDrawer();
   switchView("map");
   const d = byId[id];
   setTimeout(()=>{
-    map.flyTo([d.lat,d.lng], 15, {duration:.9});
+    mapGoTo([d.lat,d.lng], 15);
     const m = markers[id];
     if(m) setTimeout(()=>{
       // at z15 clustering is disabled, so this resolves immediately; the
@@ -813,7 +877,7 @@ function setMapTiles(){ if(!map) return; if(mapTiles) map.removeLayer(mapTiles);
     a.href = "#"; a.title = "Re-center on Boston";
     a.setAttribute("role","button"); a.setAttribute("aria-label","Re-center the map on downtown Boston");
     a.innerHTML = "⌖";
-    L.DomEvent.on(a,"click",e=>{ L.DomEvent.preventDefault(e); map.flyTo(HOME_VIEW.center, HOME_VIEW.zoom, {duration:.9}); });
+    L.DomEvent.on(a,"click",e=>{ L.DomEvent.preventDefault(e); mapGoTo(HOME_VIEW.center, HOME_VIEW.zoom); });
     return div;
   };
   homeCtl.addTo(map);
@@ -879,12 +943,15 @@ function setMapTiles(){ if(!map) return; if(mapTiles) map.removeLayer(mapTiles);
   // legend
   const lg = $("mapLegend");
   Object.entries(CATS).forEach(([k,v])=>{
-    const div = document.createElement("div");
-    div.className = "lg-item"; div.dataset.cat = k;
+    // a real button, so the legend is operable by keyboard and announces its state
+    const div = document.createElement("button");
+    div.type = "button"; div.className = "lg-item"; div.dataset.cat = k;
+    div.setAttribute("aria-pressed", "true");
     div.innerHTML = `<span class="lg-dot" style="color:${v.color};background:${v.color}"></span>${v.label}`;
     div.addEventListener("click", ()=>{
       if(activeCats.has(k)) activeCats.delete(k); else activeCats.add(k);
       div.classList.toggle("off", !activeCats.has(k));
+      div.setAttribute("aria-pressed", String(activeCats.has(k)));
       DATA.forEach(d=>{
         if(d.cat!==k) return;
         if(activeCats.has(k)) pinGroup().addLayer(markers[d.id]); else pinGroup().removeLayer(markers[d.id]);
@@ -911,7 +978,7 @@ function setMapTiles(){ if(!map) return; if(mapTiles) map.removeLayer(mapTiles);
     res.querySelectorAll("div[data-id]").forEach(el=>{
       el.addEventListener("click", ()=>{
         res.classList.remove("open"); inp.value = byId[el.dataset.id].name;
-        map.flyTo([byId[el.dataset.id].lat, byId[el.dataset.id].lng], 15, {duration:.9});
+        mapGoTo([byId[el.dataset.id].lat, byId[el.dataset.id].lng], 15);
         setTimeout(()=>markers[el.dataset.id].openPopup(), 950);
       });
     });
@@ -958,12 +1025,14 @@ let gxEnergy = 1;
   // category legend (same behavior as the map legend)
   const lg = $("gxLegend");
   Object.entries(CATS).forEach(([k,v])=>{
-    const div = document.createElement("div");
-    div.className = "lg-item"; div.dataset.cat = k;
+    const div = document.createElement("button");
+    div.type = "button"; div.className = "lg-item"; div.dataset.cat = k;
+    div.setAttribute("aria-pressed", "true");
     div.innerHTML = `<span class="lg-dot" style="color:${v.color};background:${v.color}"></span>${v.label}`;
     div.addEventListener("click", ()=>{
       if(gxCats.has(k)) gxCats.delete(k); else gxCats.add(k);
       div.classList.toggle("off", !gxCats.has(k));
+      div.setAttribute("aria-pressed", String(gxCats.has(k)));
     });
     lg.appendChild(div);
   });
@@ -1082,8 +1151,16 @@ function gxDraw(t){
   ctx.restore();
 }
 
+let gxSettleFrames = 0;
 function gxLoop(t){
-  if(currentView==="galaxy"){ gxStep(); gxDraw(t||0); }
+  if(currentView==="galaxy"){
+    // Under reduced motion the layout still settles — you get the same diagram —
+    // it just stops moving once it has, and the starfield twinkle is frozen by
+    // holding the clock still.
+    const calm = reduceMotion();
+    if(!calm || gxSettleFrames < 300){ gxStep(); gxSettleFrames++; }
+    gxDraw(calm ? 0 : (t||0));
+  }
   requestAnimationFrame(gxLoop);
 }
 requestAnimationFrame(gxLoop);
@@ -1274,7 +1351,10 @@ let dirOpenOnly = false;      // ⏳ hard constraint: is this org accepting appl
     });
     cc.appendChild(el);
   });
-  $("dirSearch").addEventListener("input", renderCards);
+  // debounced because #dirCount is a live region — an undebounced handler would
+  // queue one screen-reader announcement per keystroke
+  let dirSearchT = 0;
+  $("dirSearch").addEventListener("input", ()=>{ clearTimeout(dirSearchT); dirSearchT = setTimeout(renderCards, 220); });
   $("dirStage").addEventListener("change", renderCards);
   $("dirSort").addEventListener("change", renderCards);
 })();
@@ -1321,9 +1401,15 @@ function renderCards(){
   $("cards").innerHTML = list.map(d=>{
     const col=cColor(d.cat);
     const canCompare = d.cat==="vc" || d.cat==="accel" || d.cat==="angel";
+    // The card stays mouse-clickable, but the org name is a real button so the
+    // entry is reachable by keyboard — before this, 171 cards had zero focusable
+    // way in while their ★/⚖ tools were tabbable, so you could shortlist an
+    // organization you had no way to open. Tools come after the title in the DOM
+    // (they are absolutely positioned, so nothing moves) to put the name first in
+    // the tab order.
     return `<div class="card" style="--cc:${col}" onclick="openDrawer('${d.id}')">
-      <div class="card-tools">${canCompare?`<button class="card-tool cmp ${cmpSet.has(d.id)?'on':''}" title="Compare" aria-label="Add ${esc(d.name)} to comparison" onclick="event.stopPropagation();toggleCompare('${d.id}')">⚖</button>`:""}<button class="card-tool star ${starSet.has(d.id)?'on':''}" title="Save to shortlist" aria-label="Save ${esc(d.name)} to your shortlist" onclick="event.stopPropagation();toggleStar('${d.id}')">${starSet.has(d.id)?"★":"☆"}</button></div>
-      <h3>${esc(d.name)}</h3>
+      <h3><button type="button" class="card-open" onclick="event.stopPropagation();openDrawer('${d.id}')">${esc(d.name)}</button></h3>
+      <div class="card-tools">${canCompare?`<button class="card-tool cmp ${cmpSet.has(d.id)?'on':''}" title="Compare" aria-pressed="${cmpSet.has(d.id)}" aria-label="Add ${esc(d.name)} to comparison" onclick="event.stopPropagation();toggleCompare('${d.id}')">⚖</button>`:""}<button class="card-tool star ${starSet.has(d.id)?'on':''}" title="Save to shortlist" aria-pressed="${starSet.has(d.id)}" aria-label="Save ${esc(d.name)} to your shortlist" onclick="event.stopPropagation();toggleStar('${d.id}')">${starSet.has(d.id)?"★":"☆"}</button></div>
       <div class="c-cat" style="color:${col}">${cLabel(d.cat)} · ${esc(d.loc.split(",")[0])}</div>
       <p>${esc(d.desc.length>150 ? d.desc.slice(0,150)+"…" : d.desc)}</p>
       <div class="c-meta">${relaxed ? (d.offers||[]).filter(o=>dirNeeds.has(o)).map(o=>OFFERS_META[o]).filter(Boolean).map(m=>`<span class="tag offer-tag">${m.icon} ${m.label}</span>`).join("") : ""}${isNew(d)?`<span class="tag new-tag">✨ New</span>`:""}${eventHosts[d.id]?`<span class="tag event-tag" title="${esc(eventHosts[d.id].title)}">🎟 event this week</span>`:""}${d.applyBy && d.applyBy!=="rolling" && applyOpen(d) ? `<span class="tag apply-tag">⏳ Apply by ${esc(fmtDeadline(d.applyBy))}</span>`:""}${isStale(d)?`<span class="tag stale-tag" title="Last verified ${fmtMonth(d.lastVerified)}">⚠ not recently verified</span>`:""}${d.badge?`<span class="badge">${esc(d.badge)}</span>`:""}${(d.tags||[]).slice(0,3).map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
@@ -1387,8 +1473,8 @@ function renderShortlist(ids){
   $("slShare").style.display = list.length ? "" : "none";
   $("slPrint").style.display = list.length ? "" : "none";
 }
-function openShortlist(){ renderShortlist(shortlistIds()); $("shortlistModal").style.display="flex"; document.body.classList.add("shortlist-open"); }
-function closeShortlist(){ $("shortlistModal").style.display="none"; document.body.classList.remove("shortlist-open"); sharedList=null; }
+function openShortlist(){ renderShortlist(shortlistIds()); $("shortlistModal").style.display="flex"; document.body.classList.add("shortlist-open"); dialogOpened($("shortlistModal")); }
+function closeShortlist(){ $("shortlistModal").style.display="none"; document.body.classList.remove("shortlist-open"); sharedList=null; dialogClosed(); }
 function shareShortlist(btn){
   if(!navigator.clipboard) return;
   const url = location.origin + location.pathname + "?list=" + shortlistIds().join(",");
@@ -1427,8 +1513,9 @@ function openCompare(){
   $("cmpBody").innerHTML = `<table class="cmp-table">` +
     rows.map(([label,cells])=>`<tr><td>${label}</td>${cells.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("") + `</table>`;
   $("compareModal").style.display="flex";
+  dialogOpened($("compareModal"));
 }
-function closeCompare(){ $("compareModal").style.display="none"; }
+function closeCompare(){ $("compareModal").style.display="none"; dialogClosed(); }
 window.toggleCompare=toggleCompare; window.openCompare=openCompare; window.closeCompare=closeCompare;
 
 /* stickiness init: saved stars, shared ?list= URLs, the new-this-month banner */
@@ -1489,7 +1576,7 @@ function nextTourStep(){
   if(s.view && currentView !== s.view) switchView(s.view);
   setTimeout(()=>{
     const t = document.querySelector(s.sel);
-    if(t){ t.classList.add("tour-spot"); t.scrollIntoView({block:"center", behavior:"smooth"}); }
+    if(t){ t.classList.add("tour-spot"); t.scrollIntoView({block:"center", behavior: reduceMotion() ? "auto" : "smooth"}); }
     $("tourTitle").textContent = s.title;
     $("tourText").textContent = s.text;
     $("tourStep").textContent = (tourStep+1) + " / " + TOUR.length;
