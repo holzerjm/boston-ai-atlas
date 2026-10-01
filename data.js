@@ -834,6 +834,12 @@ const DATA = [
  why:"The broadest on-ramp into Boston startup life beyond AI.",
  tags:["equity-free"], stages:[1,2], links:["cic"], offers:["community"], added:"2026-06", lastVerified:"2026-06"},
 
+{id:"build617", name:"BUILD617", cat:"community", loc:"38 Chauncy St, Downtown Crossing",
+ lat:42.3539, lng:-71.0597, url:"https://www.build617.org",
+ desc:"Founder-led community for early-stage tech founders in Boston and Cambridge, started by Nathan Spielberg (Tamarin AI) and Nick Leonard (VoiceRun). Founder dinners, tactical sessions and a podcast, plus a free workspace in Downtown Crossing opened in September 2026 with the real-estate firm Synergy. Membership skews heavily to AI companies.",
+ why:"Free desks and a peer group that takes no equity — but it selects for AI-native startups, expects you in three days a week, and asks companies to move on past eight employees. The space is sponsor-funded and committed for a year.",
+ tags:["founders","coworking","events","applied AI"], stages:[2,3], links:[], offers:["community","space","mentorship"], applyBy:"rolling", added:"2026-10", lastVerified:"2026-10"},
+
 // ---------- STUDENT GROUPS ----------
 {id:"aimit", name:"AI@MIT", cat:"student", loc:"MIT, Cambridge", approx:true,
  lat:42.3592, lng:-71.0935, url:"https://aiatmit.com/",
