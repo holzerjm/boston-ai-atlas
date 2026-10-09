@@ -338,6 +338,12 @@ const DATA = [
  why:"Early-stage defense robotics — the Seaport's newest dual-use bet.",
  tags:["robotics","defense","industrial"], stages:[], links:["massrobotics"], offers:["talent"], added:"2026-09", lastVerified:"2026-09"},
 
+{id:"longreach", name:"Longreach", cat:"startup", loc:"Brookline", approx:true,
+ lat:42.3329, lng:-71.1188, url:"https://longreach.ai",
+ desc:"Early-stage venture started in October 2025 by Steve Strassmann (MIT PhD, previously Apple, VMware, Benchling, Overjet, and CTO of the Commonwealth of Massachusetts). Works on how organizations revisit commitments as evidence changes, for decisions involving AI. Publishes AI Pathologies, a free catalogue of 51 ways AI systems fail.",
+ why:"AI Pathologies is free, public and genuinely useful if you are shipping LLM features — a local reference on how these systems break. The company itself is pre-product; engagements run as facilitated sessions.",
+ tags:["enterprise","applied AI"], stages:[], links:[], offers:["talent"], added:"2026-10", lastVerified:"2026-10"},
+
 // ---------- VENTURE CAPITAL ----------
 {id:"venx", name:"Ven^X", cat:"vc", loc:"125 High St, Boston",
  lat:42.3553, lng:-71.0541, url:"https://www.venx.vc",
