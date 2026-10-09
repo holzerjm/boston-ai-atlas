@@ -618,8 +618,46 @@ browse the <a href="e/">full organization index</a> or use the open dataset
 <script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.24.0/maplibre-gl.min.js"></script>
 <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
-<script src="data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4.3.2/dist/js-yaml.min.js"></script>
+<!-- Ajv 8.17.1 is the newest browser build on a CDN (npm uses 8.20.0); its advisory
+     GHSA-2g4f-4pwh-qvx6 needs the $data option, which atlas-data.js doesn't enable -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/8.17.1/ajv7.min.js"></script>
+<script src="atlas-data.js"></script>
 <script>
+/* Data loader: fetch data/*.yml + schemas, validate (atlas-data.js), expose
+   CATS / STAGES / DATA as globals, then start the app script below. The app is
+   parked in a type="text/plain" tag because it reads the data at top level and
+   its inline on*="" handlers need its functions to stay global — so it can't
+   simply be wrapped in a callback. Re-inserting it as a classic <script> runs
+   it unchanged once the data is ready.
+
+   FUTURE (full rewrite, drops this indirection): move the app into app.js as an
+   ES module that does `const { CATS, STAGES, DATA } = await loadAtlas()` and
+   imports atlas-data.js; replace the inline on*="" attributes with
+   addEventListener so nothing needs to be global; then delete this loader and
+   the text/plain wrapper. */
+(function(){
+  const domReady = new Promise(r => document.readyState === "loading"
+    ? document.addEventListener("DOMContentLoaded", r) : r());
+  const texts = Promise.all(AtlasData.FILES.map(f =>
+    fetch("data/" + f).then(r => { if(!r.ok) throw new Error(`data/${f}: HTTP ${r.status}`); return r.text(); })));
+  Promise.all([texts, domReady]).then(([t]) => {
+    Object.assign(window, AtlasData.loadAtlas(
+      Object.fromEntries(AtlasData.FILES.map((f, i) => [f, t[i]])), jsyaml, ajv7));
+    const app = document.getElementById("atlas-app"), s = document.createElement("script");
+    s.textContent = app.textContent;
+    app.replaceWith(s);
+  }).catch(err => {
+    console.error(err);
+    const p = document.createElement("p");
+    p.setAttribute("role", "alert");
+    p.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;padding:12px 16px;background:#7f1d1d;color:#fff;font:14px sans-serif";
+    p.textContent = "Sorry — the atlas data failed to load. Please try again later.";
+    document.body.prepend(p);
+  });
+})();
+</script>
+<script type="text/plain" id="atlas-app">
 /* ============================================================
    Mass AI Atlas — application
    ============================================================ */
@@ -643,12 +681,13 @@ function flagEntry(id){
 }
 window.suggestEntry = suggestEntry;
 window.flagEntry = flagEntry;
-document.addEventListener("DOMContentLoaded", ()=>{
+// the data loader starts this script after DOMContentLoaded has fired
+(()=>{
   const sb = document.getElementById("suggestBtn");
   if(sb) sb.addEventListener("click", suggestEntry);
   const gl = document.getElementById("ghLink");
   if(gl) gl.href = "https://github.com/"+GH_REPO;
-});
+})();
 
 /* ---------- stats ---------- */
 (function(){

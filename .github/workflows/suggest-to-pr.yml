@@ -23,7 +23,7 @@
 #
 # SECURITY: the issue body is untrusted. It is parsed from the event file in
 # scripts/issue-to-entry.js (never interpolated via ${{ }} into run:) and every
-# value reaches data.js JSON.stringify-serialized. PR text passes as files.
+# value reaches data/entities.yml yaml.dump-serialized. PR text passes as files.
 
 name: Suggestion bot
 
@@ -50,6 +50,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 20
+      - run: npm ci
 
       - name: Parse issue and build entry
         id: build
@@ -59,7 +60,7 @@ jobs:
         if: steps.build.outputs.status == 'ok'
         run: |
           mkdir -p bot-artifact
-          cp data.js bot-artifact/data.js
+          cp data/entities.yml bot-artifact/entities.yml
           cp "$RUNNER_TEMP/pr-title.txt" "$RUNNER_TEMP/pr-body.md" bot-artifact/
 
       - name: Upload artifact
@@ -118,11 +119,11 @@ jobs:
               --body "I drafted an entry for this suggestion but the bot has no push token configured yet, so a maintainer needs to open the PR by hand (see MAINTAINING.md)."
             exit 0
           fi
-          cp bot-artifact/data.js data.js
+          cp bot-artifact/entities.yml data/entities.yml
           git config user.name "atlas-entry-bot"
           git config user.email "atlas-entry-bot@users.noreply.github.com"
           git checkout -b "$BRANCH"
-          git add data.js
+          git add data/entities.yml
           git commit -m "Draft entry from suggestion #${ISSUE}"
           # token via auth header, never in the remote URL
           AUTH=$(printf 'x-access-token:%s' "$BOT_TOKEN" | base64 -w0)

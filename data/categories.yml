@@ -1,0 +1,15 @@
+# Mass AI Atlas — categories (CATS).
+# Each key is a category id used by the `cat` field in entities.yml.
+# Schema: categories.schema.yml · Validate: node scripts/validate.js
+
+startup: {label: AI Companies & Startups, color: '#5eead4'}
+vc: {label: Venture Capital, color: '#a78bfa'}
+angel: {label: Angel Groups, color: '#f472b6'}
+accel: {label: Accelerators & Founder Support, color: '#fbbf24'}
+university: {label: University Labs & Centers, color: '#60a5fa'}
+corporate: {label: Corporate AI Labs, color: '#94a3b8'}
+community: {label: Communities & Meetups, color: '#4ade80'}
+event: {label: Major Events, color: '#fb923c'}
+gov: {label: Government & Policy, color: '#f87171'}
+space: {label: Spaces & Hubs, color: '#22d3ee'}
+student: {label: Student Groups, color: '#e879f9'}

@@ -12,13 +12,8 @@
  *   broken   404/410/other 4xx-5xx, network error, or timeout (after 1 retry)
  * Healthy URLs are counted but not listed.
  */
-const fs = require("fs");
-const path = require("path");
 
-const src = fs.readFileSync(path.join(__dirname, "..", "data.js"), "utf8");
-const mod = { exports: {} };
-new Function("module", "exports", src + "\n;module.exports={CATS,STAGES,DATA};")(mod, mod.exports);
-const { DATA } = mod.exports;
+const { DATA } = require("./load-data").loadData();
 
 const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36 boston-ai-atlas-linkcheck";
 const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return ""; } };

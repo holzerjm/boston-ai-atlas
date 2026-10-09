@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 /*
  * issue-to-entry.js — turn a "new-entry" issue-form submission into a draft
- * data.js entry. Run by .github/workflows/suggest-to-pr.yml; can be tested
+ * data/entities.yml entry. Run by .github/workflows/suggest-to-pr.yml; can be tested
  * locally with:  GITHUB_EVENT_PATH=<event.json> RUNNER_TEMP=<dir> node scripts/issue-to-entry.js
  *
  * SECURITY MODEL (do not weaken):
  *  - The issue body is attacker-controlled text. It is read from the event
- *    payload FILE (never interpolated through a shell) and every string that
- *    ends up in data.js is serialized with JSON.stringify, so it can never
- *    escape a JS string literal. HTML in text fields is additionally rejected
- *    by scripts/validate.js and escaped at render time by the app.
- *  - This script only writes: data.js (in the checkout) and status/report
+ *    payload FILE (never interpolated through a shell) and the entry that
+ *    ends up in data/entities.yml is serialized with yaml.dump, so a value can
+ *    never escape its YAML scalar. HTML in text fields is additionally rejected
+ *    by the schema (data/entities.schema.yml) and escaped at render time by the app.
+ *  - This script only writes: data/entities.yml (in the checkout) and status/report
  *    files under RUNNER_TEMP. It never executes issue-derived content.
  *
  * Outputs (written to $GITHUB_OUTPUT when set):
@@ -20,6 +20,8 @@
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
+const yaml = require("js-yaml");
+const { loadData } = require("./load-data");
 
 const ROOT = path.join(__dirname, "..");
 const TMP = process.env.RUNNER_TEMP || path.join(ROOT, ".bot-tmp");
@@ -33,10 +35,8 @@ const N = issue.number;
 const submitter = (issue.user && issue.user.login) || "unknown";
 
 // ---------- load current dataset ----------
-const src = fs.readFileSync(path.join(ROOT, "data.js"), "utf8");
-const mod = { exports: {} };
-new Function("module", "exports", src + "\n;module.exports={CATS,STAGES,DATA};")(mod, mod.exports);
-const { CATS, DATA } = mod.exports;
+const ENTITIES = path.join(ROOT, "data", "entities.yml");
+const { CATS, DATA } = loadData();
 
 // ---------- parse the issue-form body ("### Label\n\nvalue") ----------
 function parseForm(text) {
@@ -164,17 +164,16 @@ function geocode(q) {
     if (la >= 41.5 && la <= 43 && ln >= -73.5 && ln <= -70.5) { lat = la; lng = ln; geocoded = true; }
   }
 
-  // ---------- build the entry (every user string via JSON.stringify) ----------
+  // ---------- build the entry (serialized with yaml.dump, same layout as entities.yml) ----------
   const month = new Date().toISOString().slice(0, 7);
-  const J = JSON.stringify;
-  let entry = `{id:${J(id)}, name:${J(name)}, cat:${J(cat)}, loc:${J(loc)}, approx:true,\n` +
-    ` lat:${lat}, lng:${lng}, url:${J(url)},\n` +
-    ` desc:${J(desc)},\n` +
-    (why ? ` why:${J(why)},\n` : "") +
-    ` tags:[${tags.map(t => J(t)).join(",")}], stages:[${stages.join(",")}]` +
-    (links.length ? `, links:[${links.map(l => J(l)).join(",")}]` : "") +
-    (offers.length ? `, offers:[${offers.map(o => J(o)).join(",")}]` : "") +
-    `, added:${J(month)}, lastVerified:${J(month)}},`;
+  const entry = yaml.dump([{
+    id, name, cat, loc, approx: true, lat, lng, url, desc,
+    ...(why ? { why } : {}),
+    tags, stages,
+    ...(links.length ? { links } : {}),
+    ...(offers.length ? { offers } : {}),
+    added: month, lastVerified: month,
+  }], { lineWidth: -1, flowLevel: 2 }).trimEnd();
 
   // ---------- splice into the right category section ----------
   const BANNER = {
@@ -184,16 +183,16 @@ function geocode(q) {
     community: "COMMUNITIES & MEETUPS", student: "STUDENT GROUPS",
     event: "MAJOR EVENTS", gov: "GOVERNMENT & POLICY",
   };
-  const lines = src.split("\n");
-  const isBanner = (l) => /^\/\/ -{5,} .+ -{5,}$/.test(l);
+  const lines = fs.readFileSync(ENTITIES, "utf8").split("\n");
+  const isBanner = (l) => /^# -{5,} .+ -{5,}$/.test(l);
   const start = lines.findIndex(l => isBanner(l) && l.includes(BANNER[cat]));
   if (start === -1) { console.error(`section banner for "${cat}" not found`); process.exit(1); }
   let end = lines.length;
   for (let i = start + 1; i < lines.length; i++)
-    if (isBanner(lines[i]) || /^\];/.test(lines[i])) { end = i; break; }
+    if (isBanner(lines[i])) { end = i; break; }
   while (end > start && lines[end - 1].trim() === "") end--;
   lines.splice(end, 0, entry);
-  fs.writeFileSync(path.join(ROOT, "data.js"), lines.join("\n"));
+  fs.writeFileSync(ENTITIES, lines.join("\n"));
 
   // ---------- run the validator and capture its verdict ----------
   const { spawnSync } = require("child_process");
@@ -215,7 +214,7 @@ function geocode(q) {
     `| pin | ${geocoded ? `${lat}, ${lng} — geocoded via Nominatim (© OpenStreetMap contributors) from \`${query.replace(/[`|\r\n]/g, " ")}\`, marked \`approx:true\`` : "**GEOCODING FAILED** — lat/lng are 0,0 and CI is red on purpose; fix the pin before merge"} |`,
     `| stages | ${stages.join(", ") || "(none given)"} |`,
     ``,
-    `Submitted text (already serialized safely into \`data.js\`; edit for house voice before merge):`,
+    `Submitted text (already serialized safely into \`data/entities.yml\`; edit for house voice before merge):`,
     ``,
     fence(`desc: ${desc}\nwhy: ${why || "(none)"}\ntags: ${tags.join(", ") || "(none)"}\nconnections: ${connectionsText || "(none)"}`),
     ``,

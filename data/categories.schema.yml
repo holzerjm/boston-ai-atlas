@@ -1,0 +1,20 @@
+$schema: http://json-schema.org/draft-07/schema#
+$id: categories.schema.yml
+title: Mass AI Atlas categories (CATS)
+description: Map of category id → display label and accent colour.
+type: object
+minProperties: 1
+propertyNames:
+  pattern: ^[a-z]+$
+additionalProperties:
+  type: object
+  required: [label, color]
+  additionalProperties: false
+  properties:
+    label:
+      type: string
+      minLength: 1
+    color:
+      description: CSS hex colour used for this category across all views
+      type: string
+      pattern: ^#[0-9a-fA-F]{6}$

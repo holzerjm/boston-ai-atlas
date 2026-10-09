@@ -59,6 +59,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 20
+      - run: npm ci
 
       - name: Gate (once per week — first run at/after Monday 7am Eastern that finds a stale live file)
         id: gate

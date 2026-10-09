@@ -18,10 +18,7 @@ const path = require("path");
 const BASE = "https://the-open-accelerator.com/ecosystem/";
 const OG_IMAGE = "https://people.redhat.com/jholzer/TOA/android-icon-192x192.png";
 
-const src = fs.readFileSync(path.join(__dirname, "..", "data.js"), "utf8");
-const mod = { exports: {} };
-new Function("module", "exports", src + "\n;module.exports={CATS,STAGES,DATA};")(mod, mod.exports);
-const { CATS, DATA } = mod.exports;
+const { CATS, DATA } = require("./load-data").loadData();
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
   .replace(/"/g, "&quot;").replace(/'/g, "&#39;");

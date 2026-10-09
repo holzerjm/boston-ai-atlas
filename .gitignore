@@ -11,3 +11,6 @@ site-pages/
 /e/
 events.json
 events.json
+
+# npm dependencies (run: npm ci)
+node_modules/

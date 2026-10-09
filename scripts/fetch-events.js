@@ -193,11 +193,9 @@ function pullManual() {
 
 // ---------- atlas host matching (adds atlasId when the organizer is an entry) ----------
 function matchAtlas(list) {
-  const src = fs.readFileSync(path.join(ROOT, "data.js"), "utf8");
-  const mod = { exports: {} };
-  new Function("module", "exports", src + "\n;module.exports={CATS,STAGES,DATA};")(mod, mod.exports);
+  const { DATA } = require("./load-data").loadData();
   const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-  const byName = mod.exports.DATA.map(d => [d.id, norm(d.name)]);
+  const byName = DATA.map(d => [d.id, norm(d.name)]);
   for (const e of list) {
     const o = norm(e.organizer || "");
     if (!o) continue;
