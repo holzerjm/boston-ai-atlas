@@ -10,7 +10,7 @@
      name    display name
      cat     one of the CATS keys below
      loc     address or neighborhood label
-     lat,lng coordinates (Greater Boston)
+     lat,lng coordinates (Massachusetts)
      approx  true if coordinates are neighborhood-level
      url     official https:// website
      badge   optional highlight, e.g. "Applications open"

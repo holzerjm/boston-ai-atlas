@@ -6,7 +6,7 @@
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-4ade80)](CONTRIBUTING.md)
 [![The Open Accelerator](https://img.shields.io/badge/by-The%20Open%20Accelerator-EE0000)](https://the-open-accelerator.com)
 
-The living map of Greater Boston's AI ecosystem — built by the community for the community and founders, presented by
+The living map of Massachusetts' AI ecosystem — built by the community for the community and founders, presented by
 [The Open Accelerator](https://the-open-accelerator.com) (an initiative between the
 MA AI Hub, Red Hat & IBM).
 
@@ -14,7 +14,7 @@ MA AI Hub, Red Hat & IBM).
 
 **Four ways to explore 160+ verified organizations:**
 
-- 🗺️ **Map** — every VC, lab, accelerator and community pinned across Greater Boston
+- 🗺️ **Map** — every VC, lab, accelerator and community pinned across Massachusetts
 - ✨ **Galaxy** — an animated network of how the ecosystem connects (spinouts, funds, hosts)
 - 🧭 **Founder Journey** — resources curated by stage, from first spark to scale
 - 📇 **Directory** — full-text search with category and stage filters
@@ -105,7 +105,7 @@ PROJECT_STATE.md                  architecture, decisions & backlog (start here 
 ## The data
 
 The atlas is also an **open dataset** — the only maintained, human-verified dataset of
-Greater Boston's AI ecosystem. Two machine-readable endpoints regenerate on every
+Massachusetts' AI ecosystem. Two machine-readable endpoints regenerate on every
 deploy:
 
 - **JSON** — <https://the-open-accelerator.com/ecosystem/atlas.json> — a versioned

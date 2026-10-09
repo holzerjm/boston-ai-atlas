@@ -15,7 +15,7 @@ Repo: <https://github.com/holzerjm/boston-ai-atlas> · Live: <https://the-open-a
 
 ## 1. What this is
 
-An interactive map of Greater Boston's AI ecosystem, aimed at **early-stage founders**
+An interactive map of Massachusetts' AI ecosystem, aimed at **early-stage founders**
 (especially young/first-time founders) who need to find capital, labs, community and
 programs. Published by **The Open Accelerator (TOA)** — an initiative of the MA AI Hub,
 Red Hat and IBM Ventures.

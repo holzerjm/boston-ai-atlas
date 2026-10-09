@@ -166,7 +166,7 @@ is your judgment, next.
 1. Click the **Files changed** tab. Added lines are green, removed lines are red.
 2. Sanity-check the new entry against this short checklist:
 
-   - [ ] **Real, active, Greater-Boston / Massachusetts** organization relevant to AI founders
+   - [ ] **Real, active, Massachusetts** organization relevant to AI founders
    - [ ] **Factual, neutral description** — no marketing hype or unverifiable superlatives
    - [ ] **Website works** and is the official one (click it)
    - [ ] **Right category** and the **pin location looks correct** (paste the lat/lng into
@@ -382,7 +382,7 @@ Common ones:
 | `duplicate id` / `duplicate name` | That org (or id) is already in the atlas. Pick a new `id`, or it's a true duplicate — close the issue/PR instead. |
 | `id must be kebab-case` | Use only lowercase letters, numbers, and hyphens: `acme-ai`, not `Acme_AI`. |
 | `unknown category` | The `cat` value must be one of the **keys** in the category table (`vc`, `startup`, …), not the friendly label. |
-| `coordinates … outside … bounds` | A typo in lat/lng, or they're swapped. For Boston, `lat` is around **42** and `lng` is **negative**, around **-71**. |
+| `coordinates … outside … bounds` | A typo in lat/lng, or they're swapped. In Massachusetts, `lat` is around **42** and `lng` is **negative**, around **-71**. |
 | `url must start with https://` | Add `https://`, and make sure it isn't `http://`. |
 | `desc too long` | Trim the description to 400 characters or fewer. |
 | `links to unknown entry` | A value in `links` doesn't match any `id`. Fix the spelling or remove it. |

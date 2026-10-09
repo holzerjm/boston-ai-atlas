@@ -48,8 +48,12 @@ for (const d of DATA) {
   if (!CATS[d.cat]) err(id, `unknown category "${d.cat}" (valid: ${Object.keys(CATS).join(", ")})`);
   if (typeof d.lat !== "number" || typeof d.lng !== "number")
     err(id, "lat/lng must be numbers");
-  else if (d.lat < 41.5 || d.lat > 43 || d.lng < -73.5 || d.lng > -70.5)
-    err(id, `coordinates (${d.lat}, ${d.lng}) outside Greater Boston / Massachusetts bounds`);
+  // Whole-state box: the old one stopped at -70.5 and 41.5, which rejected Cape Cod,
+  // Nantucket and Martha's Vineyard. It is a typo guard (swapped or mistyped coords),
+  // not a geofence — a bounding box over Massachusetts unavoidably clips corners of
+  // neighbouring states, and the maintainer review is what actually enforces scope.
+  else if (d.lat < 41.1 || d.lat > 42.95 || d.lng < -73.6 || d.lng > -69.85)
+    err(id, `coordinates (${d.lat}, ${d.lng}) outside Massachusetts bounds`);
   if (!d.url || !/^https:\/\//.test(d.url)) err(id, "url must start with https://");
   else if (/[\s"'<>\\]/.test(d.url)) err(id, "url contains characters unsafe in a link");
   if (!d.loc) err(id, "missing loc (address or neighborhood)");

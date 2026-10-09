@@ -31,7 +31,7 @@ All data lives in [`data.js`](data.js) as one array of plain objects.
   cat: "startup",                   // startup | vc | angel | accel | university |
                                     // corporate | community | event | gov | space | student
   loc: "1 Broadway, Cambridge",     // address, or neighborhood if venues vary
-  lat: 42.3629, lng: -71.0838,      // must be within Greater Boston / MA
+  lat: 42.3629, lng: -71.0838,      // must be within Massachusetts
   approx: true,                     // include if coordinates are neighborhood-level
   url: "https://acme.ai",           // official site, https only
   badge: "Applications open",       // optional highlight
@@ -60,7 +60,7 @@ All data lives in [`data.js`](data.js) as one array of plain objects.
 
 ### What gets accepted
 
-- **Real, active, Boston-area** (Greater Boston / Massachusetts) organizations relevant
+- **Real, active, Massachusetts** organizations relevant
   to AI founders
 - Factual, neutral descriptions — no marketing copy, no superlatives you can't source
 - Affiliation is welcome (you know your org best!) — just disclose it in the PR/issue

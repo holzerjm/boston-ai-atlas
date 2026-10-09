@@ -224,7 +224,7 @@ function geocode(q) {
     fence(valOut.trim().split("\n").slice(-12).join("\n")),
     ``,
     `**Maintainer checklist — merging publishes to the live site:**`,
-    `- [ ] Opened the org's website; it is real, active, and Boston-area`,
+    `- [ ] Opened the org's website; it is real, active, and in Massachusetts`,
     `- [ ] Pin location is right (fix coordinates / remove \`approx\` if exact)`,
     `- [ ] \`desc\` is factual + neutral, \`why\` is founder-useful (rewrite as needed)`,
     `- [ ] Category and stages are honest`,
