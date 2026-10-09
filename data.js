@@ -1,5 +1,5 @@
 /* ============================================================
-   Boston AI Atlas — community dataset
+   Mass AI Atlas — community dataset
    ------------------------------------------------------------
    To add an entry: copy an existing object, fill in every field,
    and open a pull request. Full instructions: CONTRIBUTING.md

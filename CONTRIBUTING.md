@@ -1,4 +1,4 @@
-# Contributing to the Boston AI Atlas
+# Contributing to the Mass AI Atlas
 
 Thanks for keeping Boston's AI map alive. Two ways to contribute, pick your comfort level:
 

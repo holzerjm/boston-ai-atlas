@@ -1,4 +1,4 @@
-# Project State — Boston AI Atlas
+# Project State — Mass AI Atlas
 
 **Purpose of this file:** a self-contained handoff so development can continue in
 Claude Code (or by any new maintainer) without the original chat history. It captures

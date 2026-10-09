@@ -1,4 +1,4 @@
-# Add an entry to the Boston AI Atlas — a click-by-click walkthrough
+# Add an entry to the Mass AI Atlas — a click-by-click walkthrough
 
 **For:** anyone helping maintain the atlas. **No coding needed** — everything is done in
 a web browser on github.com. **Time:** about 10–15 minutes per entry.

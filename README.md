@@ -1,4 +1,4 @@
-# Boston AI Atlas
+# Mass AI Atlas
 
 [![Validate atlas data](https://github.com/holzerjm/boston-ai-atlas/actions/workflows/validate.yml/badge.svg)](https://github.com/holzerjm/boston-ai-atlas/actions/workflows/validate.yml)
 [![Organizations](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fholzerjm%2Fboston-ai-atlas%2Fmain%2Fbadge.json)](data.js)
@@ -127,7 +127,7 @@ flagged in the app). Defunct or unverifiable organizations are removed.
 **License:** the dataset is licensed under
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) — free to use, share and
 adapt with attribution to **The Open Accelerator**. Suggested citation:
-*"Boston AI Atlas, The Open Accelerator — the-open-accelerator.com/ecosystem"*.
+*"Mass AI Atlas, The Open Accelerator — the-open-accelerator.com/ecosystem"*.
 
 Some pin locations are approximate (neighborhood-level) and community groups move
 between venues — check official sites before visiting. Curated since June 2026.

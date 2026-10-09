@@ -1,12 +1,12 @@
 name: "➕ Suggest a new entry"
-description: "Propose an organization, program, or event for the Boston AI Atlas"
+description: "Propose an organization, program, or event for the Mass AI Atlas"
 title: "[New entry] "
 labels: ["new-entry"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for helping keep the Boston AI Atlas alive! A maintainer will review your
+        Thanks for helping keep the Mass AI Atlas alive! A maintainer will review your
         suggestion and add it via pull request. Comfortable with Git? You can also edit
         `data.js` and open a PR directly — see CONTRIBUTING.md.
   - type: input

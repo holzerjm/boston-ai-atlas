@@ -22,7 +22,7 @@ for (const d of DATA) counts[d.cat] = (counts[d.cat] || 0) + 1;
 const out = {
   schema: 1,
   generated: new Date().toISOString(),
-  title: "Boston AI Atlas — verified organizations of Greater Boston's AI ecosystem",
+  title: "Mass AI Atlas — verified organizations of Massachusetts' AI ecosystem",
   source: "https://github.com/holzerjm/boston-ai-atlas",
   website: "https://the-open-accelerator.com/ecosystem/",
   license: "CC BY 4.0 — (c) The Open Accelerator; attribution required",

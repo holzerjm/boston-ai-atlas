@@ -114,9 +114,9 @@ jobs:
           jq -n --arg count "$COUNT" --arg subjects "$SUBJECTS" --arg delta "$DELTA" \
                 --arg features "$FEATURES" \
                 --arg run "$RUN_URL" --arg commit "$COMMIT_URL" --arg sha "$SHORT_SHA" '
-            {text: ("🗺️ Boston AI Atlas updated — " + $count + " organizations live"),
+            {text: ("🗺️ Mass AI Atlas updated — " + $count + " organizations live"),
              blocks: ([
-               {type:"header", text:{type:"plain_text", text:"🗺️ Boston AI Atlas updated", emoji:true}},
+               {type:"header", text:{type:"plain_text", text:"🗺️ Mass AI Atlas updated", emoji:true}},
                {type:"section", text:{type:"mrkdwn",
                  text:("*" + $count + " organizations* live at <https://the-open-accelerator.com/ecosystem/|the-open-accelerator.com/ecosystem>\n" + $subjects)}}
              ]
@@ -137,7 +137,7 @@ jobs:
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           SUBJECT=$(git log -1 --pretty=%s 2>/dev/null || echo "unknown commit")
           jq -n --arg subject "$SUBJECT" --arg run "$RUN_URL" '
-            {text: "🚨 Boston AI Atlas deploy FAILED",
+            {text: "🚨 Mass AI Atlas deploy FAILED",
              blocks: [
                {type:"header", text:{type:"plain_text", text:"🚨 Atlas deploy failed", emoji:true}},
                {type:"section", text:{type:"mrkdwn",

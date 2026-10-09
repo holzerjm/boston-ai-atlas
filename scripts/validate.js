@@ -120,7 +120,7 @@ for (const d of DATA)
   for (const l of d.links || [])
     if (!ids.has(l)) err(d.id, `links to unknown entry "${l}"`);
 
-console.log(`Boston AI Atlas — validating ${DATA.length} entries, ${Object.keys(CATS).length} categories\n`);
+console.log(`Mass AI Atlas — validating ${DATA.length} entries, ${Object.keys(CATS).length} categories\n`);
 if (warn.length) console.log("Warnings:\n" + warn.join("\n") + "\n");
 if (errors.length) {
   console.log("Errors:\n" + errors.join("\n"));

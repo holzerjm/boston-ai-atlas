@@ -37,10 +37,10 @@ const page = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Boston AI Events — the next 10 days</title>
-<meta name="description" content="AI community events across Greater Boston for the next 10 days — meetups, workshops, demo nights and hackathons. Refreshed every Monday by the Boston AI Atlas.">
+<meta name="description" content="AI community events across Greater Boston for the next 10 days — meetups, workshops, demo nights and hackathons. Refreshed every Monday by the Mass AI Atlas.">
 <link rel="canonical" href="https://the-open-accelerator.com/ecosystem/events/">
 <meta property="og:title" content="Boston AI Events — the next 10 days">
-<meta property="og:description" content="AI community events across Greater Boston, refreshed every Monday. A companion to the Boston AI Atlas by The Open Accelerator.">
+<meta property="og:description" content="AI community events across Greater Boston, refreshed every Monday. A companion to the Mass AI Atlas by The Open Accelerator.">
 <meta property="og:url" content="https://the-open-accelerator.com/ecosystem/events/">
 <meta property="og:image" content="https://people.redhat.com/jholzer/TOA/android-icon-192x192.png">
 <link rel="icon" href="https://the-open-accelerator.com/favicon.ico">
@@ -105,7 +105,7 @@ ${footerCss}
 ${header}</header>
 ${mobileNav}
 <div class="wrap">
-  <p class="eyebrow">The Open Accelerator · Boston AI Atlas</p>
+  <p class="eyebrow">The Open Accelerator · Mass AI Atlas</p>
   <h1>Boston AI Events</h1>
   <p class="stand">Every AI community event we can find across Greater Boston for the next
   10 days — meetups, workshops, demo nights, hackathons. Refreshed every Monday morning.</p>
@@ -129,7 +129,7 @@ ${mobileNav}
   </div>
 
   <p style="margin-top:36px;color:var(--faint);font-size:12px">
-    A companion to the <a style="color:var(--faint)" href="../">Boston AI Atlas</a> · sources: community Luma calendars,
+    A companion to the <a style="color:var(--faint)" href="../">Mass AI Atlas</a> · sources: community Luma calendars,
     Luma's Boston AI feed, and <a style="color:var(--faint)" href="https://boston.aitinkerers.org/">AI Tinkerers Boston</a> ·
     aggregation approach builds on <a style="color:var(--faint)" href="https://github.com/nkpng2k/startup-event-scraper">nkpng2k's startup-event-scraper</a> (Apache-2.0)
   </p>

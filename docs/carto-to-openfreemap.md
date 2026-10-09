@@ -1,6 +1,6 @@
 # Migrating a map from CARTO to OpenFreeMap
 
-**A self-contained playbook.** This documents how the Boston AI Atlas moved its
+**A self-contained playbook.** This documents how the Mass AI Atlas moved its
 basemap off CARTO and onto OpenFreeMap (commit `c811833`, 2026-08-30), written so
 that another maintainer — or another Claude Code session working on a different
 map page — can perform the same migration without any other context. Hand this

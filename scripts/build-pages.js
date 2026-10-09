@@ -42,12 +42,12 @@ for (const d of DATA) {
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${name} — Boston AI Atlas</title>
+<title>${name} — Mass AI Atlas</title>
 <meta name="description" content="${esc(clip(d.desc, 200))}">
 <link rel="canonical" href="${BASE}?entry=${d.id}">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Boston AI Atlas">
-<meta property="og:title" content="${name} — ${cat} · Boston AI Atlas">
+<meta property="og:site_name" content="Mass AI Atlas">
+<meta property="og:title" content="${name} — ${cat} · Mass AI Atlas">
 <meta property="og:description" content="${blurb}">
 <meta property="og:url" content="${stubUrl}">
 <meta property="og:image" content="${OG_IMAGE}">
@@ -55,7 +55,7 @@ for (const d of DATA) {
 <meta http-equiv="refresh" content="0;url=${app}">
 <script>location.replace(${JSON.stringify(app)});</script>
 </head><body>
-<p><a href="${app}">${name} on the Boston AI Atlas</a> — ${esc(clip(d.desc, 300))}</p>
+<p><a href="${app}">${name} on the Mass AI Atlas</a> — ${esc(clip(d.desc, 300))}</p>
 </body></html>\n`;
   fs.mkdirSync(path.join(OUT, "e", d.id), { recursive: true });
   fs.writeFileSync(path.join(OUT, "e", d.id, "index.html"), html);
@@ -68,11 +68,11 @@ for (const d of DATA) (byCat[d.cat] = byCat[d.cat] || []).push(d);
 let idx = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>All organizations — Boston AI Atlas</title>
-<meta name="description" content="Every verified organization in the Boston AI Atlas — Greater Boston's AI ecosystem map by The Open Accelerator.">
+<title>All organizations — Mass AI Atlas</title>
+<meta name="description" content="Every verified organization in the Mass AI Atlas — Massachusetts' AI ecosystem map by The Open Accelerator.">
 <link rel="canonical" href="${BASE}e/">
 </head><body>
-<h1>Boston AI Atlas — all ${DATA.length} organizations</h1>
+<h1>Mass AI Atlas — all ${DATA.length} organizations</h1>
 <p><a href="${BASE}">Open the interactive atlas</a> · dataset: <a href="${BASE}atlas.json">JSON</a> / <a href="${BASE}atlas.csv">CSV</a> (CC BY 4.0)</p>\n`;
 for (const [cat, list] of Object.entries(byCat)) {
   idx += `<h2>${esc(CATS[cat].label)}</h2>\n<ul>\n`;

@@ -1,4 +1,4 @@
-# Maintainer Guide — Boston AI Atlas
+# Maintainer Guide — Mass AI Atlas
 
 This guide is for the people who **keep the atlas up to date**. It assumes you are
 comfortable using a web browser but **not** that you use Git or GitHub every day —
