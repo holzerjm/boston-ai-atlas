@@ -87,7 +87,9 @@ const parseStages = (s) => parseChecked(s, STAGE_WORDS).sort();
 const name = get("Organization name").replace(/\s+/g, " ").trim();
 let url = get("Official website");
 const catLabel = get("Category");
-const loc = get("Address or neighborhood").replace(/\s+/g, " ").trim();
+// loc is "street, city"; contributors naturally type the state, which the atlas leaves implied
+const loc = get("Address or neighborhood").replace(/\s+/g, " ").trim()
+  .replace(/,\s*(MA|Mass|Massachusetts)\.?$/i, "").replace(/,\s*\d{5}(-\d{4})?$/, "").trim();
 const desc = get("Description").replace(/\s+/g, " ").trim();
 const why = get("Why it matters for founders").replace(/\s+/g, " ").trim();
 const stages = parseStages(form["Which founder stages does it serve?"] || "");
