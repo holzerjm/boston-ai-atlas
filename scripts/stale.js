@@ -6,7 +6,9 @@
      node scripts/stale.js               -> report with 12-month threshold
      node scripts/stale.js --months 6    -> custom threshold
      node scripts/stale.js --queue 13    -> the N least-recently-verified
-                                            entries (the monthly rota)
+                                            entries (a fixed-size rota)
+     node scripts/stale.js --cycle 12    -> a rota sized so every entry is
+                                            re-checked within N months
 
    lastVerified is the month ("YYYY-MM") a maintainer last confirmed
    the org is real, active, and the entry's facts are right.
@@ -32,9 +34,16 @@ for (const a of argv) {
 }
 
 // --- Rota mode: the N least-recently-verified entries, oldest first ---
+// --cycle M sizes the rota from the dataset, so it keeps pace as the atlas grows.
+// A fixed --queue silently stops covering everything the moment entries outrun it:
+// at 199 entries a queue of 13 takes 15.3 months to come round, against a 12-month
+// freshness threshold, and nothing anywhere said so.
 const qi = argv.indexOf("--queue");
-if (qi !== -1) {
-  const n = Math.max(1, parseInt(argv[qi + 1], 10) || 13);
+const ci = argv.indexOf("--cycle");
+if (qi !== -1 || ci !== -1) {
+  const n = qi !== -1
+    ? Math.max(1, parseInt(argv[qi + 1], 10) || 13)
+    : Math.ceil(DATA.length / Math.max(1, parseInt(argv[ci + 1], 10) || 12));
   const queue = [...DATA].sort((a, b) =>
     (a.lastVerified || "0000-00").localeCompare(b.lastVerified || "0000-00")).slice(0, n);
   console.log(`Verification rota — the ${queue.length} entries longest without a check:`);

@@ -42,7 +42,7 @@ jobs:
 
       - name: Verification rota
         run: |
-          node scripts/stale.js --queue 13 | tee rota.txt
+          node scripts/stale.js --cycle 12 | tee rota.txt
           { echo '## Verification rota'; echo '```'; cat rota.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Post to Slack
@@ -55,7 +55,9 @@ jobs:
           # `|| true` so a missing report file cannot abort this step under bash -e
           SUMMARY=$(head -1 linkcheck.txt 2>/dev/null || true)
           LINKS=$(tail -n +2 linkcheck.txt 2>/dev/null | grep -E '^(BROKEN|MOVED|  )' | head -25 || true)
-          ROTA=$(tail -n +2 rota.txt 2>/dev/null | grep '^  ' | head -15 || true)
+          # head -40 is a safety rail, not the rota size — --cycle sets that. At 15
+          # it silently cut the list short the moment the rota outgrew it.
+          ROTA=$(tail -n +2 rota.txt 2>/dev/null | grep '^  ' | head -40 || true)
           # Say so out loud rather than posting a blank-looking all-clear
           [ -z "$SUMMARY" ] && SUMMARY="Link check did not finish — see the run log"
           [ -z "$ROTA" ] && ROTA="  (rota unavailable — see the run log)"
@@ -69,7 +71,7 @@ jobs:
              + (if $links != "" then [{type:"section", text:{type:"mrkdwn",
                  text:("*Needs attention:*\n```" + $links + "```")}}] else [] end)
              + [{type:"section", text:{type:"mrkdwn",
-                 text:("*This month'\''s ~20-minute verification queue:*\n```" + $rota + "```")}},
+                 text:("*This month'\''s verification queue:*\n```" + $rota + "```")}},
                 {type:"context", elements:[{type:"mrkdwn",
                  text:("Fix an entry: edit data.js on <" + $repo + "|GitHub>, bump lastVerified, merge — it deploys itself.")}]}])
             }' \
