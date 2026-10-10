@@ -230,9 +230,9 @@ org is real, active, and the entry's facts are right.
 > **The robot starts this for you.** On the 1st of each month, the "Monthly health
 > check" action posts two lists to the TOA Slack: URLs that are **broken or have
 > moved** (fix these first — a dead link on a "verified" atlas is the worst look),
-> and the ~13 entries longest without a check — your 20-minute queue. The same
+> and the entries longest without a check — your queue for the month. The same
 > report is in the action's job summary, or run it yourself:
-> `node scripts/linkcheck.js` and `node scripts/stale.js --queue 13`.
+> `node scripts/linkcheck.js` and `node scripts/stale.js --cycle 12`.
 
 To keep those honest, do a small sweep about once a month:
 
@@ -244,8 +244,11 @@ To keep those honest, do a small sweep about once a month:
 3. Bump `lastVerified` to the current month for each one you checked, and put them all
    in **one PR**.
 
-With ~123 entries on a 12-month cycle, that's roughly **10 re-checks a month — a
-20–30 minute session**.
+`--cycle 12` sizes that list from the dataset, so it keeps pace as the atlas grows:
+every entry comes round within a year without anyone re-tuning a number. At 198
+entries that is **17 re-checks a month, about half an hour**. A fixed `--queue`
+quietly stops covering everything as soon as entries outrun it — at 13 a month it
+would now take **15 months** to come round, against a 12-month threshold.
 
 ---
 
@@ -393,6 +396,32 @@ Common ones:
 
 You can re-run the check just by editing the file again and committing — every commit
 re-runs the robot automatically.
+
+---
+
+## Appendix D — Considered and not listed
+
+Research passes keep rediscovering the same candidates. These were checked, found
+real, and still left off — recorded so the next pass doesn't redo the work, and so
+the reasoning is open rather than a silent judgment.
+
+| Org | Why not |
+|---|---|
+| **EforAll** (formerly Merrimack Valley Sandbox) | A general small-business accelerator, free and equity-free, but not AI or tech, and since going fully online it is open to anyone in the US. Its Lowell address is an office, with no local cohort or workspace. Listing it would make the atlas a general business-support directory. |
+| **Keva Health** | Real, active, Lexington. But it never describes itself as an AI company — the claim rests on a 2022 listing in a programme that helps non-AI companies *adopt* AI. Revisit if it publishes its ML work. |
+| **NineTwoThree AI Studio** | Every fact checked out; it is a paid AI development agency. The atlas lists places a founder can get something — funding, space, compute, mentorship, community, talent, customers — not vendors who sell to them. Admitting one agency admits every dev shop in Boston. |
+| **Lux Capital** | Listed until October 2026, then removed: its own contact page says New York and Silicon Valley, and no Massachusetts office could be found. It backs Massachusetts companies, but so do dozens of out-of-state funds; a pin implies a presence. |
+
+The rules those add up to:
+
+- **A pin implies a presence.** An investor or company with no Massachusetts office
+  does not get one, however active it is here.
+- **AI has to be the org's own claim**, not an inference from one programme listing.
+- **The atlas lists what a founder can get, not who sells to them.** Agencies,
+  consultancies and vendors are out as a class.
+- **Being real and useful is not enough** — it also has to be AI-relevant and
+  Massachusetts-based. Say so plainly when declining; a contributor who gets a
+  reason can argue with it.
 
 ---
 
