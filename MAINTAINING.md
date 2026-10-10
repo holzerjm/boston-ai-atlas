@@ -411,6 +411,7 @@ the reasoning is open rather than a silent judgment.
 | **Keva Health** | Real, active, Lexington. But it never describes itself as an AI company — the claim rests on a 2022 listing in a programme that helps non-AI companies *adopt* AI. Revisit if it publishes its ML work. |
 | **NineTwoThree AI Studio** | Every fact checked out; it is a paid AI development agency. The atlas lists places a founder can get something — funding, space, compute, mentorship, community, talent, customers — not vendors who sell to them. Admitting one agency admits every dev shop in Boston. |
 | **Lux Capital** | Listed until October 2026, then removed: its own contact page says New York and Silicon Valley, and no Massachusetts office could be found. It backs Massachusetts companies, but so do dozens of out-of-state funds; a pin implies a presence. |
+| **Y Combinator (Boston alumni)** | Listed until October 2026, then removed. Not an organisation with a Massachusetts presence but a category of founders: its `loc` read "Remote / SF (Boston-based founders)" and its `url` was a filtered list of YC companies rather than a front door. YC alumni belong in the atlas as their own entries — several already are. |
 
 The rules those add up to:
 
