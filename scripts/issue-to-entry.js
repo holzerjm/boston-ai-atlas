@@ -62,12 +62,23 @@ const STAGE_WORDS = [[/spark/i, 1], [/validate/i, 2], [/build/i, 3], [/fund/i, 4
 const OFFER_WORDS = [[/funding \(writes/i, "funding"], [/equity-free money/i, "grants"],
   [/space \(labs/i, "space"], [/compute/i, "compute"], [/mentorship/i, "mentorship"],
   [/community \(peer/i, "community"], [/talent \(hiring/i, "talent"], [/customers/i, "customers"]];
+// Handles both shapes the form can produce. A `checkboxes` field renders as
+// "- [x] Label" lines, where only ticked ones count. A multi-select `dropdown`
+// renders the chosen labels on a single line — and that line cannot be split on
+// commas, because "Customers & pilots (design partners, procurement)" contains
+// one. For the dropdown the whole section is matched instead, which is safe
+// because it only ever contains the options the submitter actually picked.
 function parseChecked(section, words) {
+  const text = section || "";
   const out = [];
-  for (const line of (section || "").split("\n")) {
-    const m = line.match(/^- \[[xX]\] (.+)$/);
-    if (!m) continue;
-    for (const [re, v] of words) if (re.test(m[1]) && !out.includes(v)) out.push(v);
+  const take = (s) => { for (const [re, v] of words) if (re.test(s) && !out.includes(v)) out.push(v); };
+  if (/^- \[[ xX]\]/m.test(text)) {
+    for (const line of text.split("\n")) {
+      const m = line.match(/^- \[[xX]\] (.+)$/);
+      if (m) take(m[1]);
+    }
+  } else {
+    take(text);
   }
   return out;
 }

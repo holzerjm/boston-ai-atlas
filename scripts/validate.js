@@ -74,8 +74,13 @@ for (const d of DATA) {
   if (!Array.isArray(d.tags) || d.tags.length < 1) warn.push(`  ⚠ [${id}] no tags`);
   for (const s of d.stages || [])
     if (!validStages.has(s)) err(id, `invalid stage ${s} (valid: 1-5)`);
+  // Hard error, not a warning. offers is documented as required and every entry has
+  // it, but a warning let the suggestion bot emit a draft with the field omitted
+  // entirely: CI stayed green, and the only signal was a line in the job summary.
+  // An entry without offers is invisible to the Directory's "I need…" filter, which
+  // is the main way founders search, so it must not be mergeable.
   if (d.offers === undefined)
-    warn.push(`  ⚠ [${id}] missing offers — what does this org give founders? (funding, grants, space, compute, mentorship, community, talent, customers)`);
+    err(id, "missing offers — say what this org gives founders (funding, grants, space, compute, mentorship, community, talent, customers); it drives the \"I need…\" filter");
   // Cap is 6, not 4: a full-service accelerator genuinely provides space, mentorship,
   // community, funding, grants and customer intros, and the old cap of 4 made it
   // impossible to say so — which pushed maintainers toward tagging only the headline
