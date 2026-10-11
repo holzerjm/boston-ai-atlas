@@ -430,7 +430,7 @@ re-runs the robot automatically.
 
 ---
 
-## Appendix D — Considered and not listed
+## Appendix E — Considered and not listed
 
 Research passes keep rediscovering the same candidates. These were checked, found
 real, and still left off — recorded so the next pass doesn't redo the work, and so
