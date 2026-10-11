@@ -279,6 +279,7 @@ html:not(.dark) .cluster-chip{background:rgba(255,255,255,.95);color:#1c1a17;
 .meet-row{display:flex;align-items:baseline;gap:9px;font-size:13px;padding:5px 8px;border-radius:8px;background:rgba(148,163,255,.07)}
 .meet-row .m-kind{font-size:11px;color:var(--muted);text-transform:lowercase}
 .meet-row .m-dist{margin-left:auto;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.meet-sub{font-size:10.5px;text-transform:uppercase;letter-spacing:1.1px;color:var(--muted);margin:10px 0 5px}
 .meet-note{font-size:12px;color:var(--muted);line-height:1.5}
 .meet-btn{font:600 12.5px/1 inherit;font-family:inherit;padding:8px 13px;border-radius:999px;cursor:pointer;
   background:transparent;border:1px solid var(--line);color:var(--text)}
@@ -817,9 +818,23 @@ const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>
    Honest about its limits: the layer carries no opening hours, ratings or prices,
    POIs only exist in tiles at zoom 14+, and plenty of entries genuinely have
    nothing within walking distance. */
-const MEET_KINDS = { cafe:"café", restaurant:"restaurant", fast_food:"quick bite",
-  bakery:"bakery", bar:"bar", pub:"pub", ice_cream:"ice cream", food_court:"food court" };
-const MEET_RADIUS_M = 450;
+// Grouped, because "where can we talk" and "where can we eat" are different asks.
+// Keys are the poi layer's own class/subclass values, read off the live tiles
+// rather than guessed — OpenStreetMap has no coworking class of its own, so
+// office=coworking surfaces as the subclass below wherever mappers set it.
+const MEET_FOOD = { cafe:"café", bakery:"bakery", restaurant:"restaurant",
+  fast_food:"quick bite", food_court:"food court", ice_cream:"ice cream",
+  bar:"bar", pub:"pub", beer:"pub" };
+const MEET_QUIET = { library:"library", books:"bookshop", hotel:"hotel lobby",
+  coworking:"co-working" };
+const MEET_RADIUS_M = 450;              // about a five-minute walk
+const meetCache = new Map();            // entry id -> rendered html, for this session
+
+// US units: feet under a tenth of a mile, miles above it
+function walkDistance(m){
+  const ft = m * 3.28084;
+  return ft < 528 ? Math.round(ft / 10) * 10 + " ft" : (ft / 5280).toFixed(1) + " mi";
+}
 
 function metresBetween(aLat, aLng, bLat, bLng){
   const R = 6371000, r = Math.PI/180;
@@ -852,25 +867,34 @@ async function findMeetingPlaces(d, btn){
     const seen = new Map();
     for(const f of gl.querySourceFeatures("openmaptiles", {sourceLayer:"poi"})){
       const p = f.properties || {};
-      const kind = MEET_KINDS[p.subclass] || MEET_KINDS[p.class];
+      const food = MEET_FOOD[p.subclass] || MEET_FOOD[p.class];
+      const quiet = MEET_QUIET[p.subclass] || MEET_QUIET[p.class];
+      const kind = food || quiet;
       if(!p.name || !kind) continue;
       const g = f.geometry; if(!g || g.type !== "Point") continue;
       const m = Math.round(metresBetween(d.lat, d.lng, g.coordinates[1], g.coordinates[0]));
       if(m > MEET_RADIUS_M) continue;
       const k = p.name + "|" + kind;
-      if(!seen.has(k) || seen.get(k).m > m) seen.set(k, {name:p.name, kind, m});
+      if(!seen.has(k) || seen.get(k).m > m) seen.set(k, {name:p.name, kind, m, quiet:!food});
     }
-    const list = [...seen.values()].sort((a,b)=>a.m-b.m).slice(0, 6);
-    if(!list.length){
-      out.innerHTML = `<p class="meet-note">Nothing within a ${MEET_RADIUS_M} m walk in OpenStreetMap — ` +
+    const all = [...seen.values()].sort((a,b)=>a.m-b.m);
+    const rows = g => g.map(p =>
+      `<div class="meet-row"><span>${esc(p.name)}</span><span class="m-kind">${esc(p.kind)}</span>` +
+      `<span class="m-dist">${walkDistance(p.m)}</span></div>`).join("");
+    const food = all.filter(p => !p.quiet).slice(0, 5);
+    const quiet = all.filter(p => p.quiet).slice(0, 3);
+    let built;
+    if(!food.length && !quiet.length){
+      built = `<p class="meet-note">Nothing within a five-minute walk in OpenStreetMap — ` +
         `this one is likely a drive rather than a coffee.</p>`;
     } else {
-      out.innerHTML = `<div class="meet-list">` + list.map(p =>
-        `<div class="meet-row"><span>${esc(p.name)}</span><span class="m-kind">${esc(p.kind)}</span>` +
-        `<span class="m-dist">${p.m} m</span></div>`).join("") + `</div>` +
+      built = (food.length ? `<div class="meet-list">${rows(food)}</div>` : "") +
+        (quiet.length ? `<div class="meet-sub">Quieter options</div><div class="meet-list">${rows(quiet)}</div>` : "") +
         `<p class="meet-note">Walking distance from ${d.approx ? "this neighbourhood" : "the pin"}, ` +
         `from OpenStreetMap. No opening hours — check before you go.</p>`;
     }
+    meetCache.set(d.id, built);         // re-opening the entry shows it straight away
+    out.innerHTML = built;
     btn.remove();
   } catch(e){
     out.innerHTML = `<p class="meet-note">Couldn't look that up just now. The map needs to be loaded for this.</p>`;
@@ -896,9 +920,10 @@ function openDrawer(id){
     d.facts.map(f=>`<tr><td>${esc(f[0])}</td><td>${esc(f[1])}</td></tr>`).join("") + `</table>`;
   // Places to meet — rendered on demand, because it needs map tiles around this pin
   html += `<div class="dr-sec">Places to meet</div><div id="meetBox">` +
-    `<button type="button" class="meet-btn" id="meetBtn" aria-controls="meetOut">` +
-    `☕ Find places near ${esc(d.approx ? "this neighbourhood" : "here")}</button>` +
-    `<div id="meetOut" role="status" aria-live="polite"></div></div>`;
+    (meetCache.has(d.id) ? "" :
+      `<button type="button" class="meet-btn" id="meetBtn" aria-controls="meetOut">` +
+      `☕ Find places near ${esc(d.approx ? "this neighbourhood" : "here")}</button>`) +
+    `<div id="meetOut" role="status" aria-live="polite">${meetCache.get(d.id) || ""}</div></div>`;
   if(d.tags && d.tags.length) html += `<div class="dr-sec">Tags</div><div class="chips">` +
     d.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join(" ") + `</div>`;
   if(d.stages && d.stages.length) html += `<div class="dr-sec">Founder stages</div><div class="chips">` +
