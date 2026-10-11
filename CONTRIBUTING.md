@@ -83,8 +83,9 @@ unverifiable. When in doubt we mark things clearly rather than delete silently.
 
 - CI (`scripts/validate.js`) must pass: the JSON Schemas in `data/` (field types,
   MA coordinates, https links, …) plus unique ids, valid category, resolvable connections
-- One maintainer approval merges; a maintainer then publishes the update to the
-  live site (see [MAINTAINING.md](MAINTAINING.md), Part 3 — merging alone doesn't deploy)
+- One maintainer approval merges, and **merging is publishing**: a GitHub Action
+  re-checks the data and updates the live site within about a minute
+  (see [MAINTAINING.md](MAINTAINING.md), Part 3)
 - Maintainers stamp or refresh `lastVerified` whenever they verify an entry (accepting
   it, or resolving a flag) — it records when someone actually checked the org, not
   merely when the entry was last edited

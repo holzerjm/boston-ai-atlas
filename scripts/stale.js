@@ -30,7 +30,7 @@ for (const a of argv) {
 // --- Rota mode: the N least-recently-verified entries, oldest first ---
 // --cycle M sizes the rota from the dataset, so it keeps pace as the atlas grows.
 // A fixed --queue silently stops covering everything the moment entries outrun it:
-// at 199 entries a queue of 13 takes 15.3 months to come round, against a 12-month
+// at 197 entries a queue of 13 takes 15.2 months to come round, against a 12-month
 // freshness threshold, and nothing anywhere said so.
 const qi = argv.indexOf("--queue");
 const ci = argv.indexOf("--cycle");

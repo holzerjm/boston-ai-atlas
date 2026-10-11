@@ -12,16 +12,18 @@ MA AI Hub, Red Hat & IBM).
 
 [![A 14-second tour: the Map over the Boston area, an entry drawer, the whole-Commonwealth view, the Directory filtered to equity-free money, the Galaxy of connections, and the Founder Journey](docs/demo.gif)](https://the-open-accelerator.com/ecosystem/)
 
-**Four ways to explore 160+ verified organizations:**
+**Four ways to explore nearly 200 verified organizations:**
 
 - 🗺️ **Map** — every VC, lab, accelerator and community pinned across Massachusetts
 - ✨ **Galaxy** — an animated network of how the ecosystem connects (spinouts, funds, hosts)
 - 🧭 **Founder Journey** — resources curated by stage, from first spark to scale
 - 📇 **Directory** — full-text search with category and stage filters
 
-Every entry shows when a maintainer last verified it, and every entry and view is
-linkable — `?entry=csail` opens straight to an organization, `#galaxy` to a view
-(there's a 🔗 Copy link button in each entry's drawer).
+Each entry's drawer says what the organization offers founders, shows when a maintainer
+last verified it, and under **places to meet** lists the cafés, quick bites and quieter
+spots within a five-minute walk.
+Every entry and view is linkable — `?entry=csail` opens straight to an organization,
+`#galaxy` to a view (there's a 🔗 Copy link button in each entry's drawer).
 
 ## Run it
 

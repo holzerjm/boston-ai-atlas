@@ -29,12 +29,14 @@ detail. The design brief was: *same domain, far more engaging and useful.*
 | View | What it does |
 |------|--------------|
 | 🗺️ **Map** | Leaflet dark-tile map, one pin per org, colour-coded by category; searchable; legend doubles as category toggles |
-| ✨ **Galaxy** | Canvas force-directed graph — category hubs plus entity nodes, edges from `links` (112 cited edges as of 2026-08-30). Degree-weighted nodes, hover traces an org's constellation, hub hover lights its category, legend toggles, and a search box that centers + locks any org's neighborhood. Drag/zoom/click |
+| ✨ **Galaxy** | Canvas force-directed graph — category hubs plus entity nodes, edges from `links` (170 cited edges across 114 entries as of 2026-10-11). Degree-weighted nodes, hover traces an org's constellation, hub hover lights its category, legend toggles, and a search box that centers + locks any org's neighborhood. Drag/zoom/click |
 | 🧭 **Founder Journey** | 5 stages (Spark → Validate → Build → Fund → Scale); each shows curated tips plus every entry whose `stages` includes that number |
 | 📇 **Directory** | Card grid, full-text search, category chips, stage filter, sort |
 
 A detail **drawer** is shared by all views: description, "why it matters for founders",
-tags, stages, connected entries, website link, "show on map", and a **🚩 Flag** button.
+tags, stages, connected entries, website link, "show on map", **places to meet** (cafés,
+quick bites and quieter options within ~450 m, read from the basemap's OpenStreetMap
+points of interest on demand), and a **🚩 Flag** button.
 
 ---
 
@@ -44,7 +46,7 @@ Deliberately **buildless** — it must survive being copied into a static site a
 edited by non-developers.
 
 ```
-index.html          ~104KB  the entire app: HTML + CSS + vanilla JS in one file
+index.html          ~158KB  the entire app: HTML + CSS + vanilla JS in one file
 atlas-data.js               shared loader: parses data/*.yml, validates against the schemas
 data/entities.yml           DATA — the only file most contributors touch
 data/categories.yml         CATS
@@ -126,8 +128,9 @@ stamps it automatically). Powers the "✨ New" chips, the once-a-month new-orgs 
 and the Directory's "Recently added" sort. Validator warns if missing, errors if
 malformed or future. Full reference: `CONTRIBUTING.md`; enforced by `data/entities.schema.yml` + `scripts/validate.js`.
 
-**Current composition (171 entries):** vc 49 · startup 28 · accel 18 · student 13 ·
-university 12 · corporate 12 · gov 9 · space 8 · event 8 · angel 7 · community 7.
+**Current composition (197 entries, 2026-10-11):** vc 48 · startup 35 · accel 20 ·
+university 19 · corporate 19 · student 13 · space 10 · gov 9 · community 9 · event 8 ·
+angel 7.
 (Startup bar raised 15 → 28 on 2026-09-01: a 20-candidate research list was independently
 verified by a 4-agent workflow — 13 passed, 4 held, 1 skipped for NYC HQ, 2 were dupes.)
 
@@ -180,8 +183,9 @@ opens a **draft PR** with a review checklist. It never publishes (merge does tha
 - **Token:** a GitHub App (`ATLAS_APP_ID` + `ATLAS_APP_PRIVATE_KEY`, Contents RW + PRs RW)
   — preferred — or a repo-scoped fine-grained PAT (`ATLAS_BOT_PAT`). Must be the bot token,
   not `GITHUB_TOKEN`, so `validate.yml` runs on the bot's PR (GitHub's recursion guard).
-- Optional hardening not yet applied: branch protection on `main` requiring review. ⚠️
-  Would also block the `badge` job's direct push — carve out `github-actions[bot]` first.
+- **Applied:** the `Protect main` ruleset (id 24857657) requires the `validate` status
+  check and blocks deletion and force-pushes. Requiring a review is still optional and
+  not enabled. Nothing automated pushes to `main`, which is what makes this possible.
 
 ### CI (`.github/workflows/validate.yml`)
 
@@ -259,8 +263,9 @@ GitHub Pages copy exists.
 
 ## 6. Status & known gaps
 
-**Done:** four views · 171 verified entries · TOA branding · GitHub contribution loop ·
-CI validation + auto badge · auto-deploy on merge + Slack notifications · suggestion bot
+**Done:** four views · 197 verified entries · TOA branding · GitHub contribution loop ·
+CI validation + live count shield · `validate` as a required status check on `main` ·
+auto-deploy on merge + Slack notifications · suggestion bot
 (issue → draft PR) · maintainer docs · CSV export · `lastVerified` freshness field + stale
 report · shareable deep links (`?entry=` / `#view`) · HTML-escaped rendering · MIT licence ·
 OpenFreeMap vector basemap (repo-owned dark style) · guided tour · Galaxy search + focus ·

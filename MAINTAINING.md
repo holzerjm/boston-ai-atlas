@@ -32,7 +32,8 @@ There are two ways new information arrives:
   CI). It catches the most common mistakes — duplicate names, bad coordinates,
   missing fields — and shows a green ✓ or a red ✗. You do **not** have to memorize the
   rules; the robot is your safety net.
-- Nothing goes to the public website until **you publish it** (Part 3).
+- **Merging is publishing.** The moment a pull request lands on `main`, a GitHub Action
+  re-checks the data and updates the live site — there is no separate publish step (Part 3).
 
 ---
 
@@ -216,7 +217,7 @@ contribution).
 ## Part 3 — Publish to the live site
 
 **Publishing is automatic.** When a change to `index.html` or `data/` lands on
-`main` (i.e. when you merge a PR, or the robot pushes the badge), a GitHub Action
+`main` (i.e. when you merge a PR), a GitHub Action
 re-checks the data and copies the files to the web server. Within about a minute
 the public atlas at **the-open-accelerator.com/ecosystem** shows the change, and a
 summary lands in the TOA Slack channel (what deployed, which entries are new or
@@ -263,7 +264,7 @@ To keep those honest, do a small sweep about once a month:
    in **one PR**.
 
 `--cycle 12` sizes that list from the dataset, so it keeps pace as the atlas grows:
-every entry comes round within a year without anyone re-tuning a number. At 198
+every entry comes round within a year without anyone re-tuning a number. At 197
 entries that is **17 re-checks a month, about half an hour**. A fixed `--queue`
 quietly stops covering everything as soon as entries outrun it — at 13 a month it
 would now take **15 months** to come round, against a 12-month threshold.
