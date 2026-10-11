@@ -275,6 +275,15 @@ html:not(.dark) .cluster-chip{background:rgba(255,255,255,.95);color:#1c1a17;
 .dr-why{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--cc,#60a5fa);border-radius:10px;padding:13px 15px;margin-bottom:18px}
 .dr-why b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:#9fb4ff;margin-bottom:5px}
 .dr-why div{font-size:13px;line-height:1.55;color:#c4cdf0}
+.meet-list{display:flex;flex-direction:column;gap:6px}
+.meet-row{display:flex;align-items:baseline;gap:9px;font-size:13px;padding:5px 8px;border-radius:8px;background:rgba(148,163,255,.07)}
+.meet-row .m-kind{font-size:11px;color:var(--muted);text-transform:lowercase}
+.meet-row .m-dist{margin-left:auto;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.meet-note{font-size:12px;color:var(--muted);line-height:1.5}
+.meet-btn{font:600 12.5px/1 inherit;font-family:inherit;padding:8px 13px;border-radius:999px;cursor:pointer;
+  background:transparent;border:1px solid var(--line);color:var(--text)}
+.meet-btn:hover{border-color:var(--gold);color:var(--gold-ink)}
+.meet-btn[disabled]{opacity:.6;cursor:default}
 .dr-sec{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin:18px 0 9px}
 .map-home{font-size:18px;line-height:26px}
 .map-cluster-toggle{font-size:17px;line-height:26px;letter-spacing:-1px}
@@ -799,6 +808,77 @@ const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>
   .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 
 /* ---------- detail drawer ---------- */
+/* ---------- places to meet ----------
+   OpenStreetMap already ships cafés and restaurants inside the vector tiles this
+   page downloads for the map, as a "poi" source-layer the style simply doesn't
+   draw. So this needs no API key, no backend and no third-party call — and it
+   searches around the ENTRY's pin, never the visitor's location, so nothing ever
+   asks for a geolocation permission.
+   Honest about its limits: the layer carries no opening hours, ratings or prices,
+   POIs only exist in tiles at zoom 14+, and plenty of entries genuinely have
+   nothing within walking distance. */
+const MEET_KINDS = { cafe:"café", restaurant:"restaurant", fast_food:"quick bite",
+  bakery:"bakery", bar:"bar", pub:"pub", ice_cream:"ice cream", food_court:"food court" };
+const MEET_RADIUS_M = 450;
+
+function metresBetween(aLat, aLng, bLat, bLng){
+  const R = 6371000, r = Math.PI/180;
+  const dLat = (bLat-aLat)*r, dLng = (bLng-aLng)*r;
+  const h = Math.sin(dLat/2)**2 + Math.cos(aLat*r)*Math.cos(bLat*r)*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+function glHandle(){
+  for(const l of Object.values(map._layers || {}))
+    if(l.getMaplibreMap) return l.getMaplibreMap();
+    else if(l._glMap) return l._glMap;
+  return null;
+}
+async function findMeetingPlaces(d, btn){
+  const out = $("meetOut"); if(!out) return;
+  btn.disabled = true; btn.textContent = "Looking…";
+  out.innerHTML = "";
+  try{
+    const gl = glHandle();
+    if(!gl) throw new Error("no-map");
+    // POIs only exist in tiles from z14; bring the map to the pin and let them load
+    const before = map.getZoom();
+    if(before < 16 || metresBetween(map.getCenter().lat, map.getCenter().lng, d.lat, d.lng) > 600)
+      map.setView([d.lat, d.lng], 16);
+    await new Promise(r => {
+      let done = false;
+      const finish = () => { if(done) return; done = true; gl.off("idle", finish); r(); };
+      gl.on("idle", finish); setTimeout(finish, 3500);
+    });
+    const seen = new Map();
+    for(const f of gl.querySourceFeatures("openmaptiles", {sourceLayer:"poi"})){
+      const p = f.properties || {};
+      const kind = MEET_KINDS[p.subclass] || MEET_KINDS[p.class];
+      if(!p.name || !kind) continue;
+      const g = f.geometry; if(!g || g.type !== "Point") continue;
+      const m = Math.round(metresBetween(d.lat, d.lng, g.coordinates[1], g.coordinates[0]));
+      if(m > MEET_RADIUS_M) continue;
+      const k = p.name + "|" + kind;
+      if(!seen.has(k) || seen.get(k).m > m) seen.set(k, {name:p.name, kind, m});
+    }
+    const list = [...seen.values()].sort((a,b)=>a.m-b.m).slice(0, 6);
+    if(!list.length){
+      out.innerHTML = `<p class="meet-note">Nothing within a ${MEET_RADIUS_M} m walk in OpenStreetMap — ` +
+        `this one is likely a drive rather than a coffee.</p>`;
+    } else {
+      out.innerHTML = `<div class="meet-list">` + list.map(p =>
+        `<div class="meet-row"><span>${esc(p.name)}</span><span class="m-kind">${esc(p.kind)}</span>` +
+        `<span class="m-dist">${p.m} m</span></div>`).join("") + `</div>` +
+        `<p class="meet-note">Walking distance from ${d.approx ? "this neighbourhood" : "the pin"}, ` +
+        `from OpenStreetMap. No opening hours — check before you go.</p>`;
+    }
+    btn.remove();
+  } catch(e){
+    out.innerHTML = `<p class="meet-note">Couldn't look that up just now. The map needs to be loaded for this.</p>`;
+    btn.disabled = false; btn.textContent = "Try again";
+  }
+}
+window.findMeetingPlaces = findMeetingPlaces;
+
 function openDrawer(id){
   const d = byId[id]; if(!d) return;
   const col = cColor(d.cat);
@@ -814,6 +894,11 @@ function openDrawer(id){
     d.offers.map(o=>OFFERS_META[o]).filter(Boolean).map(m=>`<span class="tag offer-tag">${m.icon} ${m.label}</span>`).join(" ") + `</div>`;
   if(d.facts && d.facts.length) html += `<div class="dr-sec">At a glance</div><table class="dr-facts">` +
     d.facts.map(f=>`<tr><td>${esc(f[0])}</td><td>${esc(f[1])}</td></tr>`).join("") + `</table>`;
+  // Places to meet — rendered on demand, because it needs map tiles around this pin
+  html += `<div class="dr-sec">Places to meet</div><div id="meetBox">` +
+    `<button type="button" class="meet-btn" id="meetBtn" aria-controls="meetOut">` +
+    `☕ Find places near ${esc(d.approx ? "this neighbourhood" : "here")}</button>` +
+    `<div id="meetOut" role="status" aria-live="polite"></div></div>`;
   if(d.tags && d.tags.length) html += `<div class="dr-sec">Tags</div><div class="chips">` +
     d.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join(" ") + `</div>`;
   if(d.stages && d.stages.length) html += `<div class="dr-sec">Founder stages</div><div class="chips">` +
@@ -834,6 +919,7 @@ function openDrawer(id){
     <button class="btn btn-sec" onclick="flagEntry('${d.id}')" title="Report this entry as outdated, miscategorized, or no longer active">🚩 Flag</button>
   </div>`;
   $("drBody").innerHTML = html;
+  const mb = $("meetBtn"); if(mb) mb.addEventListener("click", ()=>findMeetingPlaces(d, mb));
   $("drawer").classList.add("open");
   $("overlay").classList.add("on");
   drawerId = d.id;
