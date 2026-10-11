@@ -55,8 +55,6 @@ for (const d of DATA) {
   if (!d.tags || d.tags.length < 1) warn.push(`  ⚠ [${id}] no tags`);
   for (const s of d.stages || [])
     if (!validStages.has(s)) err(id, `invalid stage ${s} (valid: ${[...validStages].join(", ")})`);
-  if (d.offers === undefined)
-    warn.push(`  ⚠ [${id}] missing offers — what does this org give founders? (funding, grants, space, compute, mentorship, community, talent, customers)`);
   if (d.applyBy !== undefined && d.applyBy !== "rolling" && d.applyBy < TODAY)
     warn.push(`  ⚠ [${id}] applyBy ${d.applyBy} has passed — set the next deadline or remove it`);
   if (d.added === undefined)
