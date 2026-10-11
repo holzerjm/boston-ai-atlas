@@ -1,7 +1,7 @@
 # Mass AI Atlas
 
 [![Validate atlas data](https://github.com/holzerjm/boston-ai-atlas/actions/workflows/validate.yml/badge.svg)](https://github.com/holzerjm/boston-ai-atlas/actions/workflows/validate.yml)
-[![Organizations](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fholzerjm%2Fboston-ai-atlas%2Fmain%2Fbadge.json)](data/entities.yml)
+[![Organizations](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fthe-open-accelerator.com%2Fecosystem%2Fatlas.json&query=%24.total&label=organizations&color=60a5fa)](data/entities.yml)
 [![Live site](https://img.shields.io/badge/live-the--open--accelerator.com%2Fecosystem-EE0000)](https://the-open-accelerator.com/ecosystem/)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-4ade80)](CONTRIBUTING.md)
 [![The Open Accelerator](https://img.shields.io/badge/by-The%20Open%20Accelerator-EE0000)](https://the-open-accelerator.com)
@@ -93,7 +93,6 @@ map-style-dark.json               the dark basemap style (OpenFreeMap fiord + ou
 scripts/validate.js               schema + integrity validation (runs in CI and locally)
 scripts/load-data.js              Node wrapper around atlas-data.js — scripts load data via this
 test/data-refactor-equivalence.test.js  one-time check that data/ matches the old data.js
-scripts/badge.js                  regenerates badge.json (entry count — CI runs it on merge)
 scripts/stale.js                  freshness report — entries longest unverified
 scripts/export-csv.js             export the dataset to a spreadsheet-friendly CSV
 scripts/issue-to-entry.js         the suggestion bot's form parser / entry builder

@@ -188,9 +188,9 @@ opens a **draft PR** with a review checklist. It never publishes (merge does tha
 - `validate` job — runs `npm ci` + `scripts/validate.js` on every PR (no path filter, so
   it can be a required check) and on pushes to `main` touching `data/`, `scripts/`,
   `atlas-data.js` or the npm manifests. This is the safety net non-technical maintainers rely on.
-- `badge` job — on push to `main`, regenerates `badge.json` (entry-count shield) and
-  commits it as `github-actions[bot]`. ⚠️ If branch protection is ever enabled on `main`,
-  allow the bot to push or this job fails.
+- The entry-count shield reads `total` straight from the deployed `atlas.json`; there is no
+  badge job and nothing automated pushes to `main`, which is what lets `validate` be a
+  required status check.
 
 ### Scripts
 
@@ -198,7 +198,6 @@ opens a **draft PR** with a review checklist. It never publishes (merge does tha
 |--------|---------|
 | `scripts/validate.js` | Schema + integrity validation. Run before every commit. |
 | `scripts/load-data.js` | Node side of `atlas-data.js`: `loadData()` returns `{CATS, STAGES, DATA}` (throws on schema errors). Every script loads data through it. |
-| `scripts/badge.js` | Regenerates `badge.json`. CI runs it; safe to run locally. |
 | `scripts/stale.js` | Freshness report (`lastVerified` older than N months, default 12); `--queue N` prints the monthly verification rota. Never fails; CI appends it to the job summary. |
 | `scripts/linkcheck.js` | Link-rot checker — probes every entry URL, classifies broken/moved/blocked. A report, always exits 0. Run monthly by `monthly-health.yml` (with the rota), posted to Slack. |
 | `scripts/fetch-events.js` | Builds `events.json` (gitignored) for **/ecosystem/events/** — Boston AI events, next 10 days, from Luma calendar ICS feeds (`events-sources.json`), Luma's discover API (best-effort, undocumented), AI Tinkerers (`llms-full.txt` + JSON-LD, per their agents.md), and `events-manual.json`. Runs Mondays 7am ET via `weekly-events.yml`, started by a cron on the origin server (`scripts/trigger-weekly-events.sh`, fine-grained token on `toa-forge`) because GitHub's scheduler delivered this repo's crons hours late or not at all; GitHub crons remain as Mon/Tue/Wed fallbacks behind a Monday-anchored idempotent gate (a run does the work only if it is past 7am Eastern on the latest Monday and the live `events.json` was not regenerated since; a manual run passes `force=true` to skip it); a sanity check refuses to ship a broken refresh (most sources failed), a Verify step fails the run if the live file does not show it, and a Slack rejection is red, not silent; the workflow then rsyncs the JSON and posts to the Scouts Slack (`SLACK_SCOUTS_WEBHOOK_URL`). The static page `events/index.html` deploys with the atlas; suggestions arrive via `suggest-event.yml` (label `event-suggestion`). Builds on nkpng2k/startup-event-scraper (Apache-2.0, credited). Full maintainer guide: `docs/events-guide.md`. |
@@ -299,7 +298,7 @@ community submissions, no user accounts.
 - Repo root is the working directory; `main` is the only long-lived branch.
 - **Always run `node scripts/validate.js` after touching `data/`** — same check CI runs
   (`npm ci` once first).
-- Regenerate the badge (`node scripts/badge.js`) if you change the entry count locally,
+- The entry-count shield reads `total` from the deployed `atlas.json`, so it follows a deploy on its own,
   or just let CI do it on merge.
 - Commit messages that close a suggestion should say `closes #NN` — it auto-closes the
   issue and links the commit for the contributor.
