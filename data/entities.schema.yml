@@ -10,6 +10,9 @@ description: >-
 type: array
 items:
   type: object
+  # offers is required, not just encouraged: an entry without it is invisible to
+  # the Directory's "I need…" filter, the main way founders search, so it must not
+  # be mergeable (a warning once let the suggestion bot emit drafts without it)
   required: [id, name, cat, loc, lat, lng, url, desc, offers]
   additionalProperties: false
   properties:

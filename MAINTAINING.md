@@ -246,9 +246,9 @@ org is real, active, and the entry's facts are right.
 > **The robot starts this for you.** On the 1st of each month, the "Monthly health
 > check" action posts two lists to the TOA Slack: URLs that are **broken or have
 > moved** (fix these first — a dead link on a "verified" atlas is the worst look),
-> and the ~13 entries longest without a check — your 20-minute queue. The same
+> and the entries longest without a check — your queue for the month. The same
 > report is in the action's job summary, or run it yourself:
-> `node scripts/linkcheck.js` and `node scripts/stale.js --queue 13`.
+> `node scripts/linkcheck.js` and `node scripts/stale.js --cycle 12`.
 
 To keep those honest, do a small sweep about once a month:
 
@@ -260,8 +260,11 @@ To keep those honest, do a small sweep about once a month:
 3. Bump `lastVerified` to the current month for each one you checked, and put them all
    in **one PR**.
 
-With ~123 entries on a 12-month cycle, that's roughly **10 re-checks a month — a
-20–30 minute session**.
+`--cycle 12` sizes that list from the dataset, so it keeps pace as the atlas grows:
+every entry comes round within a year without anyone re-tuning a number. At 198
+entries that is **17 re-checks a month, about half an hour**. A fixed `--queue`
+quietly stops covering everything as soon as entries outrun it — at 13 a month it
+would now take **15 months** to come round, against a 12-month threshold.
 
 ---
 
@@ -285,7 +288,7 @@ Every entry has these fields. ⭐ = required.
 | `tags` |  | 2–4 short lowercase tags. | `[robotics, lab space]` |
 | `stages` |  | Which founder stages it serves — **numbers**, see table below. | `[1, 3]` |
 | `links` |  | `id`s of related entries (draws lines in the Galaxy view). Optional. | `[csail, engine]` |
-| `offers` |  | What founders **get**, 1–6 of: `funding` (invests) · `grants` (equity-free money) · `space` · `compute` · `mentorship` · `community` · `talent` · `customers` (pilots/buyers). **Tag everything the org materially provides to an early-stage founder, not just its headline offering** — an accelerator that gives space, mentoring and a check should carry all three, or the "I need…" filter matches on less than the truth. Powers that filter; the suggestion form asks it as checkboxes. | `[funding, mentorship]` |
+| `offers` | ⭐ | What founders **get**, 1–6 of: `funding` (invests) · `grants` (equity-free money) · `space` · `compute` · `mentorship` · `community` · `talent` · `customers` (pilots/buyers). **Tag everything the org materially provides to an early-stage founder, not just its headline offering** — an accelerator that gives space, mentoring and a check should carry all three, or the "I need…" filter matches on less than the truth. Powers that filter; the suggestion form asks it as a required multi-select, and the validator errors if it is missing. | `[funding, mentorship]` |
 | `applyBy` |  | `rolling`, or the **current application deadline** as `'YYYY-MM-DD'`. Shows "Applications open" in the app; past dates auto-hide and the robot warns so you clear or roll them. Only for orgs with a real application (accelerators, grants, programs). | `'2026-10-15'` |
 | `applyNote` |  | Short label next to the deadline, max 40 chars. | `Fall 2026 cohort` |
 | `facts` |  | Optional "at a glance" table, 1–6 `[label, value]` rows. Labels must be one of: Check size, Stage, Terms, Equity, Board seat, Program length, Cohort size, Focus. Facts rot — only add ones you'd bet on, and re-check them at `lastVerified` time. | `[[Check size, $500K–$2M]]` |
@@ -424,6 +427,33 @@ pattern …`. Common ones:
 
 You can re-run the check just by editing the file again and committing — every commit
 re-runs the robot automatically.
+
+---
+
+## Appendix D — Considered and not listed
+
+Research passes keep rediscovering the same candidates. These were checked, found
+real, and still left off — recorded so the next pass doesn't redo the work, and so
+the reasoning is open rather than a silent judgment.
+
+| Org | Why not |
+|---|---|
+| **EforAll** (formerly Merrimack Valley Sandbox) | A general small-business accelerator, free and equity-free, but not AI or tech, and since going fully online it is open to anyone in the US. Its Lowell address is an office, with no local cohort or workspace. Listing it would make the atlas a general business-support directory. |
+| **Keva Health** | Real, active, Lexington. But it never describes itself as an AI company — the claim rests on a 2022 listing in a programme that helps non-AI companies *adopt* AI. Revisit if it publishes its ML work. |
+| **NineTwoThree AI Studio** | Every fact checked out; it is a paid AI development agency. The atlas lists places a founder can get something — funding, space, compute, mentorship, community, talent, customers — not vendors who sell to them. Admitting one agency admits every dev shop in Boston. |
+| **Lux Capital** | Listed until October 2026, then removed: its own contact page says New York and Silicon Valley, and no Massachusetts office could be found. It backs Massachusetts companies, but so do dozens of out-of-state funds; a pin implies a presence. |
+| **Y Combinator (Boston alumni)** | Listed until October 2026, then removed. Not an organisation with a Massachusetts presence but a category of founders: its `loc` read "Remote / SF (Boston-based founders)" and its `url` was a filtered list of YC companies rather than a front door. YC alumni belong in the atlas as their own entries — several already are. |
+
+The rules those add up to:
+
+- **A pin implies a presence.** An investor or company with no Massachusetts office
+  does not get one, however active it is here.
+- **AI has to be the org's own claim**, not an inference from one programme listing.
+- **The atlas lists what a founder can get, not who sells to them.** Agencies,
+  consultancies and vendors are out as a class.
+- **Being real and useful is not enough** — it also has to be AI-relevant and
+  Massachusetts-based. Say so plainly when declining; a contributor who gets a
+  reason can argue with it.
 
 ---
 

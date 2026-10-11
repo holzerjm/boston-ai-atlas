@@ -51,6 +51,11 @@ for (const d of DATA) {
   for (const t of d.tags || [])
     if (!TAGS.has(t))
       warn.push(`  ⚠ [${id}] tag ${JSON.stringify(t)} is not in the canonical vocabulary (see scripts/validate.js)`);
+  // loc is "street, city" — the state is implied by the atlas and never written out.
+  // Warn only: the suggestion bot builds loc from free text, so a contributor
+  // typing "Cambridge, MA" should get a nudge, not a red build.
+  if (/,\s*(MA|Mass|Massachusetts)\.?$/i.test(d.loc))
+    warn.push(`  ⚠ [${id}] loc ends in ", MA" — the atlas writes "street, city" and leaves the state implied`);
   if (!d.why) warn.push(`  ⚠ [${id}] missing "why it matters" — strongly encouraged`);
   if (!d.tags || d.tags.length < 1) warn.push(`  ⚠ [${id}] no tags`);
   for (const s of d.stages || [])

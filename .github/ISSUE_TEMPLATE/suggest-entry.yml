@@ -73,20 +73,23 @@ body:
         - label: "🔧 Build — team, space & compute"
         - label: "💸 Fund — raise your first round"
         - label: "🚀 Scale — grow & lead"
-  - type: checkboxes
+  - type: dropdown
     id: offers
     attributes:
       label: What does it offer founders?
-      description: "Pick what the organization actually gives an early-stage founder"
+      description: "Pick everything the organization actually gives an early-stage founder — at least one. This drives the Directory's \"I need…\" filter, so an entry without it cannot be found by founders searching for help."
+      multiple: true
       options:
-        - label: "💸 Funding (writes checks / invests)"
-        - label: "🎁 Equity-free money (grants, non-dilutive awards)"
-        - label: "🏢 Space (labs, coworking, makerspace)"
-        - label: "🖥️ Compute (GPU/HPC access)"
-        - label: "🧭 Mentorship (structured advising or programs)"
-        - label: "🤝 Community (peer network, meetups)"
-        - label: "🧑‍💻 Talent (hiring or co-founder pipeline)"
-        - label: "🛒 Customers & pilots (design partners, procurement)"
+        - "💸 Funding (writes checks / invests)"
+        - "🎁 Equity-free money (grants, non-dilutive awards)"
+        - "🏢 Space (labs, coworking, makerspace)"
+        - "🖥️ Compute (GPU/HPC access)"
+        - "🧭 Mentorship (structured advising or programs)"
+        - "🤝 Community (peer network, meetups)"
+        - "🧑‍💻 Talent (hiring or co-founder pipeline)"
+        - "🛒 Customers & pilots (design partners, procurement)"
+    validations:
+      required: true
   - type: input
     id: tags
     attributes:

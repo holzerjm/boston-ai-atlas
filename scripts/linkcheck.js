@@ -23,7 +23,11 @@ const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ""); } 
 // to every path including its own root and a nonsense path; it loads fine in a real
 // browser. Without this, it reports BROKEN every month and trains us to skim the
 // report. Verified by hand 2026-09-21 — drop a host from here if it starts behaving.
-const BOT_WALLED = new Set(["metacareers.com", "meta.com"]);
+// Hosts that refuse automated requests outright — each verified by hand in a real
+// browser, so a 403 or a dropped connection from them says nothing about the link.
+// Listed so the monthly report does not cry wolf on entries we just checked.
+const BOT_WALLED = new Set(["metacareers.com", "meta.com",
+  "mitre.org", "analog.com", "evolv.com"]);
 
 async function probe(url) {
   const ctl = new AbortController();
@@ -40,6 +44,10 @@ async function probe(url) {
     return { cls: "ok" };
   } catch (e) {
     clearTimeout(timer);
+    // Some bot walls drop the connection instead of answering 403, so the
+    // allowance has to apply here too or the host still reports as broken.
+    if (BOT_WALLED.has(host(url)))
+      return { cls: "blocked", note: "connection refused — host refuses all bots" };
     return { cls: "error", note: e.name === "AbortError" ? "timeout" : (e.cause?.code || e.message) };
   }
 }
