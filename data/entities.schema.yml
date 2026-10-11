@@ -10,7 +10,7 @@ description: >-
 type: array
 items:
   type: object
-  required: [id, name, cat, loc, lat, lng, url, desc]
+  required: [id, name, cat, loc, lat, lng, url, desc, offers]
   additionalProperties: false
   properties:
     id:
