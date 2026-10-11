@@ -3,8 +3,7 @@
   "private": true,
   "description": "Mass AI Atlas — community dataset and site scripts",
   "scripts": {
-    "validate": "node scripts/validate.js",
-    "build:data": "node scripts/build-data-js.js"
+    "validate": "node scripts/validate.js"
   },
   "dependencies": {
     "ajv": "8.20.0",
