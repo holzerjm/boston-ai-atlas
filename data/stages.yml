@@ -7,7 +7,7 @@
   t: Spark
   s: Learn & plug in
   icon: 💡
-  desc: 'You''re curious about AI or just landed in Boston. Goal: build technical depth and a local network before you need either. Boston''s superpower is that world-class AI research is open to the public almost every week.'
+  desc: 'You''re curious about AI or new to the state. Goal: build technical depth and a local network before you need either. Massachusetts'' superpower is that world-class AI research is open to the public almost every week.'
   tips:
     - [Show up Thursday, Venture Café Cambridge runs free weekly gatherings — the single fastest way to meet the ecosystem.]
     - [Demo culture, 'AI Tinkerers and Sundai Club are hands-on: people show what they built. Go watch, then show something.']
@@ -16,16 +16,16 @@
   t: Validate
   s: Test the idea
   icon: 🔬
-  desc: You have an idea and need brutal, useful feedback. Boston's mentor infrastructure is unusually generous — much of it free and equity-free.
+  desc: You have an idea and need brutal, useful feedback. Massachusetts' mentor infrastructure is unusually generous — much of it free and equity-free.
   tips:
     - [Free mentors, MIT VMS gives team-based mentoring at no cost and takes no equity — alumni connections help but aren't always required at other programs.]
     - ['Pitch early, pitch ugly', Angel groups and open pitch nights will pressure-test your story long before you raise.]
-    - [Talk to 50 users, 'Boston is dense with early adopters in health, robotics, biotech, fintech and edtech — your first design partners are on the Red Line.']
+    - [Talk to 50 users, 'Massachusetts is dense with early adopters in health, robotics, biotech, fintech and edtech — from the Longwood hospitals to Worcester''s manufacturers, your first design partners are already in the state.']
 - 'n': 3
   t: Build
   s: Team, space & compute
   icon: 🔧
-  desc: 'Time to make the thing. You need cofounders, space, GPUs, and a prototype. Hackathons are Boston''s #1 cofounder matching engine, and the state now subsidizes AI compute.'
+  desc: 'Time to make the thing. You need cofounders, space, GPUs, and a prototype. Hackathons are Massachusetts'' #1 cofounder matching engine, and the state now subsidizes AI compute.'
   tips:
     - [Compute is cheaper here, 'The Mass AI Hub''s AICR environment at MGHPCC offers high-performance compute for startups, and The Open Accelerator residency bundles workspace, mentorship and GPU access — apply before buying cloud credits.']
     - [Hardware? MassRobotics., 'If your AI touches the physical world, MassRobotics has shared lab space and equipment that would cost you millions.']
@@ -34,16 +34,16 @@
   t: Fund
   s: Raise your first round
   icon: 💸
-  desc: Pre-seed and seed. Boston has more equity-free money than almost any city — exhaust grants, prizes and accelerators before selling equity.
+  desc: Pre-seed and seed. Massachusetts has more equity-free money than almost any state — exhaust grants, prizes and accelerators before selling equity.
   tips:
     - [Equity-free first, 'MassChallenge (up to $1M in prizes), delta v ($20K), and state grant programs dilute you 0%.']
     - [AI-native checks, 'Glasswing, Hyperplane, Converge and Flybridge write seed checks specifically on AI theses — speak their language.']
-    - [Angels open doors, Boston angel groups syndicate together; one warm intro often cascades to four groups.]
+    - [Angels open doors, Massachusetts angel groups syndicate together; one warm intro often cascades to four groups.]
 - 'n': 5
   t: Scale
   s: Grow & lead
   icon: 🚀
-  desc: Product-market fit is emerging; now compound. Boston's late-stage capital, corporate partners and talent pipeline are your levers — and the ecosystem rewards founders who give back.
+  desc: Product-market fit is emerging; now compound. Massachusetts' late-stage capital, corporate partners and talent pipeline are your levers — and the ecosystem rewards founders who give back.
   tips:
     - [Corporate design partners, 'Google, Microsoft, Meta, IBM and Amazon all run Kendall-area labs with partner programs — land lighthouse customers locally.']
     - [Own a stage, Boston AI Week (Sept–Oct) and ODSC East are where the ecosystem looks for its next champions.]

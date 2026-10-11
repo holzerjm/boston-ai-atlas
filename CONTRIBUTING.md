@@ -1,6 +1,6 @@
 # Contributing to the Mass AI Atlas
 
-Thanks for keeping Boston's AI map alive. Two ways to contribute, pick your comfort level:
+Thanks for keeping Massachusetts' AI map alive. Two ways to contribute, pick your comfort level:
 
 ## 1. No Git required
 
