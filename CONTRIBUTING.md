@@ -2,6 +2,10 @@
 
 Thanks for keeping Massachusetts' AI map alive. Two ways to contribute, pick your comfort level:
 
+Taking part means following our [code of conduct](CODE_OF_CONDUCT.md). Found a security
+problem rather than a wrong entry? See [SECURITY.md](SECURITY.md) — do not open a public
+issue for it.
+
 ## 1. No Git required
 
 - **Suggest a new entry:** [open a suggestion form](../../issues/new?template=suggest-entry.yml)
