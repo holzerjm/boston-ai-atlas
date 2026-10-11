@@ -7,7 +7,7 @@ a web browser on github.com. **Time:** about 10–15 minutes per entry.
 > flag handling, troubleshooting) see [`MAINTAINING.md`](../MAINTAINING.md).
 
 When someone fills in the **"➕ Suggest an entry"** form, it becomes a GitHub *issue* — a
-wish-list note. Your job is to turn it into a real entry in the file `data.js` and save it
+wish-list note. Your job is to turn it into a real entry in the file `data/entities.yml` and save it
 as a *pull request* (a proposed change). Here's how, start to finish.
 
 ---
@@ -34,48 +34,62 @@ The form gives you an **address** but not the map coordinates. Get them in 20 se
 
 Copy this template into a notes app and replace the blanks:
 
-```js
-{id:"", name:"", cat:"", loc:"",
- lat:0, lng:0, url:"https://",
- desc:"",
- why:"",
- tags:[], stages:[], links:[],
- added:"", lastVerified:""},
+```yaml
+- id: 
+  name: 
+  cat: 
+  loc: 
+  lat: 0
+  lng: 0
+  url: https://
+  desc: 
+  why: 
+  tags: []
+  stages: []
+  links: []
+  added: 
+  lastVerified: 
 ```
+
+> **YAML tips.** Keep the shape exactly: `- id:` at the very start of the line, every
+> other field indented by **two spaces**, no commas at line ends. Text needs no quotes —
+> *unless* it contains a colon followed by a space (`: `) or ` #`, or starts with a quote,
+> bracket, `&`, `*`, `!`, `|`, `>`, `%` or `@`. Then wrap the whole value in double
+> quotes, e.g. `name: "Acme: The AI Lab"`.
 
 | Field | What to put |
 |------|-------------|
 | `id` | A short nickname in **lowercase-with-hyphens** you invent from the name (e.g. `Acme AI` → `acme-ai`). Must be unique. |
-| `name` | The display name, in quotes. |
+| `name` | The display name. |
 | `cat` | The category **code** — translate the form's label with the table below. |
-| `loc` | The street address (or neighborhood) in quotes. |
-| `lat`, `lng` | The two numbers from Step 2 (no quotes). |
+| `loc` | The street address (or neighborhood). |
+| `lat`, `lng` | The two numbers from Step 2. |
 | `url` | The website. **Must start with `https://`** |
 | `desc` | 1–2 plain, factual sentences (max 400 characters). Trim any marketing language. |
 | `why` | One sentence: why an early-stage founder should care. |
-| `tags` | 2–4 short lowercase tags, each in quotes: `["robotics","lab space"]` |
-| `stages` | The founder stages it serves, as **numbers** — see the table below: `[1,3]` |
+| `tags` | 2–4 short lowercase tags, in square brackets: `[robotics, lab space]` |
+| `stages` | The founder stages it serves, as **numbers** — see the table below: `[1, 3]` |
 | `links` | Usually leave as `[]`. (Advanced: ids of related entries.) |
-| `added` | Today's month as `"YYYY-MM"` (e.g. `"2026-08"`) — when the entry joined the atlas. The app uses it for the "✨ New" highlight. |
-| `lastVerified` | Today's month as `"YYYY-MM"` (e.g. `"2026-08"`) — you just verified it by building this entry. |
+| `added` | Today's month as `YYYY-MM` (e.g. `2026-08`) — when the entry joined the atlas. The app uses it for the "✨ New" highlight. |
+| `lastVerified` | Today's month as `YYYY-MM` (e.g. `2026-08`) — you just verified it by building this entry. |
 
 **Category — form label → `cat` code:**
 
 | Form says | Use |
 |---|---|
-| AI Companies & Startups | `"startup"` |
-| Venture Capital | `"vc"` |
-| Angel Groups | `"angel"` |
-| Accelerators & Founder Support | `"accel"` |
-| University Labs & Centers | `"university"` |
-| Corporate AI Labs | `"corporate"` |
-| Communities & Meetups | `"community"` |
-| Major Events | `"event"` |
-| Government & Policy | `"gov"` |
-| Spaces & Hubs | `"space"` |
-| Student Groups | `"student"` |
+| AI Companies & Startups | `startup` |
+| Venture Capital | `vc` |
+| Angel Groups | `angel` |
+| Accelerators & Founder Support | `accel` |
+| University Labs & Centers | `university` |
+| Corporate AI Labs | `corporate` |
+| Communities & Meetups | `community` |
+| Major Events | `event` |
+| Government & Policy | `gov` |
+| Spaces & Hubs | `space` |
+| Student Groups | `student` |
 
-**Stages — checkbox → number** (list every box they ticked, e.g. Build + Fund → `[3,4]`):
+**Stages — checkbox → number** (list every box they ticked, e.g. Build + Fund → `[3, 4]`):
 
 | Checkbox | Number |
 |---|---|
@@ -85,16 +99,18 @@ Copy this template into a notes app and replace the blanks:
 | 💸 Fund | `4` |
 | 🚀 Scale | `5` |
 
-## Step 4 — Add it to `data.js`
+## Step 4 — Add it to `data/entities.yml`
 
-1. Open **`data.js`** in the repo and click the **pencil ✏️ icon** ("Edit this file").
+1. Open the **`data`** folder, click **`entities.yml`**, and click the **pencil ✏️ icon**
+   ("Edit this file").
    *If GitHub mentions making "your own copy" or a "fork," that's normal — just continue.*
 2. Press **Cmd-F** (Mac) / **Ctrl-F** (Windows) and type the category banner, e.g.
    `VENTURE CAPITAL`. The file is grouped into sections like
-   `// ---------- VENTURE CAPITAL ----------`.
+   `# ---------- VENTURE CAPITAL ----------`.
 3. Click at the start of the line just below that banner and **paste** your entry there,
    among the other entries (order within a section doesn't matter).
-4. Check the commas: every entry ends with `},`.
+4. Check the indentation: `- id:` starts at the very left, every other line of your
+   entry is indented by two spaces.
 
 ## Step 5 — Save it as a pull request
 
@@ -122,20 +138,28 @@ Copy this template into a notes app and replace the blanks:
 A suggestion comes in: *Epipelagic Ventures · https://www.epipelagic.vc · Venture Capital ·
 1 Broadway, Cambridge · "founder-first venture studio…" · stages: Build + Fund.* You look up
 `1 Broadway, Cambridge` in Google Maps → `42.3626, -71.0843`, translate **Venture Capital →
-`vc`** and **Build + Fund → `[3,4]`**, and write:
+`vc`** and **Build + Fund → `[3, 4]`**, and write:
 
-```js
-{id:"epipelagic", name:"Epipelagic Ventures", cat:"vc", loc:"1 Broadway, Cambridge",
- lat:42.3626, lng:-71.0843, url:"https://www.epipelagic.vc",
- desc:"A founder-first venture studio in Kendall Square that surrounds early-stage startups with capital, mentorship and hands-on operational support to reach their next milestone.",
- why:"A hands-on venture-studio model for pre-seed founders — especially edtech, consumer, health and wellness, or moonshot ideas — pairing funding with active build support.",
- tags:["venture studio","early stage"], stages:[3,4], links:[],
- added:"2026-08", lastVerified:"2026-08"},
+```yaml
+- id: epipelagic
+  name: Epipelagic Ventures
+  cat: vc
+  loc: 1 Broadway, Cambridge
+  lat: 42.3626
+  lng: -71.0843
+  url: https://www.epipelagic.vc
+  desc: A founder-first venture studio in Kendall Square that surrounds early-stage startups with capital, mentorship and hands-on operational support to reach their next milestone.
+  why: A hands-on venture-studio model for pre-seed founders — especially edtech, consumer, health and wellness, or moonshot ideas — pairing funding with active build support.
+  tags: [venture studio, early stage]
+  stages: [3, 4]
+  links: []
+  added: 2026-08
+  lastVerified: 2026-08
 ```
 
-…then paste it into the `// ---------- VENTURE CAPITAL ----------` section. Done.
+…then paste it into the `# ---------- VENTURE CAPITAL ----------` section. Done.
 
 ---
 
-*Questions? Ask in the TOA maintainers channel. The automatic checker's exact rules live in
-[`scripts/validate.js`](../scripts/validate.js).*
+*Questions? Ask in the TOA maintainers channel. The automatic checker's exact rules live in the schemas in
+[`data/`](../data/) and in [`scripts/validate.js`](../scripts/validate.js).*

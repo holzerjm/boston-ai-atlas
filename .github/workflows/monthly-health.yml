@@ -32,6 +32,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 20
+      - run: npm ci
 
       - name: Link-rot check
         timeout-minutes: 12      # 8 workers × ~170 URLs × 15s+retry fits well inside this
@@ -73,6 +74,6 @@ jobs:
              + [{type:"section", text:{type:"mrkdwn",
                  text:("*This month'\''s verification queue:*\n```" + $rota + "```")}},
                 {type:"context", elements:[{type:"mrkdwn",
-                 text:("Fix an entry: edit data.js on <" + $repo + "|GitHub>, bump lastVerified, merge — it deploys itself.")}]}])
+                 text:("Fix an entry: edit data/entities.yml on <" + $repo + "|GitHub>, bump lastVerified, merge — it deploys itself.")}]}])
             }' \
           | curl -sS -X POST -H 'Content-type: application/json' -d @- "$SLACK_WEBHOOK_URL"

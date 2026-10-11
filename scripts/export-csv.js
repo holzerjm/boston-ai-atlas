@@ -11,13 +11,8 @@
    Excel (Data -> From Text/CSV). One row per organization.
    ============================================================ */
 const fs = require("fs");
-const path = require("path");
 
-// --- Load data.js exactly like validate.js / badge.js do ---
-const src = fs.readFileSync(path.join(__dirname, "..", "data.js"), "utf8");
-const mod = { exports: {} };
-new Function("module", "exports", src + "\n;module.exports={CATS,STAGES,DATA};")(mod, mod.exports);
-const { CATS, STAGES, DATA } = mod.exports;
+const { CATS, STAGES, DATA } = require("./load-data").loadData();
 
 // --- Lookups (turn codes into human-readable text) ---
 const catLabel = c => (CATS[c] && CATS[c].label) || c || "";

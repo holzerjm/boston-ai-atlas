@@ -1,5 +1,5 @@
 # Hands-off deploys — rsync the atlas to the web server on every merge to
-# main that touches index.html or data.js, so accepted community PRs go
+# main that touches index.html or data/, so accepted community PRs go
 # live automatically. Can also be run manually from the Actions tab
 # (workflow_dispatch), e.g. to test the pipeline.
 #
@@ -14,7 +14,7 @@
 #   SLACK_WEBHOOK_URL  optional — TOA Slack incoming webhook; deploy and
 #                      failure notifications are skipped when unset
 #
-# data.js is validated before anything is copied, so a broken dataset can
+# data/ is validated before anything is copied, so a broken dataset can
 # never ship even if it somehow reaches main. Manual fallback if this
 # workflow is ever unavailable: scripts/sync-to-site.sh from a local checkout.
 
@@ -23,7 +23,7 @@ name: Deploy to TOA site
 on:
   push:
     branches: [main]
-    paths: ["index.html", "data.js", "map-style-dark.json", "events/**"]
+    paths: ["index.html", "atlas-data.js", "data/**", "map-style-dark.json", "events/**"]
   workflow_dispatch:
 
 jobs:
@@ -36,7 +36,8 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 20
-      - name: Validate data.js before shipping
+      - run: npm ci
+      - name: Validate data/ before shipping
         run: node scripts/validate.js
       - name: Generate public dataset (atlas.json + atlas.csv)
         run: |
@@ -52,8 +53,11 @@ jobs:
           ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
       - name: Rsync atlas
         run: |
-          rsync -avz -e "ssh -i ~/.ssh/id_deploy" index.html data.js map-style-dark.json atlas.json atlas.csv site-pages/sitemap.xml \
+          rsync -avz -e "ssh -i ~/.ssh/id_deploy" index.html atlas-data.js map-style-dark.json atlas.json atlas.csv site-pages/sitemap.xml \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
+          # the page fetches data/*.yml (data + schemas) at load time
+          rsync -avz -e "ssh -i ~/.ssh/id_deploy" data/ \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/data/"
           rsync -avz -e "ssh -i ~/.ssh/id_deploy" events/index.html \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/events/"
           # entry stubs: --delete is scoped to the e/ subtree only, so removed
@@ -71,29 +75,32 @@ jobs:
         run: |
           [ -z "$SLACK_WEBHOOK_URL" ] && { echo "SLACK_WEBHOOK_URL not set — skipping"; exit 0; }
 
-          COUNT=$(node -e 'const s=require("fs").readFileSync("data.js","utf8");console.log(new Function(s+";return DATA;")().length)')
+          COUNT=$(node -e 'console.log(require("./scripts/load-data").loadData().DATA.length)')
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           COMMIT_URL="${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
           SHORT_SHA=$(git rev-parse --short HEAD)
 
           # What changed: commit subjects for the pushed range, plus the
-          # data.js entry-level delta (new ids vs. touched-but-existing ids).
+          # entities.yml entry-level delta (new ids vs. changed existing entries).
           NEW_NAMES=""; UPDATED=0
           if [ "$EVENT_NAME" = "push" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] \
              && git rev-parse -q --verify "$BEFORE_SHA^{commit}" >/dev/null; then
             RANGE="$BEFORE_SHA..HEAD"
             SUBJECTS=$(git log --pretty='• %s' "$RANGE" | grep -v '^• chore:' | head -5)
-            DIFF=$(git diff "$RANGE" -- data.js || true)
-            PLUS=$(printf '%s\n' "$DIFF" | sed -nE 's/^\+\{id:"([^"]*)".*/\1/p' | sort -u)
-            MINUS=$(printf '%s\n' "$DIFF" | sed -nE 's/^-\{id:"([^"]*)".*/\1/p' | sort -u)
-            NEW_IDS=$(comm -23 <(printf '%s\n' "$PLUS") <(printf '%s\n' "$MINUS") | grep . || true)
-            UPDATED=$(comm -12 <(printf '%s\n' "$PLUS") <(printf '%s\n' "$MINUS") | grep -c . || true)
-            if [ -n "$NEW_IDS" ]; then
-              NEW_NAMES=$(node -e '
-                const fs=require("fs");
-                const DATA=new Function(fs.readFileSync("data.js","utf8")+";return DATA;")();
-                const names=process.argv.slice(1).map(i=>(DATA.find(d=>d.id===i)||{name:i}).name);
-                console.log(names.join(", "));' $NEW_IDS)
+            # compare parsed entries by id; an older commit without
+            # data/entities.yml yields no delta
+            OLD_YML=$(git show "$BEFORE_SHA:data/entities.yml" 2>/dev/null || true)
+            if [ -n "$OLD_YML" ]; then
+              DELTA_OUT=$(printf '%s' "$OLD_YML" | node -e '
+                const yaml=require("js-yaml");
+                const old=yaml.load(require("fs").readFileSync(0,"utf8"),{schema:yaml.CORE_SCHEMA})||[];
+                const before=new Map(old.map(d=>[d.id,JSON.stringify(d)]));
+                const {DATA}=require("./scripts/load-data").loadData();
+                const added=DATA.filter(d=>!before.has(d.id)).map(d=>d.name);
+                const updated=DATA.filter(d=>before.has(d.id)&&before.get(d.id)!==JSON.stringify(d)).length;
+                console.log(updated); console.log(added.join(", "));')
+              UPDATED=$(printf '%s\n' "$DELTA_OUT" | sed -n 1p)
+              NEW_NAMES=$(printf '%s\n' "$DELTA_OUT" | sed -n 2p)
             fi
           else
             SUBJECTS="• Manual deploy of the current state"

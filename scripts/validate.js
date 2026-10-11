@@ -1,12 +1,26 @@
 #!/usr/bin/env node
-/* Validates data.js — run locally before opening a PR:  node scripts/validate.js */
-const fs = require("fs");
-const path = require("path");
+/* Validates data/*.yml — run locally before opening a PR:  node scripts/validate.js
+   Per-field rules (types, formats, lengths, allowed values, no HTML) live in
+   data/*.schema.yml. This script runs those schemas, then the checks a schema
+   can't express: uniqueness, references across files, links between entries,
+   dates relative to today, and warnings. */
+const { checkData } = require("./load-data");
 
-const src = fs.readFileSync(path.join(__dirname, "..", "data.js"), "utf8");
-const mod = { exports: {} };
-new Function("module", "exports", src + "\n;module.exports={CATS,STAGES,DATA};")(mod, mod.exports);
-const { CATS, STAGES, DATA } = mod.exports;
+let checked;
+try { checked = checkData(); }
+catch (e) {   // YAML syntax error — js-yaml's message names the file, line and column
+  console.log(`FAILED: ${e.message}`);
+  process.exit(1);
+}
+const { atlas, errors: schemaErrors } = checked;
+const { CATS, STAGES, DATA } = atlas;
+
+console.log(`Mass AI Atlas — validating ${DATA.length} entries, ${Object.keys(CATS).length} categories\n`);
+if (schemaErrors.length) {
+  console.log("Schema errors:\n" + schemaErrors.join("\n"));
+  console.log(`\nFAILED: ${schemaErrors.length} schema error(s). Fix these first — the remaining checks run once the schema passes.`);
+  process.exit(1);
+}
 
 const errors = [];
 const warn = [];
@@ -14,12 +28,7 @@ const err = (id, msg) => errors.push(`  ✗ [${id}] ${msg}`);
 
 const ids = new Set();
 const names = new Set();
-const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-const YYYY_MM = /^\d{4}-(0[1-9]|1[0-2])$/;
-const YMD = /^\d{4}-\d{2}-\d{2}$/;
 const TODAY = new Date().toISOString().slice(0, 10);
-const OFFERS = new Set(["funding","grants","space","compute","mentorship","community","talent","customers"]);
-const FACT_LABELS = new Set(["Check size","Stage","Terms","Equity","Board seat","Program length","Cohort size","Focus"]);
 // canonical tag vocabulary — unknown tags only WARN (contributors may propose new
 // ones; a maintainer either maps them to an existing tag or adds them here)
 const TAGS = new Set(["pre-seed","seed","multi-stage","equity-free","strategic","venture studio",
@@ -32,98 +41,33 @@ const THIS_MONTH = new Date().toISOString().slice(0, 7);   // current UTC month
 const validStages = new Set(STAGES.map(s => s.n));
 
 for (const d of DATA) {
-  const id = d.id || "(missing id)";
-  if (!d.id) err(id, "missing id");
-  else {
-    if (!KEBAB.test(d.id)) err(id, "id must be kebab-case (a-z, 0-9, hyphens)");
-    if (ids.has(d.id)) err(id, "duplicate id");
-    ids.add(d.id);
-  }
-  if (!d.name) err(id, "missing name");
-  else {
-    const key = d.name.toLowerCase();
-    if (names.has(key)) err(id, `duplicate name "${d.name}"`);
-    names.add(key);
-  }
-  if (!CATS[d.cat]) err(id, `unknown category "${d.cat}" (valid: ${Object.keys(CATS).join(", ")})`);
-  if (typeof d.lat !== "number" || typeof d.lng !== "number")
-    err(id, "lat/lng must be numbers");
-  // Whole-state box: the old one stopped at -70.5 and 41.5, which rejected Cape Cod,
-  // Nantucket and Martha's Vineyard. It is a typo guard (swapped or mistyped coords),
-  // not a geofence — a bounding box over Massachusetts unavoidably clips corners of
-  // neighbouring states, and the maintainer review is what actually enforces scope.
-  else if (d.lat < 41.1 || d.lat > 42.95 || d.lng < -73.6 || d.lng > -69.85)
-    err(id, `coordinates (${d.lat}, ${d.lng}) outside Massachusetts bounds`);
-  if (!d.url || !/^https:\/\//.test(d.url)) err(id, "url must start with https://");
-  else if (/[\s"'<>\\]/.test(d.url)) err(id, "url contains characters unsafe in a link");
-  if (!d.loc) err(id, "missing loc (address or neighborhood)");
-  if (!d.desc) err(id, "missing desc");
-  else if (d.desc.length > 400) err(id, `desc too long (${d.desc.length} chars, max 400)`);
-  // text fields are prose — HTML has no legitimate use here and is an XSS vector
-  for (const [f, v] of [["name", d.name], ["loc", d.loc], ["desc", d.desc],
-                        ["why", d.why], ["badge", d.badge]])
-    if (typeof v === "string" && /[<>]/.test(v))
-      err(id, `${f} must not contain < or > (HTML is not allowed in entry text)`);
-  for (const t of d.tags || []) {
-    if (typeof t === "string" && /[<>]/.test(t))
-      err(id, `tag ${JSON.stringify(t)} must not contain < or > (HTML is not allowed)`);
-    else if (typeof t === "string" && !TAGS.has(t))
+  const id = d.id;
+  if (ids.has(d.id)) err(id, "duplicate id");
+  ids.add(d.id);
+  const key = d.name.toLowerCase();
+  if (names.has(key)) err(id, `duplicate name "${d.name}"`);
+  names.add(key);
+  if (!Object.hasOwn(CATS, d.cat)) err(id, `unknown category "${d.cat}" (valid: ${Object.keys(CATS).join(", ")})`);
+  for (const t of d.tags || [])
+    if (!TAGS.has(t))
       warn.push(`  ⚠ [${id}] tag ${JSON.stringify(t)} is not in the canonical vocabulary (see scripts/validate.js)`);
-  }
   // loc is "street, city" — the state is implied by the atlas and never written out.
   // Warn only: the suggestion bot builds loc from free text, so a contributor
   // typing "Cambridge, MA" should get a nudge, not a red build.
   if (/,\s*(MA|Mass|Massachusetts)\.?$/i.test(d.loc))
     warn.push(`  ⚠ [${id}] loc ends in ", MA" — the atlas writes "street, city" and leaves the state implied`);
   if (!d.why) warn.push(`  ⚠ [${id}] missing "why it matters" — strongly encouraged`);
-  if (!Array.isArray(d.tags) || d.tags.length < 1) warn.push(`  ⚠ [${id}] no tags`);
+  if (!d.tags || d.tags.length < 1) warn.push(`  ⚠ [${id}] no tags`);
   for (const s of d.stages || [])
-    if (!validStages.has(s)) err(id, `invalid stage ${s} (valid: 1-5)`);
-  // Hard error, not a warning. offers is documented as required and every entry has
-  // it, but a warning let the suggestion bot emit a draft with the field omitted
-  // entirely: CI stayed green, and the only signal was a line in the job summary.
-  // An entry without offers is invisible to the Directory's "I need…" filter, which
-  // is the main way founders search, so it must not be mergeable.
-  if (d.offers === undefined)
-    err(id, "missing offers — say what this org gives founders (funding, grants, space, compute, mentorship, community, talent, customers); it drives the \"I need…\" filter");
-  // Cap is 6, not 4: a full-service accelerator genuinely provides space, mentorship,
-  // community, funding, grants and customer intros, and the old cap of 4 made it
-  // impossible to say so — which pushed maintainers toward tagging only the headline
-  // offering and left the "I need…" filter matching on less than the truth.
-  else if (!Array.isArray(d.offers) || d.offers.length < 1 || d.offers.length > 6)
-    err(id, "offers must be an array of 1-6 values");
-  else for (const o of d.offers)
-    if (!OFFERS.has(o)) err(id, `unknown offer "${o}" (valid: ${[...OFFERS].join(", ")})`);
-  if (d.applyBy !== undefined) {
-    if (d.applyBy !== "rolling" && (typeof d.applyBy !== "string" || !YMD.test(d.applyBy)))
-      err(id, `applyBy must be "rolling" or a "YYYY-MM-DD" date (got ${JSON.stringify(d.applyBy)})`);
-    else if (d.applyBy !== "rolling" && d.applyBy < TODAY)
-      warn.push(`  ⚠ [${id}] applyBy ${d.applyBy} has passed — set the next deadline or remove it`);
-  }
-  if (d.applyNote !== undefined &&
-      (typeof d.applyNote !== "string" || d.applyNote.length > 40 || /[<>]/.test(d.applyNote)))
-    err(id, "applyNote must be a short string (max 40 chars, no HTML)");
-  if (d.facts !== undefined) {
-    if (!Array.isArray(d.facts) || d.facts.length < 1 || d.facts.length > 6)
-      err(id, "facts must be an array of 1-6 [label, value] pairs");
-    else for (const f of d.facts) {
-      if (!Array.isArray(f) || f.length !== 2 || typeof f[0] !== "string" || typeof f[1] !== "string")
-        { err(id, "each fact must be a [label, value] pair of strings"); break; }
-      if (!FACT_LABELS.has(f[0])) err(id, `unknown fact label ${JSON.stringify(f[0])} (valid: ${[...FACT_LABELS].join(", ")})`);
-      if (f[1].length > 48) err(id, `fact "${f[0]}" value too long (max 48 chars)`);
-      if (/[<>]/.test(f[0] + f[1])) err(id, "facts must not contain < or > (HTML is not allowed)");
-    }
-  }
+    if (!validStages.has(s)) err(id, `invalid stage ${s} (valid: ${[...validStages].join(", ")})`);
+  if (d.applyBy !== undefined && d.applyBy !== "rolling" && d.applyBy < TODAY)
+    warn.push(`  ⚠ [${id}] applyBy ${d.applyBy} has passed — set the next deadline or remove it`);
   if (d.added === undefined)
     warn.push(`  ⚠ [${id}] missing added — the month the entry joined the atlas ("YYYY-MM")`);
-  else if (typeof d.added !== "string" || !YYYY_MM.test(d.added))
-    err(id, `added must be a "YYYY-MM" string (got ${JSON.stringify(d.added)})`);
   else if (d.added > THIS_MONTH)
     err(id, `added ${d.added} is in the future`);
   if (d.lastVerified === undefined)
     warn.push(`  ⚠ [${id}] missing lastVerified — add the month this entry was last confirmed ("YYYY-MM")`);
-  else if (typeof d.lastVerified !== "string" || !YYYY_MM.test(d.lastVerified))
-    err(id, `lastVerified must be a "YYYY-MM" string (got ${JSON.stringify(d.lastVerified)})`);
   else if (d.lastVerified > THIS_MONTH)
     err(id, `lastVerified ${d.lastVerified} is in the future`);
   else if (d.lastVerified < "2020-01")
@@ -134,11 +78,10 @@ for (const d of DATA)
   for (const l of d.links || [])
     if (!ids.has(l)) err(d.id, `links to unknown entry "${l}"`);
 
-console.log(`Mass AI Atlas — validating ${DATA.length} entries, ${Object.keys(CATS).length} categories\n`);
 if (warn.length) console.log("Warnings:\n" + warn.join("\n") + "\n");
 if (errors.length) {
   console.log("Errors:\n" + errors.join("\n"));
   console.log(`\nFAILED: ${errors.length} error(s).`);
   process.exit(1);
 }
-console.log("PASSED: data.js is valid.");
+console.log("PASSED: data/ is valid.");

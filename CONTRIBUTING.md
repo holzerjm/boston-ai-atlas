@@ -12,51 +12,58 @@ A maintainer reviews each issue and turns accepted suggestions into pull request
 
 ## 2. Pull requests (preferred)
 
-All data lives in [`data.js`](data.js) as one array of plain objects.
+All data lives in YAML files under [`data/`](data/): the entries in
+[`data/entities.yml`](data/entities.yml) (one list item per organization), plus
+[`categories.yml`](data/categories.yml) and [`stages.yml`](data/stages.yml). Each file
+has a JSON Schema next to it (`*.schema.yml`) that defines every field and its rules.
 
 ### Adding an entry
 
 1. Fork and clone the repo
-2. Add your object to the `DATA` array (keep it inside its category section — see the
-   section comments)
-3. Validate: `node scripts/validate.js`
+2. Add your entry to `data/entities.yml` (keep it inside its category section — see the
+   `# ---------- … ----------` comments)
+3. Validate: `npm ci` (once), then `node scripts/validate.js`
 4. Open a PR explaining what the org is and including a source link
 
 ### Entry schema
 
-```js
-{
-  id: "acme-ai",                    // unique, kebab-case
-  name: "Acme AI Labs",
-  cat: "startup",                   // startup | vc | angel | accel | university |
-                                    // corporate | community | event | gov | space | student
-  loc: "1 Broadway, Cambridge",     // address, or neighborhood if venues vary
-  lat: 42.3629, lng: -71.0838,      // must be within Massachusetts
-  approx: true,                     // include if coordinates are neighborhood-level
-  url: "https://acme.ai",           // official site, https only
-  badge: "Applications open",       // optional highlight
-  desc: "1-2 factual sentences. What it is, what it does.",   // max 400 chars
-  why: "One sentence on why an early-stage founder should care.",
-  tags: ["robotics", "lab space"],  // 2-4 short lowercase tags
-  stages: [1, 3],                   // founder stages served: 1 Spark, 2 Validate,
-                                    // 3 Build, 4 Fund, 5 Scale
-  links: ["csail", "engine"],       // ids of related entries (Galaxy view edges)
-  offers: ["funding","mentorship"], // what founders GET, 1-6 of: funding | grants |
-                                    // space | compute | mentorship | community |
-                                    // talent | customers (powers the "I need…" filter)
-  applyBy: "2026-10-15",            // optional: "rolling", or the current application
-                                    // deadline — past dates auto-hide in the app
-  applyNote: "Fall 2026 cohort",    // optional, max 40 chars, shown next to the deadline
-  facts: [["Check size","$500K–$2M"],
-          ["Equity","6%"]],         // optional "at a glance" table, 1-6 rows; labels:
-                                    // Check size | Stage | Terms | Equity | Board seat |
-                                    // Program length | Cohort size | Focus
-  added: "2026-08",                 // month ("YYYY-MM") the entry joined the atlas —
-                                    // set once, never changed; powers the "✨ New" highlight
-  lastVerified: "2026-08"           // month ("YYYY-MM") a maintainer last confirmed the
-                                    // org is real, active, and the facts are right
-}
+The authoritative definition is [`data/entities.schema.yml`](data/entities.schema.yml).
+An annotated example:
+
+```yaml
+- id: acme-ai                       # unique, kebab-case
+  name: Acme AI Labs
+  cat: startup                      # startup | vc | angel | accel | university |
+                                    # corporate | community | event | gov | space | student
+  loc: 1 Broadway, Cambridge        # address, or neighborhood if venues vary
+  lat: 42.3629                      # lat/lng must be within Massachusetts
+  lng: -71.0838
+  approx: true                      # include if coordinates are neighborhood-level
+  url: https://acme.ai              # official site, https only
+  badge: Applications open          # optional highlight
+  desc: 1-2 factual sentences. What it is, what it does.   # max 400 chars
+  why: One sentence on why an early-stage founder should care.
+  tags: [robotics, lab space]       # 2-4 short lowercase tags
+  stages: [1, 3]                    # founder stages served: 1 Spark, 2 Validate,
+                                    # 3 Build, 4 Fund, 5 Scale
+  links: [csail, engine]            # ids of related entries (Galaxy view edges)
+  offers: [funding, mentorship]     # what founders GET, 1-6 of: funding | grants |
+                                    # space | compute | mentorship | community |
+                                    # talent | customers (powers the "I need…" filter)
+  applyBy: '2026-10-15'             # optional: rolling, or the current application
+                                    # deadline — past dates auto-hide in the app
+  applyNote: Fall 2026 cohort       # optional, max 40 chars, shown next to the deadline
+  facts: [[Check size, $500K–$2M],
+          [Equity, 6%]]             # optional "at a glance" table, 1-6 rows; labels:
+                                    # Check size | Stage | Terms | Equity | Board seat |
+                                    # Program length | Cohort size | Focus
+  added: 2026-08                    # month (YYYY-MM) the entry joined the atlas —
+                                    # set once, never changed; powers the "✨ New" highlight
+  lastVerified: 2026-08             # month (YYYY-MM) a maintainer last confirmed the
+                                    # org is real, active, and the facts are right
 ```
+
+Text containing `: ` or ` #`, or starting with a quote or bracket, must be quoted.
 
 ### What gets accepted
 
@@ -74,8 +81,8 @@ unverifiable. When in doubt we mark things clearly rather than delete silently.
 
 ## Review process
 
-- CI (`scripts/validate.js`) must pass: unique ids, valid category, MA coordinates,
-  https links, resolvable connections
+- CI (`scripts/validate.js`) must pass: the JSON Schemas in `data/` (field types,
+  MA coordinates, https links, …) plus unique ids, valid category, resolvable connections
 - One maintainer approval merges; a maintainer then publishes the update to the
   live site (see [MAINTAINING.md](MAINTAINING.md), Part 3 — merging alone doesn't deploy)
 - Maintainers stamp or refresh `lastVerified` whenever they verify an entry (accepting

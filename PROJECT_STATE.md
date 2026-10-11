@@ -40,19 +40,26 @@ tags, stages, connected entries, website link, "show on map", and a **🚩 Flag*
 
 ## 2. Architecture & conventions
 
-Deliberately **dependency-free and buildless** — it must survive being copied into a
-static site and edited by non-developers.
+Deliberately **buildless** — it must survive being copied into a static site and
+edited by non-developers.
 
 ```
-index.html    ~104KB  the entire app: HTML + CSS + vanilla JS in one file
-data.js        ~56KB  CATS, STAGES, DATA — the only file most contributors touch
+index.html          ~104KB  the entire app: HTML + CSS + vanilla JS in one file
+atlas-data.js               shared loader: parses data/*.yml, validates against the schemas
+data/entities.yml           DATA — the only file most contributors touch
+data/categories.yml         CATS
+data/stages.yml             STAGES
+data/*.schema.yml           JSON Schema (draft-07) for each data file
 ```
 
-- **No framework, no bundler, no npm install.** Open `index.html` in a browser and it
-  runs. Node is used only for the maintenance scripts.
-- `index.html` loads `data.js` via a plain `<script src="data.js">` — so **relative
-  paths matter**: the page must be served at a directory URL (`/ecosystem/`), not
-  `/ecosystem`.
+- **No framework, no bundler.** Serve the folder and `index.html` runs. Node (plus
+  `npm ci` for js-yaml and Ajv) is used only for the maintenance scripts.
+- At load, `index.html` fetches `data/*.yml` and the schemas, validates them via
+  `atlas-data.js` (js-yaml + Ajv from cdnjs), sets the `CATS`/`STAGES`/`DATA` globals,
+  then starts the app script (parked as `type="text/plain"` until the data is ready —
+  see the comment there for the planned module rewrite). Scripts load the same files
+  through `scripts/load-data.js`. **Relative paths matter**: the page must be served at a
+  directory URL (`/ecosystem/`), not `/ecosystem`.
 - External runtime deps, all CDN: Leaflet 1.9.4 + MapLibre GL 5.24 + maplibre-gl-leaflet
   (map), Tailwind Play CDN, Google Fonts (Red Hat Display), plus the TOA logo hot-linked
   from `the-open-accelerator.com`.
@@ -62,7 +69,7 @@ data.js        ~56KB  CATS, STAGES, DATA — the only file most contributors tou
   stock `positron` style; dark mode uses **our own `map-style-dark.json`** — OpenFreeMap's
   `fiord` grafted with positron's highway shields, airport label, and river line-labels
   (fiord's palette), so the two themes have label parity; fiord's ferry-route labels are
-  kept. The style file deploys alongside `index.html`/`data.js` (deploy.yml + sync script
+  kept. The style file deploys alongside `index.html`/`data/` (deploy.yml + sync script
   include it). Sprites/fonts/tiles load from OpenFreeMap; if it ever degrades, VersaTiles
   is a one-line style-URL fallback. The previous CARTO raster tiles (retired-track,
   key-watermarked as of 2026-08-25) are fully removed.
@@ -72,19 +79,35 @@ data.js        ~56KB  CATS, STAGES, DATA — the only file most contributors tou
   Display typeface, TOA logo in the header, Red Hat + MA AI Hub + IBM logos in the footer.
   Per-category accent colours are defined in `CATS` and used consistently across all views.
 
-### Data model (`data.js`)
+### Data model (`data/`)
 
-Three exports: `CATS` (11 categories → label + colour), `STAGES` (5 founder stages with
-tips), and `DATA` (the array of entries). One entry:
+Three data sets, each a YAML file with a JSON Schema beside it: `CATS` in
+`categories.yml` (11 categories → label + colour), `STAGES` in `stages.yml` (5 founder
+stages with tips), and `DATA` in `entities.yml` (the list of entries, grouped under
+`# ---------- CATEGORY ----------` comment banners). One entry:
 
-```js
-{id:"acme-ai", name:"Acme AI Labs", cat:"startup", loc:"1 Broadway, Cambridge",
- lat:42.3629, lng:-71.0838, approx:true, url:"https://acme.ai", badge:"Applications open",
- desc:"1–2 factual sentences, max 400 chars.",
- why:"Why an early-stage founder should care.",
- tags:["robotics","warehouse"], stages:[3,4], links:["csail"],
- added:"2026-08", lastVerified:"2026-08"},
+```yaml
+- id: acme-ai
+  name: Acme AI Labs
+  cat: startup
+  loc: 1 Broadway, Cambridge
+  lat: 42.3629
+  lng: -71.0838
+  approx: true
+  url: https://acme.ai
+  badge: Applications open
+  desc: 1–2 factual sentences, max 400 chars.
+  why: Why an early-stage founder should care.
+  tags: [robotics, warehouse]
+  stages: [3, 4]
+  links: [csail]
+  added: 2026-08
+  lastVerified: 2026-08
 ```
+
+YAML is parsed with js-yaml's `CORE_SCHEMA`, so unquoted dates stay strings. Per-field
+rules live in `data/*.schema.yml`; `scripts/validate.js` adds what a schema can't express
+(uniqueness, cross-file references, links, dates vs. today, warnings).
 
 `id` kebab-case & unique · `cat` ∈ CATS keys · lat/lng inside MA bounds · `url` https ·
 `links` must resolve to real ids (they draw Galaxy edges) · `approx: true` when the pin is
@@ -101,7 +124,7 @@ canonical ~45-word vocabulary (list in `validate.js`; unknown tags warn-only).
 once and never changed (backfilled for all entries from git first-commit dates; the bot
 stamps it automatically). Powers the "✨ New" chips, the once-a-month new-orgs banner,
 and the Directory's "Recently added" sort. Validator warns if missing, errors if
-malformed or future. Full reference: `CONTRIBUTING.md`; enforced by `scripts/validate.js`.
+malformed or future. Full reference: `CONTRIBUTING.md`; enforced by `data/entities.schema.yml` + `scripts/validate.js`.
 
 **Current composition (171 entries):** vc 49 · startup 28 · accel 18 · student 13 ·
 university 12 · corporate 12 · gov 9 · space 8 · event 8 · angel 7 · community 7.
@@ -132,13 +155,13 @@ transparent moderation, contribution history, on-brand for an open-source accele
   GitHub **silently skips** labels that don't (they were missing until 2026-08-28, which
   is why issues #12/#13 arrived unlabelled). If the repo ever moves, recreate them
   (and `bot:draft`, below).
-- **Nothing auto-publishes.** A maintainer converts each issue into a `data.js` edit —
+- **Nothing auto-publishes.** A maintainer converts each issue into a `data/entities.yml` edit —
   by hand, or with the suggestion bot.
 
 ### Suggestion bot (`.github/workflows/suggest-to-pr.yml` + `scripts/issue-to-entry.js`)
 
 Maintainer adds the **`bot:draft`** label to a suggestion issue → the bot parses the
-form, geocodes the address (Nominatim), builds a JSON-serialized `data.js` entry, and
+form, geocodes the address (Nominatim), builds a `yaml.dump`-serialized `data/entities.yml` entry, and
 opens a **draft PR** with a review checklist. It never publishes (merge does that).
 
 **Trust model — read before editing this workflow:**
@@ -151,7 +174,7 @@ opens a **draft PR** with a review checklist. It never publishes (merge does tha
   opens the PR from that artifact **without running any issue-derived code**. One parser
   bug can't reach the deploy-capable token.
 - **Injection-safe.** Issue text is read from the event file (never `${{ }}`-interpolated
-  into `run:`), every value reaches `data.js` via `JSON.stringify`, and `validate.js`
+  into `run:`), every value reaches `data/entities.yml` via `yaml.dump`, and the schema
   rejects `<`/`>` in text fields (defence-in-depth with the app's `esc()` render
   escaping). The token pushes via an auth header, not a URL.
 - **Token:** a GitHub App (`ATLAS_APP_ID` + `ATLAS_APP_PRIVATE_KEY`, Contents RW + PRs RW)
@@ -162,8 +185,9 @@ opens a **draft PR** with a review checklist. It never publishes (merge does tha
 
 ### CI (`.github/workflows/validate.yml`)
 
-- `validate` job — runs `scripts/validate.js` on every PR/push touching `data.js` or
-  `scripts/`. This is the safety net non-technical maintainers rely on.
+- `validate` job — runs `npm ci` + `scripts/validate.js` on every PR (no path filter, so
+  it can be a required check) and on pushes to `main` touching `data/`, `scripts/`,
+  `atlas-data.js` or the npm manifests. This is the safety net non-technical maintainers rely on.
 - `badge` job — on push to `main`, regenerates `badge.json` (entry-count shield) and
   commits it as `github-actions[bot]`. ⚠️ If branch protection is ever enabled on `main`,
   allow the bot to push or this job fails.
@@ -173,6 +197,7 @@ opens a **draft PR** with a review checklist. It never publishes (merge does tha
 | Script | Purpose |
 |--------|---------|
 | `scripts/validate.js` | Schema + integrity validation. Run before every commit. |
+| `scripts/load-data.js` | Node side of `atlas-data.js`: `loadData()` returns `{CATS, STAGES, DATA}` (throws on schema errors). Every script loads data through it. |
 | `scripts/badge.js` | Regenerates `badge.json`. CI runs it; safe to run locally. |
 | `scripts/stale.js` | Freshness report (`lastVerified` older than N months, default 12); `--queue N` prints the monthly verification rota. Never fails; CI appends it to the job summary. |
 | `scripts/linkcheck.js` | Link-rot checker — probes every entry URL, classifies broken/moved/blocked. A report, always exits 0. Run monthly by `monthly-health.yml` (with the rota), posted to Slack. |
@@ -180,16 +205,16 @@ opens a **draft PR** with a review checklist. It never publishes (merge does tha
 | `scripts/build-events-page.js` | Assembles `events/index.html` (a **generated file** — never hand-edit it) by lifting the TOA header/mobile-nav/footer/theme-toggle chrome verbatim from the atlas's `index.html` and wrapping it around the events page content. Re-run after changing either the shared chrome or the events layout. |
 | `scripts/export-csv.js` | Dataset → `atlas.csv` for Sheets/Excel. Output is gitignored. |
 | `scripts/export-json.js` | Dataset → `atlas.json` (versioned envelope). Both exports regenerate at deploy and are served publicly at `/ecosystem/atlas.{json,csv}` under **CC BY 4.0**. |
-| `scripts/sync-to-site.sh` | Copies `index.html` + `data.js` into the TOA site tree. |
+| `scripts/sync-to-site.sh` | Copies `index.html` + `atlas-data.js` + `data/*.yml` into the TOA site tree. |
 
 ---
 
 ## 4. Deployment
 
 **Automatic since 2026-08-29** — merging to `main` is publishing.
-`.github/workflows/deploy.yml` fires on pushes touching `index.html`/`data.js`
-(plus manual `workflow_dispatch` runs): it re-validates `data.js`, rsyncs both files
-to the origin server, and posts a summary (new/updated entry names, count, links) to
+`.github/workflows/deploy.yml` fires on pushes touching `index.html`/`atlas-data.js`/`data/`
+(plus manual `workflow_dispatch` runs): it re-validates `data/`, rsyncs the page, loader
+and data files to the origin server, and posts a summary (new/updated entry names, count, links) to
 the TOA Slack — or a failure alert; a failed deploy leaves the live site unchanged.
 
 Plumbing (all in repo secrets, Settings → Secrets → Actions): `DEPLOY_SSH_KEY` is a
@@ -272,13 +297,14 @@ community submissions, no user accounts.
 ## 7. Working here in Claude Code
 
 - Repo root is the working directory; `main` is the only long-lived branch.
-- **Always run `node scripts/validate.js` after touching `data.js`** — same check CI runs.
+- **Always run `node scripts/validate.js` after touching `data/`** — same check CI runs
+  (`npm ci` once first).
 - Regenerate the badge (`node scripts/badge.js`) if you change the entry count locally,
   or just let CI do it on merge.
 - Commit messages that close a suggestion should say `closes #NN` — it auto-closes the
   issue and links the commit for the contributor.
 - To test the whole app quickly: `python3 -m http.server` and open `localhost:8000`.
-  (Because of the relative `data.js` include, don't test via `file://`.)
-- When adding entries in bulk, keep them inside the correct `// ---------- CATEGORY ----------`
-  banner in `data.js` — order within a section doesn't matter, but the banners are how
+  (The page fetches `data/*.yml`, which browsers block on `file://`.)
+- When adding entries in bulk, keep them inside the correct `# ---------- CATEGORY ----------`
+  banner in `data/entities.yml` — order within a section doesn't matter, but the banners are how
   humans navigate the file.

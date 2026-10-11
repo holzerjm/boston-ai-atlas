@@ -1,11 +1,13 @@
 name: Validate atlas data
 
+# Runs on every PR (no path filter) so "validate" can be a required status
+# check in main's branch protection — a path-filtered required check never
+# reports on PRs outside its paths and would block them forever.
 on:
   pull_request:
-    paths: ["data.js", "scripts/**"]
   push:
     branches: [main]
-    paths: ["data.js", "scripts/**"]
+    paths: ["data/**", "scripts/**", "atlas-data.js", "package.json", "package-lock.json"]
 
 jobs:
   validate:
@@ -15,7 +17,8 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 20
-      - name: Validate data.js
+      - run: npm ci
+      - name: Validate data/ against the schemas
         run: node scripts/validate.js
       - name: Freshness report (informational, never fails the build)
         continue-on-error: true
@@ -33,6 +36,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 20
+      - run: npm ci
       - name: Regenerate badge.json
         run: node scripts/badge.js
       - name: Commit badge if changed

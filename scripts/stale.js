@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* ============================================================
-   Freshness report for data.js — which entries need re-verifying?
+   Freshness report for data/entities.yml — which entries need re-verifying?
 
    Usage:
      node scripts/stale.js               -> report with 12-month threshold
@@ -14,14 +14,8 @@
    the org is real, active, and the entry's facts are right.
    This script is a report, not a gate — it always exits 0.
    ============================================================ */
-const fs = require("fs");
-const path = require("path");
 
-// --- Load data.js exactly like validate.js / badge.js do ---
-const src = fs.readFileSync(path.join(__dirname, "..", "data.js"), "utf8");
-const mod = { exports: {} };
-new Function("module", "exports", src + "\n;module.exports={CATS,STAGES,DATA};")(mod, mod.exports);
-const { DATA } = mod.exports;
+const { DATA } = require("./load-data").loadData();
 
 // --- Threshold: default 12 months, override with --months N ---
 let months = 12;

@@ -11,10 +11,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const src = fs.readFileSync(path.join(__dirname, "..", "data.js"), "utf8");
-const mod = { exports: {} };
-new Function("module", "exports", src + "\n;module.exports={CATS,STAGES,DATA};")(mod, mod.exports);
-const { CATS, STAGES, DATA } = mod.exports;
+const { CATS, STAGES, DATA } = require("./load-data").loadData();
 
 const counts = {};
 for (const d of DATA) counts[d.cat] = (counts[d.cat] || 0) + 1;

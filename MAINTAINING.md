@@ -7,12 +7,12 @@ almost everything here is done by pointing and clicking on **github.com**.
 There are two ways new information arrives:
 
 1. **An Issue** — someone filled in the "Suggest an entry" form. It's a wish-list
-   item written in plain English. *Your job: turn it into a real entry in `data.js`.*
+   item written in plain English. *Your job: turn it into a real entry in `data/entities.yml`.*
 2. **A Pull Request (PR)** — someone who knows Git already wrote the entry for you and
    is proposing the exact change. *Your job: check it and merge it.*
 
-> **What is `data.js`?** It's the single file that holds every organization on the
-> map. It's a list of "entries," and each entry is a small block of fields like
+> **What is `data/entities.yml`?** It's the single file that holds every organization
+> on the map. It's a list of "entries," and each entry is a small block of fields like
 > `name`, `category`, `location`, and so on. Everything you do ends up as an edit to
 > this one file.
 
@@ -22,13 +22,13 @@ There are two ways new information arrives:
 
 ```
   Someone suggests       You turn it into        A robot double-checks      You publish
-  an org (Issue)   ──▶    a data.js entry   ──▶   the entry (automatic) ──▶  to the live site
+  an org (Issue)   ──▶  an entities.yml entry ──▶ the entry (automatic) ──▶  to the live site
        │                  (Part 1 or 2)            (the green ✓ check)        (Part 3)
        │
   …or sends a ready-made edit (Pull Request) ─────────────────────────────────▶
 ```
 
-- Every change to `data.js` is **automatically checked by a robot** (GitHub Actions
+- Every change to `data/entities.yml` is **automatically checked by a robot** (GitHub Actions
   CI). It catches the most common mistakes — duplicate names, bad coordinates,
   missing fields — and shows a green ✓ or a red ✗. You do **not** have to memorize the
   rules; the robot is your safety net.
@@ -36,7 +36,7 @@ There are two ways new information arrives:
 
 ---
 
-## Part 1 — Turn an Issue into a `data.js` entry
+## Part 1 — Turn an Issue into a `data/entities.yml` entry
 
 Use this when someone used the **"➕ Suggest an entry"** form.
 
@@ -76,14 +76,29 @@ numbers so the pin lands in the right spot.
 Copy this template and fill it in. Field-by-field help is in
 [Appendix A](#appendix-a--field-by-field-cheat-sheet); a filled-in example is below it.
 
-```js
-{id:"", name:"", cat:"", loc:"",
- lat:0, lng:0, url:"https://",
- badge:"", desc:"",
- why:"",
- tags:[], stages:[], links:[],
- added:"", lastVerified:""},
+```yaml
+- id: 
+  name: 
+  cat: 
+  loc: 
+  lat: 0
+  lng: 0
+  url: https://
+  badge: 
+  desc: 
+  why: 
+  tags: []
+  stages: []
+  links: []
+  added: 
+  lastVerified: 
 ```
+
+> **YAML tips.** Keep the shape exactly: `- id:` at the very start of the line, every
+> other field indented by **two spaces**, no commas at line ends. Text needs no quotes —
+> *unless* it contains a colon followed by a space (`: `) or ` #`, or starts with a quote,
+> bracket, `&`, `*`, `!`, `|`, `>`, `%` or `@`. Then wrap the whole value in double
+> quotes, e.g. `name: "Acme: The AI Lab"`.
 
 Three fields need a quick "translation" from the form's words into the code's words —
 the tables in Appendix A do this for you:
@@ -96,21 +111,22 @@ the tables in Appendix A do this for you:
   `Acme AI Labs` → `acme-ai`. Keep it short and make sure it's not already used (in the
   GitHub file view, press **`/`** or `Ctrl/Cmd-F` and search the id).
 
-Leave `badge` empty (or delete the line) if there's nothing special. `links` is
+Delete the `badge` line if there's nothing special (an empty value is an error). `links` is
 optional — see Appendix A. For `added` **and** `lastVerified`, put **today's month** as
-`"YYYY-MM"` (e.g. `"2026-08"`) — the entry joins the atlas now, and you just verified
+`YYYY-MM` (e.g. `2026-08`) — the entry joins the atlas now, and you just verified
 the org by building it.
 
-### Step 4 — Add it to `data.js` (right in the browser)
+### Step 4 — Add it to `data/entities.yml` (right in the browser)
 
-1. In the repo, click **`data.js`** to open it.
+1. In the repo, open the **`data`** folder and click **`entities.yml`**.
 2. Click the **pencil ✏️ icon** ("Edit this file") near the top right.
-3. `data.js` is split into **category sections**, each starting with a comment banner
-   like `// ---------- VENTURE CAPITAL ----------`. Scroll to the section that matches
-   your entry's category and paste your filled-in block on its own line **among the
-   other entries there** (order within a section doesn't matter).
-4. Double-check you didn't break the commas: every entry ends with `},` and the very
-   last entry in the whole file ends with just `}`.
+3. `entities.yml` is split into **category sections**, each starting with a comment banner
+   like `# ---------- VENTURE CAPITAL ----------`. Scroll to the section that matches
+   your entry's category and paste your filled-in block **between two other entries
+   there** — just before a line starting with `- id:` (order within a section doesn't
+   matter).
+4. Double-check the indentation: your `- id:` line starts at the very left, and every
+   other line of your entry is indented by exactly two spaces, like its neighbours.
 
 ### Step 5 — Save it as a Pull Request (this is easier than it sounds)
 
@@ -128,7 +144,7 @@ the org by building it.
 1. On the new PR, a check named **"Validate atlas data"** runs automatically.
    - **Green ✓** → the entry is well-formed. Continue.
    - **Red ✗** → click **Details** to see what's wrong, then click the pencil ✏️ on
-     `data.js` again to fix it. [Appendix D](#appendix-d--when-the-robot-complains)
+     `data/entities.yml` again to fix it. [Appendix D](#appendix-d--when-the-robot-complains)
      lists the common ones.
 2. When it's green, click **Merge pull request** → **Confirm merge**. (If you're the
    only reviewer, you can merge your own PR.)
@@ -139,7 +155,7 @@ the org by building it.
 
 ---
 
-## Part 2 — Review & merge a Pull Request that edits `data.js`
+## Part 2 — Review & merge a Pull Request that edits `data/entities.yml`
 
 Use this when a contributor (someone who knows Git) opened a PR themselves. You're the
 reviewer, not the author — most of the work is already done.
@@ -157,8 +173,8 @@ Scroll to the bottom of the **Conversation** tab:
   comment pointing them to the error (see [Appendix D](#appendix-d--when-the-robot-complains)),
   and wait — the check re-runs every time they push a fix.
 
-The robot checks structure (no duplicates, valid category, MA coordinates, `https`
-links, etc.). It does **not** know whether the org is *real and relevant* — that part
+The robot checks structure against the schemas in `data/` (no duplicates, valid
+category, MA coordinates, `https` links, etc.). It does **not** know whether the org is *real and relevant* — that part
 is your judgment, next.
 
 ### Step 3 — Read the actual change
@@ -197,9 +213,9 @@ contribution).
 
 ## Part 3 — Publish to the live site
 
-**Publishing is automatic.** When a change to `index.html` or `data.js` lands on
+**Publishing is automatic.** When a change to `index.html` or `data/` lands on
 `main` (i.e. when you merge a PR, or the robot pushes the badge), a GitHub Action
-re-checks the data and copies both files to the web server. Within about a minute
+re-checks the data and copies the files to the web server. Within about a minute
 the public atlas at **the-open-accelerator.com/ecosystem** shows the change, and a
 summary lands in the TOA Slack channel (what deployed, which entries are new or
 updated — or a 🚨 alert if the deploy failed, in which case the live site is simply
@@ -217,7 +233,7 @@ repo checked out and SSH access to the server:
 
 ```bash
 git pull
-./scripts/sync-to-site.sh <destination>   # copies index.html + data.js
+./scripts/sync-to-site.sh <destination>   # copies index.html + atlas-data.js + data/*.yml
 ```
 
 ---
@@ -258,44 +274,45 @@ Every entry has these fields. ⭐ = required.
 
 | Field | ⭐ | What to put | Example |
 |------|----|-------------|---------|
-| `id` | ⭐ | A unique nickname in **lowercase-with-hyphens**. Invent it from the name. | `"acme-ai"` |
-| `name` | ⭐ | The display name (must be unique). | `"Acme AI Labs"` |
-| `cat` | ⭐ | The category **key** — translate from the form using the table below. | `"startup"` |
-| `loc` | ⭐ | Street address, or neighborhood if it moves around. | `"1 Broadway, Cambridge"` |
+| `id` | ⭐ | A unique nickname in **lowercase-with-hyphens**. Invent it from the name. | `acme-ai` |
+| `name` | ⭐ | The display name (must be unique). | `Acme AI Labs` |
+| `cat` | ⭐ | The category **key** — translate from the form using the table below. | `startup` |
+| `loc` | ⭐ | Street address, or neighborhood if it moves around. | `1 Broadway, Cambridge` |
 | `lat` | ⭐ | First coordinate from Google Maps. | `42.3629` |
 | `lng` | ⭐ | Second coordinate from Google Maps. | `-71.0838` |
 | `approx` |  | Add `approx: true` **only** if the location is neighborhood-level, not exact. | `true` |
-| `url` | ⭐ | Official website. **Must start with `https://`**. | `"https://acme.ai"` |
-| `badge` |  | A short highlight, or omit. | `"Applications open"` |
-| `desc` | ⭐ | 1–2 factual sentences (**max 400 characters**). | `"A robotics-AI startup…"` |
-| `why` |  | One sentence on why an early-stage founder should care. | `"Hires from hackathons…"` |
-| `tags` |  | 2–4 short lowercase tags. | `["robotics", "lab space"]` |
+| `url` | ⭐ | Official website. **Must start with `https://`**. | `https://acme.ai` |
+| `badge` |  | A short highlight, or omit. | `Applications open` |
+| `desc` | ⭐ | 1–2 factual sentences (**max 400 characters**). | `A robotics-AI startup…` |
+| `why` |  | One sentence on why an early-stage founder should care. | `Hires from hackathons…` |
+| `tags` |  | 2–4 short lowercase tags. | `[robotics, lab space]` |
 | `stages` |  | Which founder stages it serves — **numbers**, see table below. | `[1, 3]` |
-| `links` |  | `id`s of related entries (draws lines in the Galaxy view). Optional. | `["csail", "engine"]` |
-| `offers` | ⭐ | What founders **get**, 1–6 of: `funding` (invests) · `grants` (equity-free money) · `space` · `compute` · `mentorship` · `community` · `talent` · `customers` (pilots/buyers). **Tag everything the org materially provides to an early-stage founder, not just its headline offering** — an accelerator that gives space, mentoring and a check should carry all three, or the "I need…" filter matches on less than the truth. Powers that filter; the suggestion form asks it as a required multi-select, and the validator errors if it is missing. | `["funding","mentorship"]` |
-| `applyBy` |  | `"rolling"`, or the **current application deadline** as `"YYYY-MM-DD"`. Shows "Applications open" in the app; past dates auto-hide and the robot warns so you clear or roll them. Only for orgs with a real application (accelerators, grants, programs). | `"2026-10-15"` |
-| `applyNote` |  | Short label next to the deadline, max 40 chars. | `"Fall 2026 cohort"` |
-| `facts` |  | Optional "at a glance" table, 1–6 `[label, value]` rows. Labels must be one of: Check size, Stage, Terms, Equity, Board seat, Program length, Cohort size, Focus. Facts rot — only add ones you'd bet on, and re-check them at `lastVerified` time. | `[["Check size","$500K–$2M"]]` |
-| `added` |  | The month (`"YYYY-MM"`) the entry **joined the atlas** — set it once to the current month and never change it. Powers the "✨ New" chips, the new-this-month banner, and the "Recently added" sort. | `"2026-08"` |
-| `lastVerified` |  | The month (`"YYYY-MM"`) a maintainer last **confirmed the org is real, active, and the facts are right** — set it when you actually checked the org, not merely when you edited the entry. New entry → today's month. The robot only warns if it's missing, but always set it. | `"2026-08"` |
+| `links` |  | `id`s of related entries (draws lines in the Galaxy view). Optional. | `[csail, engine]` |
+| `offers` | ⭐ | What founders **get**, 1–6 of: `funding` (invests) · `grants` (equity-free money) · `space` · `compute` · `mentorship` · `community` · `talent` · `customers` (pilots/buyers). **Tag everything the org materially provides to an early-stage founder, not just its headline offering** — an accelerator that gives space, mentoring and a check should carry all three, or the "I need…" filter matches on less than the truth. Powers that filter; the suggestion form asks it as a required multi-select, and the validator errors if it is missing. | `[funding, mentorship]` |
+| `applyBy` |  | `rolling`, or the **current application deadline** as `'YYYY-MM-DD'`. Shows "Applications open" in the app; past dates auto-hide and the robot warns so you clear or roll them. Only for orgs with a real application (accelerators, grants, programs). | `'2026-10-15'` |
+| `applyNote` |  | Short label next to the deadline, max 40 chars. | `Fall 2026 cohort` |
+| `facts` |  | Optional "at a glance" table, 1–6 `[label, value]` rows. Labels must be one of: Check size, Stage, Terms, Equity, Board seat, Program length, Cohort size, Focus. Facts rot — only add ones you'd bet on, and re-check them at `lastVerified` time. | `[[Check size, $500K–$2M]]` |
+| `added` |  | The month (`YYYY-MM`) the entry **joined the atlas** — set it once to the current month and never change it. Powers the "✨ New" chips, the new-this-month banner, and the "Recently added" sort. | `2026-08` |
+| `lastVerified` |  | The month (`YYYY-MM`) a maintainer last **confirmed the org is real, active, and the facts are right** — set it when you actually checked the org, not merely when you edited the entry. New entry → today's month. The robot only warns if it's missing, but always set it. | `2026-08` |
 
 ### Category (the `cat` field)
 
-The suggestion form uses friendly labels; `data.js` uses the short key on the right.
+The suggestion form uses friendly labels; `entities.yml` uses the short key on the right
+(the full list lives in `data/categories.yml`).
 
 | Form says… | Use `cat:` |
 |------------|------------|
-| AI Companies & Startups | `"startup"` |
-| Venture Capital | `"vc"` |
-| Angel Groups | `"angel"` |
-| Accelerators & Founder Support | `"accel"` |
-| University Labs & Centers | `"university"` |
-| Corporate AI Labs | `"corporate"` |
-| Communities & Meetups | `"community"` |
-| Major Events | `"event"` |
-| Government & Policy | `"gov"` |
-| Spaces & Hubs | `"space"` |
-| Student Groups | `"student"` |
+| AI Companies & Startups | `startup` |
+| Venture Capital | `vc` |
+| Angel Groups | `angel` |
+| Accelerators & Founder Support | `accel` |
+| University Labs & Centers | `university` |
+| Corporate AI Labs | `corporate` |
+| Communities & Meetups | `community` |
+| Major Events | `event` |
+| Government & Policy | `gov` |
+| Spaces & Hubs | `space` |
+| Student Groups | `student` |
 
 ### Stages (the `stages` field)
 
@@ -313,7 +330,7 @@ ticked, e.g. Build + Fund → `stages: [3, 4]`.
 ### `links` (optional, for the Galaxy view)
 
 If the suggestion lists "Connected entries" (e.g. *"spun out of MIT CSAIL"*), find that
-org already in `data.js`, copy its `id`, and add it to `links`. If you can't find a
+org already in `data/entities.yml`, copy its `id`, and add it to `links`. If you can't find a
 match, just leave `links` empty (`[]`). Wrong/unknown ids are caught by the robot.
 
 ---
@@ -330,31 +347,40 @@ A suggestion comes in:
 
 You look up `1 Broadway, Cambridge` in Google Maps → `42.3629, -71.0838`, and you write:
 
-```js
-{id:"acme-ai", name:"Acme AI Labs", cat:"startup", loc:"1 Broadway, Cambridge",
- lat:42.3629, lng:-71.0838, url:"https://acme.ai",
- desc:"Robotics-AI startup building warehouse pick-and-place arms.",
- why:"Hires interns straight out of MIT hackathons.",
- tags:["robotics","warehouse"], stages:[3,4], links:[],
- added:"2026-08", lastVerified:"2026-08"},
+```yaml
+- id: acme-ai
+  name: Acme AI Labs
+  cat: startup
+  loc: 1 Broadway, Cambridge
+  lat: 42.3629
+  lng: -71.0838
+  url: https://acme.ai
+  desc: Robotics-AI startup building warehouse pick-and-place arms.
+  why: Hires interns straight out of MIT hackathons.
+  tags: [robotics, warehouse]
+  stages: [3, 4]
+  links: []
+  added: 2026-08
+  lastVerified: 2026-08
 ```
 
-…and paste it into the `// ---------- AI COMPANIES & STARTUPS ----------` section of
-`data.js`.
+…and paste it into the `# ---------- STARTUPS / AI COMPANIES ----------` section of
+`data/entities.yml`.
 
 ---
 
 ## Appendix C — Handling "🚩 Flag" issues (updates & removals)
 
 A **Flag** issue reports that an existing entry is wrong (shut down, moved, wrong
-category, dead link…). The fix is the same kind of `data.js` edit:
+category, dead link…). The fix is the same kind of `data/entities.yml` edit:
 
 1. Open the flag issue; note the **entry id** it names and what's wrong.
-2. Edit `data.js` (pencil ✏️), press **`/`** or `Ctrl/Cmd-F` and search that **id** to
+2. Edit `data/entities.yml` (pencil ✏️), press **`/`** or `Ctrl/Cmd-F` and search that **id** to
    jump to the entry.
 3. Then:
    - **Outdated info / wrong category / wrong location** → fix the relevant field(s).
-   - **Moved out of the region or shut down** → delete the whole entry block. Also
+   - **Moved out of the region or shut down** → delete the whole entry block (from its
+     `- id:` line down to the line before the next `- id:`). Also
      **search the file for its id in other entries' `links`** and remove it there, or
      the robot will complain about a broken connection.
 4. Commit with `Fix <name> per flag (closes #NN)` → open the PR → green check → merge →
@@ -362,7 +388,7 @@ category, dead link…). The fix is the same kind of `data.js` edit:
 
 > **Resolving a flag counts as re-verifying.** Whenever you keep the entry — you fixed
 > something, *or* you checked and it was already correct — set its `lastVerified` to the
-> current month (`"YYYY-MM"`). "I looked, and it's fine" is exactly the information the
+> current month (`YYYY-MM`). "I looked, and it's fine" is exactly the information the
 > field records.
 
 ### When to bump `lastVerified` — and when not to
@@ -378,19 +404,24 @@ category, dead link…). The fix is the same kind of `data.js` edit:
 ## Appendix D — When the robot complains
 
 Open the failed **"Validate atlas data"** check → **Details** to see the message.
-Common ones:
+Schema errors name the entry and field, e.g. `✗ entities.yml [acme-ai] /url: must match
+pattern …`. Common ones:
 
 | Message contains… | Fix |
 |-------------------|-----|
+| `bad indentation` / `can not read` / other messages with a line number and a `^` marker | A YAML formatting slip at that line — usually indentation (two spaces per field) or text containing `: ` that needs double quotes. |
 | `duplicate id` / `duplicate name` | That org (or id) is already in the atlas. Pick a new `id`, or it's a true duplicate — close the issue/PR instead. |
-| `id must be kebab-case` | Use only lowercase letters, numbers, and hyphens: `acme-ai`, not `Acme_AI`. |
+| `/id: must match pattern` | Use only lowercase letters, numbers, and hyphens: `acme-ai`, not `Acme_AI`. |
 | `unknown category` | The `cat` value must be one of the **keys** in the category table (`vc`, `startup`, …), not the friendly label. |
-| `coordinates … outside … bounds` | A typo in lat/lng, or they're swapped. In Massachusetts, `lat` is around **42** and `lng` is **negative**, around **-71**. |
-| `url must start with https://` | Add `https://`, and make sure it isn't `http://`. |
-| `desc too long` | Trim the description to 400 characters or fewer. |
+| `/lat: must be >=` (or `<=`, or `/lng: …`) | A typo in lat/lng, or they're swapped. In Massachusetts, `lat` is around **42** and `lng` is **negative**, around **-71**. |
+| `/url: must match pattern` | The URL must start with `https://` (not `http://`) and contain no spaces or quotes. |
+| `/desc: must NOT have more than 400 characters` | Trim the description to 400 characters or fewer. |
+| `must have required property` | A ⭐ field from Appendix A is missing. |
+| `must NOT have additional properties "…"` | A field name is misspelled (e.g. `lastverified`) or isn't one of the fields in Appendix A. |
+| `must be string` | A field was left empty (e.g. `badge:` with nothing after it). Fill it in or delete the line. |
 | `links to unknown entry` | A value in `links` doesn't match any `id`. Fix the spelling or remove it. |
-| `missing lastVerified` (a ⚠ warning, not a failure) | Add the month you last confirmed this entry: `lastVerified:"YYYY-MM"`. |
-| `lastVerified must be a "YYYY-MM" string` | Fix the format: four-digit year, hyphen, two-digit month — e.g. `2026-08`. |
+| `missing lastVerified` (a ⚠ warning, not a failure) | Add the month you last confirmed this entry: `lastVerified: YYYY-MM`. |
+| `/lastVerified: must match pattern` | Fix the format: four-digit year, hyphen, two-digit month — e.g. `2026-08`. |
 | `lastVerified … is in the future` | Check the date — it can't be later than the current month. |
 | `looks like a typo (before 2020)` | The year in `lastVerified` is wrong — fix it (e.g. a mistyped `2016` for `2026`). |
 
@@ -427,4 +458,5 @@ The rules those add up to:
 ---
 
 *Maintained by The Open Accelerator. Schema reference: [`CONTRIBUTING.md`](CONTRIBUTING.md).
-The robot's exact rules live in [`scripts/validate.js`](scripts/validate.js).*
+The robot's exact rules live in the schemas in [`data/`](data/) and in
+[`scripts/validate.js`](scripts/validate.js).*

@@ -8,7 +8,7 @@ body:
       value: |
         Thanks for helping keep the Mass AI Atlas alive! A maintainer will review your
         suggestion and add it via pull request. Comfortable with Git? You can also edit
-        `data.js` and open a PR directly — see CONTRIBUTING.md.
+        `data/entities.yml` and open a PR directly — see CONTRIBUTING.md.
   - type: input
     id: org-name
     attributes:

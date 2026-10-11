@@ -1,7 +1,7 @@
 # Mass AI Atlas
 
 [![Validate atlas data](https://github.com/holzerjm/boston-ai-atlas/actions/workflows/validate.yml/badge.svg)](https://github.com/holzerjm/boston-ai-atlas/actions/workflows/validate.yml)
-[![Organizations](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fholzerjm%2Fboston-ai-atlas%2Fmain%2Fbadge.json)](data.js)
+[![Organizations](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fholzerjm%2Fboston-ai-atlas%2Fmain%2Fbadge.json)](data/entities.yml)
 [![Live site](https://img.shields.io/badge/live-the--open--accelerator.com%2Fecosystem-EE0000)](https://the-open-accelerator.com/ecosystem/)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-4ade80)](CONTRIBUTING.md)
 [![The Open Accelerator](https://img.shields.io/badge/by-The%20Open%20Accelerator-EE0000)](https://the-open-accelerator.com)
@@ -34,13 +34,16 @@ The hosted live page is at https://the-open-accelerator.com/ecosystem/
 python3 -m http.server     # then open http://localhost:8000
 ```
 
-Opening `index.html` straight from `file://` mostly works, but a few hot-linked TOA
-images will be broken and it's not how the page ships — prefer the local server above.
+Opening `index.html` straight from `file://` doesn't work: the page fetches its data
+from `data/*.yml`, which browsers block on `file://`. Use the local server above.
+
+The maintenance scripts (`scripts/`) need Node 20+ and the two npm dependencies
+(js-yaml, Ajv): run `npm ci` once.
 
 ## Deploy
 
-**Merging is publishing.** A GitHub Action deploys `index.html`, `data.js` and the
-map style to [the live site](https://the-open-accelerator.com/ecosystem/) on every
+**Merging is publishing.** A GitHub Action deploys `index.html`, `atlas-data.js`,
+`data/` and the map style to [the live site](https://the-open-accelerator.com/ecosystem/) on every
 merge to `main` that touches them — it re-validates the data first, then rsyncs to
 the server and posts a summary to the TOA Slack. (Not GitHub Pages.)
 
@@ -51,7 +54,7 @@ Manual fallback, from a checkout with SSH access to the server:
 ```
 
 The page must be served at a directory URL (`…/ecosystem/`, trailing slash) so the
-relative `data.js` include resolves.
+relative `data/` fetches resolve.
 
 **If the repo ever moves (or you host your own copy):** set `GH_REPO` in
 `index.html` (search for `const GH_REPO`) to your `org/repo` so the in-app
@@ -62,12 +65,12 @@ relative `data.js` include resolves.
 The atlas is community-maintained:
 
 - **➕ Suggest an entry** — [open a suggestion](../../issues/new?template=suggest-entry.yml)
-  or edit [`data.js`](data.js) and send a PR
+  or edit [`data/entities.yml`](data/entities.yml) and send a PR
 - **🚩 Flag an entry** — [report something outdated or miscategorized](../../issues/new?template=flag-entry.yml)
   (or use the Flag button on any entry inside the atlas)
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the entry schema and review process.
-Every PR touching `data.js` is automatically validated by CI, and a maintainer can
+Every PR is automatically validated by CI, and a maintainer can
 hand your suggestion to the **atlas bot**, which drafts it as a pull request
 (geocoded and validated) for human review — nothing publishes without a maintainer
 merge.
@@ -80,9 +83,16 @@ merge.
 ```
 index.html                        the app — one file of HTML/CSS/vanilla JS (Leaflet +
                                   MapLibre GL, Tailwind & web fonts via CDN; TOA-branded)
-data.js                           the dataset — this is what you edit
+data/entities.yml                 the dataset — this is what you edit
+data/categories.yml, stages.yml   the categories and founder stages
+data/*.schema.yml                 JSON Schemas for the three data files
+atlas-data.js                     shared loader: parses data/*.yml + validates against
+                                  the schemas (used by index.html and scripts/)
+package.json                      npm deps for the scripts (js-yaml, Ajv) — `npm ci`
 map-style-dark.json               the dark basemap style (OpenFreeMap fiord + our grafts)
-scripts/validate.js               schema validation (runs in CI and locally)
+scripts/validate.js               schema + integrity validation (runs in CI and locally)
+scripts/load-data.js              Node wrapper around atlas-data.js — scripts load data via this
+test/data-refactor-equivalence.test.js  one-time check that data/ matches the old data.js
 scripts/badge.js                  regenerates badge.json (entry count — CI runs it on merge)
 scripts/stale.js                  freshness report — entries longest unverified
 scripts/export-csv.js             export the dataset to a spreadsheet-friendly CSV
@@ -98,7 +108,7 @@ scripts/sync-to-site.sh           manual deploy fallback (CI normally deploys on
 .github/workflows/weekly-events.yml  Monday 7am ET events refresh + Slack post
 docs/events-guide.md              how the events page & weekly refresh work
 CONTRIBUTING.md                   entry schema & contributor workflow
-MAINTAINING.md                    maintainer guide — turn issues & PRs into data.js
+MAINTAINING.md                    maintainer guide — turn issues & PRs into data/entities.yml
 PROJECT_STATE.md                  architecture, decisions & backlog (start here if new)
 ```
 
