@@ -705,6 +705,42 @@ window.flagEntry = flagEntry;
   if(gl) gl.href = "https://github.com/"+GH_REPO;
 })();
 
+/* ---------- category ink ----------
+   The category palette is tuned for coloured dots on the dark map, where it is
+   fine: all 11 clear 3:1 against the map. But the same colour is also used for
+   the category LABEL — in the drawer, in map popups and on Directory cards —
+   and as text on a light background all 11 fail WCAG AA: #5eead4 lands at
+   1.48:1 against white where 4.5:1 is required.
+   So each category gets a CSS variable holding the bright colour in dark mode
+   and a darkened ink in light mode, derived here rather than hand-picked, so a
+   category added later is compliant without anyone remembering this. Dots and
+   pins keep the bright colour — they are graphics on a dark map, not text. */
+const srgb = v => (v /= 255) <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+const relLum = ([r, g, b]) => 0.2126 * srgb(r) + 0.7152 * srgb(g) + 0.0722 * srgb(b);
+const rgbOf = h => [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16));
+// measured against the DARKEST light-mode surface (--panel2 #eef1f7), not pure
+// white, so the ink clears 4.5:1 on every light surface the label can sit on —
+// the drawer uses #f6f7fb, and an ink tuned to #fff lands at 4.45:1 there.
+const LIGHT_SURFACE = relLum([238, 241, 247]);
+const contrastOnLight = rgb => (LIGHT_SURFACE + 0.05) / (relLum(rgb) + 0.05);
+function inkFor(hex){
+  let rgb = rgbOf(hex);
+  for(let i = 0; i < 60 && contrastOnLight(rgb) < 4.5; i++) rgb = rgb.map(v => v * 0.95);
+  return "#" + rgb.map(v => Math.round(v).toString(16).padStart(2, "0")).join("");
+}
+(function categoryInk(){
+  const dark = [], light = [];
+  for(const [k, v] of Object.entries(CATS)){
+    dark.push(`--cat-${k}:${v.color}`);
+    light.push(`--cat-${k}:${inkFor(v.color)}`);
+  }
+  const el = document.createElement("style");
+  el.textContent = `:root{${dark.join(";")}}\nhtml:not(.dark){${light.join(";")}}`;
+  document.head.appendChild(el);
+})();
+// the colour to use when a category name is rendered as TEXT
+const cInk = c => `var(--cat-${c}, ${cColor(c)})`;
+
 /* ---------- stats ---------- */
 (function(){
   const total = DATA.length;
@@ -803,7 +839,7 @@ function openDrawer(id){
   const d = byId[id]; if(!d) return;
   const col = cColor(d.cat);
   $("drCat").textContent = cLabel(d.cat);
-  $("drCat").style.color = col;
+  $("drCat").style.color = cInk(d.cat);
   $("drName").textContent = d.name;
   $("drLoc").textContent = "📍 " + d.loc + (d.approx ? " (approx.)" : "");
   let html = `<p>${esc(d.desc)}</p>`;
@@ -1028,7 +1064,7 @@ function setMapTiles(){ if(!map) return; if(mapTiles) map.removeLayer(mapTiles);
     const m = L.marker([d.lat,d.lng], {icon, title:d.name});
     m.bindPopup(
       `<div class="pop-name">${esc(d.name)}</div>`+
-      `<div class="pop-cat" style="color:${col}">${cLabel(d.cat)}</div>`+
+      `<div class="pop-cat" style="color:${cInk(d.cat)}">${cLabel(d.cat)}</div>`+
       `<div class="pop-desc">${esc(d.desc.length>140 ? d.desc.slice(0,140)+"…" : d.desc)}</div>`+
       `<span class="pop-btn" onclick="openDrawer('${d.id}')">Full details →</span>`,
       {maxWidth:260});
@@ -1510,7 +1546,7 @@ function renderCards(){
     return `<div class="card" style="--cc:${col}" onclick="openDrawer('${d.id}')">
       <h3><button type="button" class="card-open" onclick="event.stopPropagation();openDrawer('${d.id}')">${esc(d.name)}</button></h3>
       <div class="card-tools">${canCompare?`<button class="card-tool cmp ${cmpSet.has(d.id)?'on':''}" title="Compare" aria-pressed="${cmpSet.has(d.id)}" aria-label="Add ${esc(d.name)} to comparison" onclick="event.stopPropagation();toggleCompare('${d.id}')">⚖</button>`:""}<button class="card-tool star ${starSet.has(d.id)?'on':''}" title="Save to shortlist" aria-pressed="${starSet.has(d.id)}" aria-label="Save ${esc(d.name)} to your shortlist" onclick="event.stopPropagation();toggleStar('${d.id}')">${starSet.has(d.id)?"★":"☆"}</button></div>
-      <div class="c-cat" style="color:${col}">${cLabel(d.cat)} · ${esc(d.loc.split(",")[0])}</div>
+      <div class="c-cat" style="color:${cInk(d.cat)}">${cLabel(d.cat)} · ${esc(d.loc.split(",")[0])}</div>
       <p>${esc(d.desc.length>150 ? d.desc.slice(0,150)+"…" : d.desc)}</p>
       <div class="c-meta">${relaxed ? (d.offers||[]).filter(o=>dirNeeds.has(o)).map(o=>OFFERS_META[o]).filter(Boolean).map(m=>`<span class="tag offer-tag">${m.icon} ${m.label}</span>`).join("") : ""}${isNew(d)?`<span class="tag new-tag">✨ New</span>`:""}${eventHosts[d.id]?`<span class="tag event-tag" title="${esc(eventHosts[d.id].title)}">🎟 event this week</span>`:""}${d.applyBy && d.applyBy!=="rolling" && applyOpen(d) ? `<span class="tag apply-tag">⏳ Apply by ${esc(fmtDeadline(d.applyBy))}</span>`:""}${isStale(d)?`<span class="tag stale-tag" title="Last verified ${fmtMonth(d.lastVerified)}">⚠ not recently verified</span>`:""}${d.badge?`<span class="badge">${esc(d.badge)}</span>`:""}${(d.tags||[]).slice(0,3).map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
     </div>`;
@@ -1602,7 +1638,7 @@ function openCompare(){
   const factLabels=[...new Set(list.flatMap(d=>(d.facts||[]).map(f=>f[0])))];
   const cell=(d,l)=>{ const f=(d.facts||[]).find(x=>x[0]===l); return f?esc(f[1]):"—"; };
   const rows=[
-    ["", list.map(d=>`<b>${esc(d.name)}</b><br><span style="color:${cColor(d.cat)}">${cLabel(d.cat)}</span>`)],
+    ["", list.map(d=>`<b>${esc(d.name)}</b><br><span style="color:${cInk(d.cat)}">${cLabel(d.cat)}</span>`)],
     ["Location", list.map(d=>esc(d.loc))],
     ["What you get", list.map(d=>(d.offers||[]).map(o=>OFFERS_META[o]?.icon+" "+OFFERS_META[o]?.label).join("<br>")||"—")],
     ["Applications", list.map(d=>applyOpen(d) ? (d.applyBy==="rolling"?"Open — rolling":"Open — by "+esc(fmtDeadline(d.applyBy))) : "—")],
