@@ -47,6 +47,7 @@ Copy this template into a notes app and replace the blanks:
   tags: []
   stages: []
   links: []
+  offers: []
   added: 
   lastVerified: 
 ```
@@ -70,6 +71,7 @@ Copy this template into a notes app and replace the blanks:
 | `tags` | 2–4 short lowercase tags, in square brackets: `[robotics, lab space]` |
 | `stages` | The founder stages it serves, as **numbers** — see the table below: `[1, 3]` |
 | `links` | Usually leave as `[]`. (Advanced: ids of related entries.) |
+| `offers` | **Required.** What founders *get*, 1–6 of: `funding` · `grants` · `space` · `compute` · `mentorship` · `community` · `talent` · `customers`. This is what powers the "I need…" filter: `[funding, mentorship]` |
 | `added` | Today's month as `YYYY-MM` (e.g. `2026-08`) — when the entry joined the atlas. The app uses it for the "✨ New" highlight. |
 | `lastVerified` | Today's month as `YYYY-MM` (e.g. `2026-08`) — you just verified it by building this entry. |
 
@@ -153,6 +155,7 @@ A suggestion comes in: *Epipelagic Ventures · https://www.epipelagic.vc · Vent
   tags: [venture studio, early stage]
   stages: [3, 4]
   links: []
+  offers: [funding, mentorship]
   added: 2026-08
   lastVerified: 2026-08
 ```

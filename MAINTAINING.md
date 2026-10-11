@@ -84,12 +84,12 @@ Copy this template and fill it in. Field-by-field help is in
   lat: 0
   lng: 0
   url: https://
-  badge: 
   desc: 
   why: 
   tags: []
   stages: []
   links: []
+  offers: []
   added: 
   lastVerified: 
 ```
@@ -111,8 +111,10 @@ the tables in Appendix A do this for you:
   `Acme AI Labs` → `acme-ai`. Keep it short and make sure it's not already used (in the
   GitHub file view, press **`/`** or `Ctrl/Cmd-F` and search the id).
 
-Delete the `badge` line if there's nothing special (an empty value is an error). `links` is
-optional — see Appendix A. For `added` **and** `lastVerified`, put **today's month** as
+`offers` is **required** and needs at least one value — an entry without it is invisible to
+the Directory's "I need…" filter, so validation rejects it. Add a `badge:` line only if
+there's something to flag (an empty value is an error). `links` is optional — see
+Appendix A. For `added` **and** `lastVerified`, put **today's month** as
 `YYYY-MM` (e.g. `2026-08`) — the entry joins the atlas now, and you just verified
 the org by building it.
 
@@ -360,6 +362,7 @@ You look up `1 Broadway, Cambridge` in Google Maps → `42.3629, -71.0838`, and 
   tags: [robotics, warehouse]
   stages: [3, 4]
   links: []
+  offers: [talent]
   added: 2026-08
   lastVerified: 2026-08
 ```

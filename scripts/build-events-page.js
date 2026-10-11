@@ -22,7 +22,13 @@ const twConfig = between("tailwind.config = {", "</script>");
 const bootstrap = between("<script>(function(){try{if(localStorage.getItem('toa-atlas-theme')", "</script>");
 const header = between("<!-- ============ STANDARD TOA SITE HEADER ============ -->", "</header>");
 const mobileNav = between("<!-- Mobile Nav Overlay -->", "</div>");
-const footer = between('<footer class="footer">', "</footer>");
+// The atlas page fills #footCount from the dataset at runtime; this page ships no
+// such script, so the lifted markup would keep whatever literal is inside the span.
+// It read "101 organizations" for months. Bake the real number in at build time.
+const { DATA } = require("./load-data").loadData();
+const footerRaw = between('<footer class="footer">', "</footer>");
+const footer = footerRaw.replace(/<span id="footCount">[^<]*<\/span>/, String(DATA.length));
+if (footer === footerRaw) throw new Error("footer: #footCount span not found in index.html — the count would ship stale");
 const footerCss = between("/* ---------- FOOTER ---------- */", ".footer a{color:var(--gold);text-decoration:none}");
 // chrome script: from toggleMobileMenu's containing <script> to the updateLogos sync call
 const scriptStart = src.lastIndexOf("<script>", src.indexOf("function toggleMobileMenu"));
@@ -196,5 +202,6 @@ ${chromeJs}
 </html>
 `;
 fs.writeFileSync(REPO + "/events/index.html", page);
-console.log("events/index.html assembled:", page.length, "bytes; chrome pieces: header",
+console.log("events/index.html assembled:", page.length, "bytes;",
+  DATA.length, "organizations; chrome pieces: header",
   header.length, "· mobileNav", mobileNav.length, "· footer", footer.length, "· js", chromeJs.length);
