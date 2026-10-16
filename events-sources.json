@@ -3,7 +3,8 @@
   "luma_calendars": [
     { "id": "cal-BI22W7AXNavDI82", "slug": "startupbosorg", "name": "Startup Boston", "ai_default": false },
     { "id": "cal-qk07YDF6ZivCcE0", "slug": "toa", "name": "The Open Accelerator", "ai_default": true },
-    { "id": "cal-EnsrRAJPfkZzBsv", "slug": "ai-furnace-boston", "name": "The AI Furnace (Boston)", "ai_default": true }
+    { "id": "cal-EnsrRAJPfkZzBsv", "slug": "ai-furnace-boston", "name": "The AI Furnace (Boston)", "ai_default": true },
+    { "id": "cal-U8WjrBqOBNicQWo", "slug": "boston-air", "name": "Boston Computer Vision AIR", "ai_default": true }
   ],
   "luma_discover": [
     { "latitude": 42.3601, "longitude": -71.0589, "slug": "ai", "ai_default": true },
